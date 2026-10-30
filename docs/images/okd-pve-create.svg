@@ -7,125 +7,756 @@
 <path d="M0 8a8 8 0 0 1 8-8h987a8 8 0 0 1 8 8v22H0z" fill="#2b313b"/>
 <circle cx="18" cy="15" r="5.5" fill="#ff5f57"/><circle cx="36" cy="15" r="5.5" fill="#febc2e"/><circle cx="54" cy="15" r="5.5" fill="#28c840"/>
 <text x="501.5" y="19.5" fill="#9aa3ad" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">okd-pve create</text>
-<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#d0d4db" xml:space="preserve">
-<text x="16" y="57">$ ./okd-pve --dir clusters/demo create</text>
-<text x="16" y="91"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [1/14] Configuration</tspan></text>
-<text x="16" y="108">    <tspan fill="#8fd18a">OK</tspan>  Cluster demo.example.com, OKD 4.22.0-okd-scos.10, 6 nodes</text>
-<text x="16" y="125"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [2/14] Preflight</tspan></text>
-<text x="16" y="142"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: configuration</tspan></text>
-<text x="16" y="159">    <tspan fill="#8fd18a">[PASS]</tspan> cluster.yaml and install-config.yaml are valid (cluster demo.example.com, OKD 4.22.0-okd-scos.10)</text>
-<text x="16" y="176">    <tspan fill="#8fd18a">[PASS]</tspan> Topology: 3 control-plane, 3 other node(s) (3 with infra role)</text>
-<text x="16" y="193">    <tspan fill="#8fd18a">[PASS]</tspan> Pull secret is valid JSON (source: clusters/demo/pull-secret.json)</text>
-<text x="16" y="210">    <tspan fill="#8fd18a">[PASS]</tspan> SSH public key found (ssh-ed25519)</text>
-<text x="16" y="227">    <tspan fill="#8fd18a">[PASS]</tspan> Pre-Boot manifests render cleanly (8 files)</text>
-<text x="16" y="244">    <tspan fill-opacity="0.55">[INFO]</tspan> No StorageClass for monitoring configured; Prometheus/Alertmanager use emptyDir</text>
-<text x="16" y="261"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: local workstation</tspan></text>
-<text x="16" y="278">    <tspan fill="#8fd18a">[PASS]</tspan> bash 5.2.21</text>
-<text x="16" y="295">    <tspan fill="#8fd18a">[PASS]</tspan> jq 1.7, yq v4.54.1</text>
-<text x="16" y="312">    <tspan fill="#8fd18a">[PASS]</tspan> nmstatectl 2.2.62 (clusters/demo/bin/nmstatectl; openshift-install validates the static network config with it)</text>
-<text x="16" y="329">    <tspan fill="#8fd18a">[PASS]</tspan> openshift-install 4.22.0-okd-scos.10 (clusters/demo/bin/openshift-install)</text>
-<text x="16" y="346">    <tspan fill="#8fd18a">[PASS]</tspan> oc 4.22.0-okd-scos.10 (clusters/demo/bin/oc)</text>
-<text x="16" y="363">    <tspan fill="#8fd18a">[PASS]</tspan> tofu 1.13.2 (clusters/demo/bin/tofu)</text>
-<text x="16" y="380">    <tspan fill="#8fd18a">[PASS]</tspan> butane 0.29.0 (clusters/demo/bin/butane)</text>
-<text x="16" y="397">    <tspan fill="#8fd18a">[PASS]</tspan> Cluster directory: 642.5 GiB free</text>
-<text x="16" y="414">    <tspan fill="#8fd18a">[PASS]</tspan> Upload buffer /tmp: 642.5 GiB free</text>
-<text x="16" y="431"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: Proxmox VE</tspan></text>
-<text x="16" y="448">    <tspan fill="#8fd18a">[PASS]</tspan> API reachable, token valid (Proxmox VE 9.2.21)</text>
-<text x="16" y="465">    <tspan fill="#8fd18a">[PASS]</tspan> Proxmox VE 9.2.21 is supported</text>
-<text x="16" y="482">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /nodes/pve1</text>
-<text x="16" y="499">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /nodes/pve2</text>
-<text x="16" y="516">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /pool/okd</text>
-<text x="16" y="533">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /sdn/zones/localnetwork/vmbr0</text>
-<text x="16" y="550">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /storage/iso-nfs</text>
-<text x="16" y="567">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /storage/vm-nfs</text>
-<text x="16" y="584">    <tspan fill="#8fd18a">[PASS]</tspan> Node pve1 is online</text>
-<text x="16" y="601">    <tspan fill="#8fd18a">[PASS]</tspan> Node pve2 is online</text>
-<text x="16" y="618">    <tspan fill="#8fd18a">[PASS]</tspan> Resource pool okd exists</text>
-<text x="16" y="635">    <tspan fill="#8fd18a">[PASS]</tspan> All 6 VMIDs are free</text>
-<text x="16" y="652">    <tspan fill="#8fd18a">[PASS]</tspan> Storage vm-nfs on pve1 allows images</text>
-<text x="16" y="669">    <tspan fill="#8fd18a">[PASS]</tspan> Storage iso-nfs on pve1 allows iso</text>
-<text x="16" y="686">    <tspan fill="#8fd18a">[PASS]</tspan> Storage vm-nfs on pve2 allows images</text>
-<text x="16" y="703">    <tspan fill="#8fd18a">[PASS]</tspan> Storage iso-nfs on pve2 allows iso</text>
-<text x="16" y="720">    <tspan fill="#8fd18a">[PASS]</tspan> Space on vm-nfs (shared): need 744.0 GiB, 1145.8 GiB available</text>
-<text x="16" y="737">    <tspan fill="#8fd18a">[PASS]</tspan> Bridge vmbr0 exists on pve1</text>
-<text x="16" y="754">    <tspan fill="#8fd18a">[PASS]</tspan> Bridge vmbr0 exists on pve2</text>
-<text x="16" y="771">    <tspan fill="#8fd18a">[PASS]</tspan> Host pve1 CPU supports x86-64-v3</text>
-<text x="16" y="788">    <tspan fill="#8fd18a">[PASS]</tspan> Host pve2 CPU supports x86-64-v3</text>
-<text x="16" y="805">    <tspan fill="#8fd18a">[PASS]</tspan> No visible VM uses one of the generated MAC addresses (prefix 02:00:41)</text>
-<text x="16" y="822"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: capacity</tspan></text>
-<text x="16" y="839">      HOST   THREADS  vCPU RUNNING  vCPU NEW  CPU RATIO  RAM TOTAL  RAM RUNNING  RAM NEW    RAM FREE AFTER</text>
-<text x="16" y="856">      pve1   32       0             32        1.0:1      377.8 GiB  0.0 GiB      192.0 GiB  177.8 GiB</text>
-<text x="16" y="873">      pve2   32       0             16        0.5:1      377.8 GiB  0.0 GiB      96.0 GiB   273.8 GiB</text>
-<text x="16" y="890">      TOTAL  64       0             48        -          755.5 GiB  0.0 GiB      288.0 GiB  -</text>
-<text x="16" y="907">    <tspan fill="#8fd18a">[PASS]</tspan> RAM fits on every host (host reserve 8 GiB)</text>
-<text x="16" y="924">    <tspan fill="#8fd18a">[PASS]</tspan> No CPU overcommit</text>
-<text x="16" y="941"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: network, DNS and time</tspan></text>
-<text x="16" y="958">    <tspan fill="#8fd18a">[PASS]</tspan> DNS: api resolves to 192.0.2.5</text>
-<text x="16" y="975">    <tspan fill="#8fd18a">[PASS]</tspan> DNS: *.apps resolves to 192.0.2.6</text>
-<text x="16" y="992">    <tspan fill="#8fd18a">[PASS]</tspan> VIPs and node IPs do not answer (free)</text>
-<text x="16" y="1009">    <tspan fill="#e8c46a">[WARN]</tspan> Gateway 192.0.2.1 does not answer ICMP from here</text>
-<text x="16" y="1026">           <tspan fill-opacity="0.55">-&gt; Fine if this workstation is in another network or ICMP is filtered; otherwise check network.gateway.</tspan></text>
-<text x="16" y="1043">    <tspan fill="#8fd18a">[PASS]</tspan> 3 NTP servers configured</text>
-<text x="16" y="1060">    <tspan fill="#8fd18a">[PASS]</tspan> NTP server ntp1.example.com answers</text>
-<text x="16" y="1077">    <tspan fill="#8fd18a">[PASS]</tspan> NTP server ntp2.example.com answers</text>
-<text x="16" y="1094">    <tspan fill="#8fd18a">[PASS]</tspan> NTP server ntp3.example.com answers</text>
-<text x="16" y="1111">    <tspan fill="#8fd18a">[PASS]</tspan> Local clock is within 0s of NTP</text>
-<text x="16" y="1145">    <tspan fill="#e8c46a">WARN</tspan> Preflight: 46 passed, 1 warnings, 0 failed</text>
-<text x="16" y="1162"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [3/14] Tools</tspan></text>
-<text x="16" y="1179">    <tspan fill="#8fd18a">OK</tspan>  openshift-install, oc, tofu, butane, nmstatectl ready</text>
-<text x="16" y="1196"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [4/14] Rendering install-config.yaml and agent-config.yaml</tspan></text>
-<text x="16" y="1213">    <tspan fill="#8fd18a">OK</tspan>  install-config.yaml, agent-config.yaml rendered (sources untouched)</text>
-<text x="16" y="1230"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [5/14] Rendering Pre-Boot manifests</tspan></text>
-<text x="16" y="1247">    <tspan fill="#8fd18a">OK</tspan>  8 manifest(s): 99-master-okd-pve-chrony.yaml 99-master-okd-pve-kargs.yaml 99-master-okd-pve-ssh.yaml …</text>
-<text x="16" y="1264"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [6/14] Building the agent ISO</tspan></text>
-<text x="16" y="1281">    openshift-install agent create image (takes a few minutes; downloads the base ISO on first use)</text>
-<text x="16" y="1298">      | Configuration has 3 master replicas, 0 arbiter replicas, and 3 worker replicas</text>
-<text x="16" y="1315">      | The rendezvous host IP (node0 IP) is 192.0.2.11</text>
-<text x="16" y="1332">      | Using cached Base ISO ~/.cache/agent/image_cache/coreos-x86_64.iso</text>
-<text x="16" y="1349">    <tspan fill="#8fd18a">OK</tspan>  Agent ISO built in 18m54s: 0.9 GiB</text>
-<text x="16" y="1366"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [7/14] Uploading the ISO and creating VMs (OpenTofu)</tspan></text>
-<text x="16" y="1383">    <tspan fill="#8fd18a">OK</tspan>  OpenTofu apply finished in 17m49s</text>
-<text x="16" y="1400"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [8/14] Waiting for bootstrap</tspan></text>
-<text x="16" y="1417">      <tspan fill-opacity="0.55">· 17:37 API not reachable yet · 6/6 nodes answer ping</tspan></text>
-<text x="16" y="1434">      <tspan fill-opacity="0.55">· 17:41 nodes 0/6 Ready · operators 1/34 available · installing 4.22.0-okd-scos.10, operators still starting</tspan></text>
-<text x="16" y="1451">        <tspan fill="#e8c46a">waiting on authentication: no status yet</tspan></text>
-<text x="16" y="1468">        <tspan fill="#e8c46a">… and 32 more operator(s)</tspan></text>
-<text x="16" y="1485">      | Bootstrap is complete</text>
-<text x="16" y="1502"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [9/14] Waiting for the installation to complete</tspan></text>
-<text x="16" y="1519">      <tspan fill-opacity="0.55">· 18:37 nodes 5/6 Ready · operators 30/34 available · installing 4.22.0-okd-scos.10, operators still starting</tspan></text>
-<text x="16" y="1536">        <tspan fill="#e8c46a">waiting on console: RouteHealthDegraded: route not yet available</tspan></text>
-<text x="16" y="1553">        <tspan fill="#e8c46a">… and 3 more operator(s)</tspan></text>
-<text x="16" y="1570">      | Cluster is installed</text>
-<text x="16" y="1587"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [10/14] Detaching the ISO</tspan></text>
-<text x="16" y="1604">    <tspan fill="#8fd18a">OK</tspan>  OpenTofu apply finished in 9s</text>
-<text x="16" y="1621"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [11/14] Infra labels and taints</tspan></text>
-<text x="16" y="1638">    <tspan fill="#8fd18a">OK</tspan>  Infra labels and taints updated</text>
-<text x="16" y="1655"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [12/14] Verifying the cluster</tspan></text>
-<text x="16" y="1672">    <tspan fill="#8fd18a">OK</tspan>  Cluster is healthy</text>
-<text x="16" y="1689"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [13/14] Storage</tspan></text>
-<text x="16" y="1706">    Skipped (storage.backend: none)</text>
-<text x="16" y="1723"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [14/14] Post-Install hooks</tspan></text>
-<text x="16" y="1740"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Hook 30-ingress-controller.sh (builtin)</tspan></text>
-<text x="16" y="1757">    | info: ingresscontroller/default: patched</text>
-<text x="16" y="1774">    | HTTP/2 enabled for all routes (ingresses.config/cluster).</text>
-<text x="16" y="1791">    <tspan fill="#8fd18a">OK</tspan>  30-ingress-controller.sh finished in 3m50s</text>
-<text x="16" y="1808">    …</text>
-<text x="16" y="1842"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Hook report</tspan></text>
-<text x="16" y="1859">    HOOK                                      SOURCE   DURATION  RESULT</text>
-<text x="16" y="1876">    10-infra-nodes.sh                         builtin  4s        ok</text>
-<text x="16" y="1893">    15-scc-anyuid-nfs.sh                      builtin  1s        ok</text>
-<text x="16" y="1910">    20-operatorhub-catalogs.sh                builtin  1m13s     ok</text>
-<text x="16" y="1927">    30-ingress-controller.sh                  builtin  3m50s     ok</text>
-<text x="16" y="1944">    40-monitoring.sh                          builtin  7s        ok</text>
-<text x="16" y="1961">    45-alertmanager-receiver.sh               builtin  1s        ok</text>
-<text x="16" y="1978">    50-operator-logging.sh                    builtin  3m53s     ok</text>
-<text x="16" y="1995">    51-operator-descheduler.sh                builtin  1m00s     ok</text>
-<text x="16" y="2012">    52-operator-cluster-resource-override.sh  builtin  50s       ok</text>
-<text x="16" y="2029">    53-operator-cert-manager.sh               builtin  1m29s     ok</text>
-<text x="16" y="2046">    54-operator-web-terminal.sh               builtin  1m19s     ok</text>
-<text x="16" y="2063">    55-eventrouter.sh                         builtin  9s        ok</text>
-<text x="16" y="2097">    <tspan fill="#8fd18a">OK</tspan>  Cluster demo.example.com is ready (1h52m10s this run)</text>
-<text x="16" y="2114">    Console:    https://console-openshift-console.apps.demo.example.com</text>
-<text x="16" y="2131">    Kubeconfig: export KUBECONFIG=clusters/demo/auth/kubeconfig</text>
-<text x="16" y="2148">    Password:   clusters/demo/auth/kubeadmin-password (user kubeadmin)</text>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#d0d4db">
+<text x="16.0" y="57"  textLength="7.8" lengthAdjust="spacingAndGlyphs">$</text>
+<text x="31.7" y="57"  textLength="70.5" lengthAdjust="spacingAndGlyphs">./okd-pve</text>
+<text x="110.0" y="57"  textLength="39.1" lengthAdjust="spacingAndGlyphs">--dir</text>
+<text x="156.9" y="57"  textLength="101.8" lengthAdjust="spacingAndGlyphs">clusters/demo</text>
+<text x="266.6" y="57"  textLength="47.0" lengthAdjust="spacingAndGlyphs">create</text>
+<text x="16.0" y="91" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="91" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">[1/14]</text>
+<text x="102.1" y="91" fill="#6fb3ff" font-weight="bold" textLength="101.8" lengthAdjust="spacingAndGlyphs">Configuration</text>
+<text x="47.3" y="108" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="108"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Cluster</text>
+<text x="141.3" y="108"  textLength="133.1" lengthAdjust="spacingAndGlyphs">demo.example.com,</text>
+<text x="282.2" y="108"  textLength="23.5" lengthAdjust="spacingAndGlyphs">OKD</text>
+<text x="313.5" y="108"  textLength="148.8" lengthAdjust="spacingAndGlyphs">4.22.0-okd-scos.10,</text>
+<text x="470.1" y="108"  textLength="7.8" lengthAdjust="spacingAndGlyphs">6</text>
+<text x="485.8" y="108"  textLength="39.1" lengthAdjust="spacingAndGlyphs">nodes</text>
+<text x="16.0" y="125" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="125" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">[2/14]</text>
+<text x="102.1" y="125" fill="#6fb3ff" font-weight="bold" textLength="70.5" lengthAdjust="spacingAndGlyphs">Preflight</text>
+<text x="16.0" y="142" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="142" fill="#6fb3ff" font-weight="bold" textLength="78.3" lengthAdjust="spacingAndGlyphs">Preflight:</text>
+<text x="133.4" y="142" fill="#6fb3ff" font-weight="bold" textLength="101.8" lengthAdjust="spacingAndGlyphs">configuration</text>
+<text x="47.3" y="159" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="159"  textLength="94.0" lengthAdjust="spacingAndGlyphs">cluster.yaml</text>
+<text x="203.9" y="159"  textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="235.2" y="159"  textLength="148.8" lengthAdjust="spacingAndGlyphs">install-config.yaml</text>
+<text x="391.8" y="159"  textLength="23.5" lengthAdjust="spacingAndGlyphs">are</text>
+<text x="423.2" y="159"  textLength="39.1" lengthAdjust="spacingAndGlyphs">valid</text>
+<text x="470.1" y="159"  textLength="62.6" lengthAdjust="spacingAndGlyphs">(cluster</text>
+<text x="540.6" y="159"  textLength="133.1" lengthAdjust="spacingAndGlyphs">demo.example.com,</text>
+<text x="681.5" y="159"  textLength="23.5" lengthAdjust="spacingAndGlyphs">OKD</text>
+<text x="712.9" y="159"  textLength="148.8" lengthAdjust="spacingAndGlyphs">4.22.0-okd-scos.10)</text>
+<text x="47.3" y="176" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="176"  textLength="70.5" lengthAdjust="spacingAndGlyphs">Topology:</text>
+<text x="180.4" y="176"  textLength="7.8" lengthAdjust="spacingAndGlyphs">3</text>
+<text x="196.1" y="176"  textLength="109.6" lengthAdjust="spacingAndGlyphs">control-plane,</text>
+<text x="313.5" y="176"  textLength="7.8" lengthAdjust="spacingAndGlyphs">3</text>
+<text x="329.2" y="176"  textLength="39.1" lengthAdjust="spacingAndGlyphs">other</text>
+<text x="376.2" y="176"  textLength="54.8" lengthAdjust="spacingAndGlyphs">node(s)</text>
+<text x="438.8" y="176"  textLength="15.7" lengthAdjust="spacingAndGlyphs">(3</text>
+<text x="462.3" y="176"  textLength="31.3" lengthAdjust="spacingAndGlyphs">with</text>
+<text x="501.5" y="176"  textLength="39.1" lengthAdjust="spacingAndGlyphs">infra</text>
+<text x="548.4" y="176"  textLength="39.1" lengthAdjust="spacingAndGlyphs">role)</text>
+<text x="47.3" y="193" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="193"  textLength="31.3" lengthAdjust="spacingAndGlyphs">Pull</text>
+<text x="141.3" y="193"  textLength="47.0" lengthAdjust="spacingAndGlyphs">secret</text>
+<text x="196.1" y="193"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="219.6" y="193"  textLength="39.1" lengthAdjust="spacingAndGlyphs">valid</text>
+<text x="266.6" y="193"  textLength="31.3" lengthAdjust="spacingAndGlyphs">JSON</text>
+<text x="305.7" y="193"  textLength="62.6" lengthAdjust="spacingAndGlyphs">(source:</text>
+<text x="376.2" y="193"  textLength="242.7" lengthAdjust="spacingAndGlyphs">clusters/demo/pull-secret.json)</text>
+<text x="47.3" y="210" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="210"  textLength="23.5" lengthAdjust="spacingAndGlyphs">SSH</text>
+<text x="133.4" y="210"  textLength="47.0" lengthAdjust="spacingAndGlyphs">public</text>
+<text x="188.3" y="210"  textLength="23.5" lengthAdjust="spacingAndGlyphs">key</text>
+<text x="219.6" y="210"  textLength="39.1" lengthAdjust="spacingAndGlyphs">found</text>
+<text x="266.6" y="210"  textLength="101.8" lengthAdjust="spacingAndGlyphs">(ssh-ed25519)</text>
+<text x="47.3" y="227" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="227"  textLength="62.6" lengthAdjust="spacingAndGlyphs">Pre-Boot</text>
+<text x="172.6" y="227"  textLength="70.5" lengthAdjust="spacingAndGlyphs">manifests</text>
+<text x="250.9" y="227"  textLength="47.0" lengthAdjust="spacingAndGlyphs">render</text>
+<text x="305.7" y="227"  textLength="54.8" lengthAdjust="spacingAndGlyphs">cleanly</text>
+<text x="368.4" y="227"  textLength="15.7" lengthAdjust="spacingAndGlyphs">(8</text>
+<text x="391.8" y="227"  textLength="47.0" lengthAdjust="spacingAndGlyphs">files)</text>
+<text x="47.3" y="244" fill-opacity="0.55" textLength="47.0" lengthAdjust="spacingAndGlyphs">[INFO]</text>
+<text x="102.1" y="244"  textLength="15.7" lengthAdjust="spacingAndGlyphs">No</text>
+<text x="125.6" y="244"  textLength="94.0" lengthAdjust="spacingAndGlyphs">StorageClass</text>
+<text x="227.4" y="244"  textLength="23.5" lengthAdjust="spacingAndGlyphs">for</text>
+<text x="258.7" y="244"  textLength="78.3" lengthAdjust="spacingAndGlyphs">monitoring</text>
+<text x="344.9" y="244"  textLength="86.1" lengthAdjust="spacingAndGlyphs">configured;</text>
+<text x="438.8" y="244"  textLength="180.1" lengthAdjust="spacingAndGlyphs">Prometheus/Alertmanager</text>
+<text x="626.7" y="244"  textLength="23.5" lengthAdjust="spacingAndGlyphs">use</text>
+<text x="658.1" y="244"  textLength="62.6" lengthAdjust="spacingAndGlyphs">emptyDir</text>
+<text x="16.0" y="261" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="261" fill="#6fb3ff" font-weight="bold" textLength="78.3" lengthAdjust="spacingAndGlyphs">Preflight:</text>
+<text x="133.4" y="261" fill="#6fb3ff" font-weight="bold" textLength="39.1" lengthAdjust="spacingAndGlyphs">local</text>
+<text x="180.4" y="261" fill="#6fb3ff" font-weight="bold" textLength="86.1" lengthAdjust="spacingAndGlyphs">workstation</text>
+<text x="47.3" y="278" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="278"  textLength="31.3" lengthAdjust="spacingAndGlyphs">bash</text>
+<text x="141.3" y="278"  textLength="47.0" lengthAdjust="spacingAndGlyphs">5.2.21</text>
+<text x="47.3" y="295" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="295"  textLength="15.7" lengthAdjust="spacingAndGlyphs">jq</text>
+<text x="125.6" y="295"  textLength="31.3" lengthAdjust="spacingAndGlyphs">1.7,</text>
+<text x="164.8" y="295"  textLength="15.7" lengthAdjust="spacingAndGlyphs">yq</text>
+<text x="188.3" y="295"  textLength="54.8" lengthAdjust="spacingAndGlyphs">v4.54.1</text>
+<text x="47.3" y="312" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="312"  textLength="78.3" lengthAdjust="spacingAndGlyphs">nmstatectl</text>
+<text x="188.3" y="312"  textLength="47.0" lengthAdjust="spacingAndGlyphs">2.2.62</text>
+<text x="243.1" y="312"  textLength="234.9" lengthAdjust="spacingAndGlyphs">(clusters/demo/bin/nmstatectl;</text>
+<text x="485.8" y="312"  textLength="133.1" lengthAdjust="spacingAndGlyphs">openshift-install</text>
+<text x="626.7" y="312"  textLength="70.5" lengthAdjust="spacingAndGlyphs">validates</text>
+<text x="705.0" y="312"  textLength="23.5" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="736.4" y="312"  textLength="47.0" lengthAdjust="spacingAndGlyphs">static</text>
+<text x="791.2" y="312"  textLength="54.8" lengthAdjust="spacingAndGlyphs">network</text>
+<text x="853.8" y="312"  textLength="47.0" lengthAdjust="spacingAndGlyphs">config</text>
+<text x="908.6" y="312"  textLength="31.3" lengthAdjust="spacingAndGlyphs">with</text>
+<text x="947.8" y="312"  textLength="23.5" lengthAdjust="spacingAndGlyphs">it)</text>
+<text x="47.3" y="329" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="329"  textLength="133.1" lengthAdjust="spacingAndGlyphs">openshift-install</text>
+<text x="243.1" y="329"  textLength="140.9" lengthAdjust="spacingAndGlyphs">4.22.0-okd-scos.10</text>
+<text x="391.8" y="329"  textLength="289.7" lengthAdjust="spacingAndGlyphs">(clusters/demo/bin/openshift-install)</text>
+<text x="47.3" y="346" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="346"  textLength="15.7" lengthAdjust="spacingAndGlyphs">oc</text>
+<text x="125.6" y="346"  textLength="140.9" lengthAdjust="spacingAndGlyphs">4.22.0-okd-scos.10</text>
+<text x="274.4" y="346"  textLength="172.3" lengthAdjust="spacingAndGlyphs">(clusters/demo/bin/oc)</text>
+<text x="47.3" y="363" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="363"  textLength="31.3" lengthAdjust="spacingAndGlyphs">tofu</text>
+<text x="141.3" y="363"  textLength="47.0" lengthAdjust="spacingAndGlyphs">1.13.2</text>
+<text x="196.1" y="363"  textLength="187.9" lengthAdjust="spacingAndGlyphs">(clusters/demo/bin/tofu)</text>
+<text x="47.3" y="380" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="380"  textLength="47.0" lengthAdjust="spacingAndGlyphs">butane</text>
+<text x="156.9" y="380"  textLength="47.0" lengthAdjust="spacingAndGlyphs">0.29.0</text>
+<text x="211.8" y="380"  textLength="203.6" lengthAdjust="spacingAndGlyphs">(clusters/demo/bin/butane)</text>
+<text x="47.3" y="397" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="397"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Cluster</text>
+<text x="164.8" y="397"  textLength="78.3" lengthAdjust="spacingAndGlyphs">directory:</text>
+<text x="250.9" y="397"  textLength="39.1" lengthAdjust="spacingAndGlyphs">642.5</text>
+<text x="297.9" y="397"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="329.2" y="397"  textLength="31.3" lengthAdjust="spacingAndGlyphs">free</text>
+<text x="47.3" y="414" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="414"  textLength="47.0" lengthAdjust="spacingAndGlyphs">Upload</text>
+<text x="156.9" y="414"  textLength="47.0" lengthAdjust="spacingAndGlyphs">buffer</text>
+<text x="211.8" y="414"  textLength="39.1" lengthAdjust="spacingAndGlyphs">/tmp:</text>
+<text x="258.7" y="414"  textLength="39.1" lengthAdjust="spacingAndGlyphs">642.5</text>
+<text x="305.7" y="414"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="337.0" y="414"  textLength="31.3" lengthAdjust="spacingAndGlyphs">free</text>
+<text x="16.0" y="431" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="431" fill="#6fb3ff" font-weight="bold" textLength="78.3" lengthAdjust="spacingAndGlyphs">Preflight:</text>
+<text x="133.4" y="431" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">Proxmox</text>
+<text x="196.1" y="431" fill="#6fb3ff" font-weight="bold" textLength="15.7" lengthAdjust="spacingAndGlyphs">VE</text>
+<text x="47.3" y="448" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="448"  textLength="23.5" lengthAdjust="spacingAndGlyphs">API</text>
+<text x="133.4" y="448"  textLength="78.3" lengthAdjust="spacingAndGlyphs">reachable,</text>
+<text x="219.6" y="448"  textLength="39.1" lengthAdjust="spacingAndGlyphs">token</text>
+<text x="266.6" y="448"  textLength="39.1" lengthAdjust="spacingAndGlyphs">valid</text>
+<text x="313.5" y="448"  textLength="62.6" lengthAdjust="spacingAndGlyphs">(Proxmox</text>
+<text x="384.0" y="448"  textLength="15.7" lengthAdjust="spacingAndGlyphs">VE</text>
+<text x="407.5" y="448"  textLength="54.8" lengthAdjust="spacingAndGlyphs">9.2.21)</text>
+<text x="47.3" y="465" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="465"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Proxmox</text>
+<text x="164.8" y="465"  textLength="15.7" lengthAdjust="spacingAndGlyphs">VE</text>
+<text x="188.3" y="465"  textLength="47.0" lengthAdjust="spacingAndGlyphs">9.2.21</text>
+<text x="243.1" y="465"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="266.6" y="465"  textLength="70.5" lengthAdjust="spacingAndGlyphs">supported</text>
+<text x="47.3" y="482" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="482"  textLength="78.3" lengthAdjust="spacingAndGlyphs">Privileges</text>
+<text x="188.3" y="482"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="211.8" y="482"  textLength="86.1" lengthAdjust="spacingAndGlyphs">/nodes/pve1</text>
+<text x="47.3" y="499" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="499"  textLength="78.3" lengthAdjust="spacingAndGlyphs">Privileges</text>
+<text x="188.3" y="499"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="211.8" y="499"  textLength="86.1" lengthAdjust="spacingAndGlyphs">/nodes/pve2</text>
+<text x="47.3" y="516" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="516"  textLength="78.3" lengthAdjust="spacingAndGlyphs">Privileges</text>
+<text x="188.3" y="516"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="211.8" y="516"  textLength="70.5" lengthAdjust="spacingAndGlyphs">/pool/okd</text>
+<text x="47.3" y="533" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="533"  textLength="78.3" lengthAdjust="spacingAndGlyphs">Privileges</text>
+<text x="188.3" y="533"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="211.8" y="533"  textLength="227.1" lengthAdjust="spacingAndGlyphs">/sdn/zones/localnetwork/vmbr0</text>
+<text x="47.3" y="550" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="550"  textLength="78.3" lengthAdjust="spacingAndGlyphs">Privileges</text>
+<text x="188.3" y="550"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="211.8" y="550"  textLength="125.3" lengthAdjust="spacingAndGlyphs">/storage/iso-nfs</text>
+<text x="47.3" y="567" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="567"  textLength="78.3" lengthAdjust="spacingAndGlyphs">Privileges</text>
+<text x="188.3" y="567"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="211.8" y="567"  textLength="117.5" lengthAdjust="spacingAndGlyphs">/storage/vm-nfs</text>
+<text x="47.3" y="584" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="584"  textLength="31.3" lengthAdjust="spacingAndGlyphs">Node</text>
+<text x="141.3" y="584"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve1</text>
+<text x="180.4" y="584"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="203.9" y="584"  textLength="47.0" lengthAdjust="spacingAndGlyphs">online</text>
+<text x="47.3" y="601" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="601"  textLength="31.3" lengthAdjust="spacingAndGlyphs">Node</text>
+<text x="141.3" y="601"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve2</text>
+<text x="180.4" y="601"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="203.9" y="601"  textLength="47.0" lengthAdjust="spacingAndGlyphs">online</text>
+<text x="47.3" y="618" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="618"  textLength="62.6" lengthAdjust="spacingAndGlyphs">Resource</text>
+<text x="172.6" y="618"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pool</text>
+<text x="211.8" y="618"  textLength="23.5" lengthAdjust="spacingAndGlyphs">okd</text>
+<text x="243.1" y="618"  textLength="47.0" lengthAdjust="spacingAndGlyphs">exists</text>
+<text x="47.3" y="635" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="635"  textLength="23.5" lengthAdjust="spacingAndGlyphs">All</text>
+<text x="133.4" y="635"  textLength="7.8" lengthAdjust="spacingAndGlyphs">6</text>
+<text x="149.1" y="635"  textLength="39.1" lengthAdjust="spacingAndGlyphs">VMIDs</text>
+<text x="196.1" y="635"  textLength="23.5" lengthAdjust="spacingAndGlyphs">are</text>
+<text x="227.4" y="635"  textLength="31.3" lengthAdjust="spacingAndGlyphs">free</text>
+<text x="47.3" y="652" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="652"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Storage</text>
+<text x="164.8" y="652"  textLength="47.0" lengthAdjust="spacingAndGlyphs">vm-nfs</text>
+<text x="219.6" y="652"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="243.1" y="652"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve1</text>
+<text x="282.2" y="652"  textLength="47.0" lengthAdjust="spacingAndGlyphs">allows</text>
+<text x="337.0" y="652"  textLength="47.0" lengthAdjust="spacingAndGlyphs">images</text>
+<text x="47.3" y="669" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="669"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Storage</text>
+<text x="164.8" y="669"  textLength="54.8" lengthAdjust="spacingAndGlyphs">iso-nfs</text>
+<text x="227.4" y="669"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="250.9" y="669"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve1</text>
+<text x="290.1" y="669"  textLength="47.0" lengthAdjust="spacingAndGlyphs">allows</text>
+<text x="344.9" y="669"  textLength="23.5" lengthAdjust="spacingAndGlyphs">iso</text>
+<text x="47.3" y="686" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="686"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Storage</text>
+<text x="164.8" y="686"  textLength="47.0" lengthAdjust="spacingAndGlyphs">vm-nfs</text>
+<text x="219.6" y="686"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="243.1" y="686"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve2</text>
+<text x="282.2" y="686"  textLength="47.0" lengthAdjust="spacingAndGlyphs">allows</text>
+<text x="337.0" y="686"  textLength="47.0" lengthAdjust="spacingAndGlyphs">images</text>
+<text x="47.3" y="703" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="703"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Storage</text>
+<text x="164.8" y="703"  textLength="54.8" lengthAdjust="spacingAndGlyphs">iso-nfs</text>
+<text x="227.4" y="703"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="250.9" y="703"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve2</text>
+<text x="290.1" y="703"  textLength="47.0" lengthAdjust="spacingAndGlyphs">allows</text>
+<text x="344.9" y="703"  textLength="23.5" lengthAdjust="spacingAndGlyphs">iso</text>
+<text x="47.3" y="720" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="720"  textLength="39.1" lengthAdjust="spacingAndGlyphs">Space</text>
+<text x="149.1" y="720"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="172.6" y="720"  textLength="47.0" lengthAdjust="spacingAndGlyphs">vm-nfs</text>
+<text x="227.4" y="720"  textLength="70.5" lengthAdjust="spacingAndGlyphs">(shared):</text>
+<text x="305.7" y="720"  textLength="31.3" lengthAdjust="spacingAndGlyphs">need</text>
+<text x="344.9" y="720"  textLength="39.1" lengthAdjust="spacingAndGlyphs">744.0</text>
+<text x="391.8" y="720"  textLength="31.3" lengthAdjust="spacingAndGlyphs">GiB,</text>
+<text x="431.0" y="720"  textLength="47.0" lengthAdjust="spacingAndGlyphs">1145.8</text>
+<text x="485.8" y="720"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="517.1" y="720"  textLength="70.5" lengthAdjust="spacingAndGlyphs">available</text>
+<text x="47.3" y="737" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="737"  textLength="47.0" lengthAdjust="spacingAndGlyphs">Bridge</text>
+<text x="156.9" y="737"  textLength="39.1" lengthAdjust="spacingAndGlyphs">vmbr0</text>
+<text x="203.9" y="737"  textLength="47.0" lengthAdjust="spacingAndGlyphs">exists</text>
+<text x="258.7" y="737"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="282.2" y="737"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve1</text>
+<text x="47.3" y="754" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="754"  textLength="47.0" lengthAdjust="spacingAndGlyphs">Bridge</text>
+<text x="156.9" y="754"  textLength="39.1" lengthAdjust="spacingAndGlyphs">vmbr0</text>
+<text x="203.9" y="754"  textLength="47.0" lengthAdjust="spacingAndGlyphs">exists</text>
+<text x="258.7" y="754"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="282.2" y="754"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve2</text>
+<text x="47.3" y="771" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="771"  textLength="31.3" lengthAdjust="spacingAndGlyphs">Host</text>
+<text x="141.3" y="771"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve1</text>
+<text x="180.4" y="771"  textLength="23.5" lengthAdjust="spacingAndGlyphs">CPU</text>
+<text x="211.8" y="771"  textLength="62.6" lengthAdjust="spacingAndGlyphs">supports</text>
+<text x="282.2" y="771"  textLength="70.5" lengthAdjust="spacingAndGlyphs">x86-64-v3</text>
+<text x="47.3" y="788" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="788"  textLength="31.3" lengthAdjust="spacingAndGlyphs">Host</text>
+<text x="141.3" y="788"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve2</text>
+<text x="180.4" y="788"  textLength="23.5" lengthAdjust="spacingAndGlyphs">CPU</text>
+<text x="211.8" y="788"  textLength="62.6" lengthAdjust="spacingAndGlyphs">supports</text>
+<text x="282.2" y="788"  textLength="70.5" lengthAdjust="spacingAndGlyphs">x86-64-v3</text>
+<text x="47.3" y="805" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="805"  textLength="15.7" lengthAdjust="spacingAndGlyphs">No</text>
+<text x="125.6" y="805"  textLength="54.8" lengthAdjust="spacingAndGlyphs">visible</text>
+<text x="188.3" y="805"  textLength="15.7" lengthAdjust="spacingAndGlyphs">VM</text>
+<text x="211.8" y="805"  textLength="31.3" lengthAdjust="spacingAndGlyphs">uses</text>
+<text x="250.9" y="805"  textLength="23.5" lengthAdjust="spacingAndGlyphs">one</text>
+<text x="282.2" y="805"  textLength="15.7" lengthAdjust="spacingAndGlyphs">of</text>
+<text x="305.7" y="805"  textLength="23.5" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="337.0" y="805"  textLength="70.5" lengthAdjust="spacingAndGlyphs">generated</text>
+<text x="415.3" y="805"  textLength="23.5" lengthAdjust="spacingAndGlyphs">MAC</text>
+<text x="446.6" y="805"  textLength="70.5" lengthAdjust="spacingAndGlyphs">addresses</text>
+<text x="525.0" y="805"  textLength="54.8" lengthAdjust="spacingAndGlyphs">(prefix</text>
+<text x="587.6" y="805"  textLength="70.5" lengthAdjust="spacingAndGlyphs">02:00:41)</text>
+<text x="16.0" y="822" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="822" fill="#6fb3ff" font-weight="bold" textLength="78.3" lengthAdjust="spacingAndGlyphs">Preflight:</text>
+<text x="133.4" y="822" fill="#6fb3ff" font-weight="bold" textLength="62.6" lengthAdjust="spacingAndGlyphs">capacity</text>
+<text x="63.0" y="839"  textLength="31.3" lengthAdjust="spacingAndGlyphs">HOST</text>
+<text x="117.8" y="839"  textLength="54.8" lengthAdjust="spacingAndGlyphs">THREADS</text>
+<text x="188.3" y="839"  textLength="31.3" lengthAdjust="spacingAndGlyphs">vCPU</text>
+<text x="227.4" y="839"  textLength="54.8" lengthAdjust="spacingAndGlyphs">RUNNING</text>
+<text x="297.9" y="839"  textLength="31.3" lengthAdjust="spacingAndGlyphs">vCPU</text>
+<text x="337.0" y="839"  textLength="23.5" lengthAdjust="spacingAndGlyphs">NEW</text>
+<text x="376.2" y="839"  textLength="23.5" lengthAdjust="spacingAndGlyphs">CPU</text>
+<text x="407.5" y="839"  textLength="39.1" lengthAdjust="spacingAndGlyphs">RATIO</text>
+<text x="462.3" y="839"  textLength="23.5" lengthAdjust="spacingAndGlyphs">RAM</text>
+<text x="493.6" y="839"  textLength="39.1" lengthAdjust="spacingAndGlyphs">TOTAL</text>
+<text x="548.4" y="839"  textLength="23.5" lengthAdjust="spacingAndGlyphs">RAM</text>
+<text x="579.8" y="839"  textLength="54.8" lengthAdjust="spacingAndGlyphs">RUNNING</text>
+<text x="650.2" y="839"  textLength="23.5" lengthAdjust="spacingAndGlyphs">RAM</text>
+<text x="681.5" y="839"  textLength="23.5" lengthAdjust="spacingAndGlyphs">NEW</text>
+<text x="736.4" y="839"  textLength="23.5" lengthAdjust="spacingAndGlyphs">RAM</text>
+<text x="767.7" y="839"  textLength="31.3" lengthAdjust="spacingAndGlyphs">FREE</text>
+<text x="806.8" y="839"  textLength="39.1" lengthAdjust="spacingAndGlyphs">AFTER</text>
+<text x="63.0" y="856"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve1</text>
+<text x="117.8" y="856"  textLength="15.7" lengthAdjust="spacingAndGlyphs">32</text>
+<text x="188.3" y="856"  textLength="7.8" lengthAdjust="spacingAndGlyphs">0</text>
+<text x="297.9" y="856"  textLength="15.7" lengthAdjust="spacingAndGlyphs">32</text>
+<text x="376.2" y="856"  textLength="39.1" lengthAdjust="spacingAndGlyphs">1.0:1</text>
+<text x="462.3" y="856"  textLength="39.1" lengthAdjust="spacingAndGlyphs">377.8</text>
+<text x="509.3" y="856"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="548.4" y="856"  textLength="23.5" lengthAdjust="spacingAndGlyphs">0.0</text>
+<text x="579.8" y="856"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="650.2" y="856"  textLength="39.1" lengthAdjust="spacingAndGlyphs">192.0</text>
+<text x="697.2" y="856"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="736.4" y="856"  textLength="39.1" lengthAdjust="spacingAndGlyphs">177.8</text>
+<text x="783.3" y="856"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="63.0" y="873"  textLength="31.3" lengthAdjust="spacingAndGlyphs">pve2</text>
+<text x="117.8" y="873"  textLength="15.7" lengthAdjust="spacingAndGlyphs">32</text>
+<text x="188.3" y="873"  textLength="7.8" lengthAdjust="spacingAndGlyphs">0</text>
+<text x="297.9" y="873"  textLength="15.7" lengthAdjust="spacingAndGlyphs">16</text>
+<text x="376.2" y="873"  textLength="39.1" lengthAdjust="spacingAndGlyphs">0.5:1</text>
+<text x="462.3" y="873"  textLength="39.1" lengthAdjust="spacingAndGlyphs">377.8</text>
+<text x="509.3" y="873"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="548.4" y="873"  textLength="23.5" lengthAdjust="spacingAndGlyphs">0.0</text>
+<text x="579.8" y="873"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="650.2" y="873"  textLength="31.3" lengthAdjust="spacingAndGlyphs">96.0</text>
+<text x="689.4" y="873"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="736.4" y="873"  textLength="39.1" lengthAdjust="spacingAndGlyphs">273.8</text>
+<text x="783.3" y="873"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="63.0" y="890"  textLength="39.1" lengthAdjust="spacingAndGlyphs">TOTAL</text>
+<text x="117.8" y="890"  textLength="15.7" lengthAdjust="spacingAndGlyphs">64</text>
+<text x="188.3" y="890"  textLength="7.8" lengthAdjust="spacingAndGlyphs">0</text>
+<text x="297.9" y="890"  textLength="15.7" lengthAdjust="spacingAndGlyphs">48</text>
+<text x="376.2" y="890"  textLength="7.8" lengthAdjust="spacingAndGlyphs">-</text>
+<text x="462.3" y="890"  textLength="39.1" lengthAdjust="spacingAndGlyphs">755.5</text>
+<text x="509.3" y="890"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="548.4" y="890"  textLength="23.5" lengthAdjust="spacingAndGlyphs">0.0</text>
+<text x="579.8" y="890"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="650.2" y="890"  textLength="39.1" lengthAdjust="spacingAndGlyphs">288.0</text>
+<text x="697.2" y="890"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="736.4" y="890"  textLength="7.8" lengthAdjust="spacingAndGlyphs">-</text>
+<text x="47.3" y="907" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="907"  textLength="23.5" lengthAdjust="spacingAndGlyphs">RAM</text>
+<text x="133.4" y="907"  textLength="31.3" lengthAdjust="spacingAndGlyphs">fits</text>
+<text x="172.6" y="907"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="196.1" y="907"  textLength="39.1" lengthAdjust="spacingAndGlyphs">every</text>
+<text x="243.1" y="907"  textLength="31.3" lengthAdjust="spacingAndGlyphs">host</text>
+<text x="282.2" y="907"  textLength="39.1" lengthAdjust="spacingAndGlyphs">(host</text>
+<text x="329.2" y="907"  textLength="54.8" lengthAdjust="spacingAndGlyphs">reserve</text>
+<text x="391.8" y="907"  textLength="7.8" lengthAdjust="spacingAndGlyphs">8</text>
+<text x="407.5" y="907"  textLength="31.3" lengthAdjust="spacingAndGlyphs">GiB)</text>
+<text x="47.3" y="924" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="924"  textLength="15.7" lengthAdjust="spacingAndGlyphs">No</text>
+<text x="125.6" y="924"  textLength="23.5" lengthAdjust="spacingAndGlyphs">CPU</text>
+<text x="156.9" y="924"  textLength="78.3" lengthAdjust="spacingAndGlyphs">overcommit</text>
+<text x="16.0" y="941" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="941" fill="#6fb3ff" font-weight="bold" textLength="78.3" lengthAdjust="spacingAndGlyphs">Preflight:</text>
+<text x="133.4" y="941" fill="#6fb3ff" font-weight="bold" textLength="62.6" lengthAdjust="spacingAndGlyphs">network,</text>
+<text x="203.9" y="941" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">DNS</text>
+<text x="235.2" y="941" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="266.6" y="941" fill="#6fb3ff" font-weight="bold" textLength="31.3" lengthAdjust="spacingAndGlyphs">time</text>
+<text x="47.3" y="958" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="958"  textLength="31.3" lengthAdjust="spacingAndGlyphs">DNS:</text>
+<text x="141.3" y="958"  textLength="23.5" lengthAdjust="spacingAndGlyphs">api</text>
+<text x="172.6" y="958"  textLength="62.6" lengthAdjust="spacingAndGlyphs">resolves</text>
+<text x="243.1" y="958"  textLength="15.7" lengthAdjust="spacingAndGlyphs">to</text>
+<text x="266.6" y="958"  textLength="70.5" lengthAdjust="spacingAndGlyphs">192.0.2.5</text>
+<text x="47.3" y="975" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="975"  textLength="31.3" lengthAdjust="spacingAndGlyphs">DNS:</text>
+<text x="141.3" y="975"  textLength="47.0" lengthAdjust="spacingAndGlyphs">*.apps</text>
+<text x="196.1" y="975"  textLength="62.6" lengthAdjust="spacingAndGlyphs">resolves</text>
+<text x="266.6" y="975"  textLength="15.7" lengthAdjust="spacingAndGlyphs">to</text>
+<text x="290.1" y="975"  textLength="70.5" lengthAdjust="spacingAndGlyphs">192.0.2.6</text>
+<text x="47.3" y="992" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="992"  textLength="31.3" lengthAdjust="spacingAndGlyphs">VIPs</text>
+<text x="141.3" y="992"  textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="172.6" y="992"  textLength="31.3" lengthAdjust="spacingAndGlyphs">node</text>
+<text x="211.8" y="992"  textLength="23.5" lengthAdjust="spacingAndGlyphs">IPs</text>
+<text x="243.1" y="992"  textLength="15.7" lengthAdjust="spacingAndGlyphs">do</text>
+<text x="266.6" y="992"  textLength="23.5" lengthAdjust="spacingAndGlyphs">not</text>
+<text x="297.9" y="992"  textLength="47.0" lengthAdjust="spacingAndGlyphs">answer</text>
+<text x="352.7" y="992"  textLength="47.0" lengthAdjust="spacingAndGlyphs">(free)</text>
+<text x="47.3" y="1009" fill="#e8c46a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[WARN]</text>
+<text x="102.1" y="1009"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Gateway</text>
+<text x="164.8" y="1009"  textLength="70.5" lengthAdjust="spacingAndGlyphs">192.0.2.1</text>
+<text x="243.1" y="1009"  textLength="31.3" lengthAdjust="spacingAndGlyphs">does</text>
+<text x="282.2" y="1009"  textLength="23.5" lengthAdjust="spacingAndGlyphs">not</text>
+<text x="313.5" y="1009"  textLength="47.0" lengthAdjust="spacingAndGlyphs">answer</text>
+<text x="368.4" y="1009"  textLength="31.3" lengthAdjust="spacingAndGlyphs">ICMP</text>
+<text x="407.5" y="1009"  textLength="31.3" lengthAdjust="spacingAndGlyphs">from</text>
+<text x="446.6" y="1009"  textLength="31.3" lengthAdjust="spacingAndGlyphs">here</text>
+<text x="102.1" y="1026" fill-opacity="0.55" textLength="15.7" lengthAdjust="spacingAndGlyphs">-&gt;</text>
+<text x="125.6" y="1026" fill-opacity="0.55" textLength="31.3" lengthAdjust="spacingAndGlyphs">Fine</text>
+<text x="164.8" y="1026" fill-opacity="0.55" textLength="15.7" lengthAdjust="spacingAndGlyphs">if</text>
+<text x="188.3" y="1026" fill-opacity="0.55" textLength="31.3" lengthAdjust="spacingAndGlyphs">this</text>
+<text x="227.4" y="1026" fill-opacity="0.55" textLength="86.1" lengthAdjust="spacingAndGlyphs">workstation</text>
+<text x="321.4" y="1026" fill-opacity="0.55" textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="344.9" y="1026" fill-opacity="0.55" textLength="15.7" lengthAdjust="spacingAndGlyphs">in</text>
+<text x="368.4" y="1026" fill-opacity="0.55" textLength="54.8" lengthAdjust="spacingAndGlyphs">another</text>
+<text x="431.0" y="1026" fill-opacity="0.55" textLength="54.8" lengthAdjust="spacingAndGlyphs">network</text>
+<text x="493.6" y="1026" fill-opacity="0.55" textLength="15.7" lengthAdjust="spacingAndGlyphs">or</text>
+<text x="517.1" y="1026" fill-opacity="0.55" textLength="31.3" lengthAdjust="spacingAndGlyphs">ICMP</text>
+<text x="556.3" y="1026" fill-opacity="0.55" textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="579.8" y="1026" fill-opacity="0.55" textLength="70.5" lengthAdjust="spacingAndGlyphs">filtered;</text>
+<text x="658.1" y="1026" fill-opacity="0.55" textLength="70.5" lengthAdjust="spacingAndGlyphs">otherwise</text>
+<text x="736.4" y="1026" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">check</text>
+<text x="783.3" y="1026" fill-opacity="0.55" textLength="125.3" lengthAdjust="spacingAndGlyphs">network.gateway.</text>
+<text x="47.3" y="1043" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="1043"  textLength="7.8" lengthAdjust="spacingAndGlyphs">3</text>
+<text x="117.8" y="1043"  textLength="23.5" lengthAdjust="spacingAndGlyphs">NTP</text>
+<text x="149.1" y="1043"  textLength="54.8" lengthAdjust="spacingAndGlyphs">servers</text>
+<text x="211.8" y="1043"  textLength="78.3" lengthAdjust="spacingAndGlyphs">configured</text>
+<text x="47.3" y="1060" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="1060"  textLength="23.5" lengthAdjust="spacingAndGlyphs">NTP</text>
+<text x="133.4" y="1060"  textLength="47.0" lengthAdjust="spacingAndGlyphs">server</text>
+<text x="188.3" y="1060"  textLength="125.3" lengthAdjust="spacingAndGlyphs">ntp1.example.com</text>
+<text x="321.4" y="1060"  textLength="54.8" lengthAdjust="spacingAndGlyphs">answers</text>
+<text x="47.3" y="1077" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="1077"  textLength="23.5" lengthAdjust="spacingAndGlyphs">NTP</text>
+<text x="133.4" y="1077"  textLength="47.0" lengthAdjust="spacingAndGlyphs">server</text>
+<text x="188.3" y="1077"  textLength="125.3" lengthAdjust="spacingAndGlyphs">ntp2.example.com</text>
+<text x="321.4" y="1077"  textLength="54.8" lengthAdjust="spacingAndGlyphs">answers</text>
+<text x="47.3" y="1094" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="1094"  textLength="23.5" lengthAdjust="spacingAndGlyphs">NTP</text>
+<text x="133.4" y="1094"  textLength="47.0" lengthAdjust="spacingAndGlyphs">server</text>
+<text x="188.3" y="1094"  textLength="125.3" lengthAdjust="spacingAndGlyphs">ntp3.example.com</text>
+<text x="321.4" y="1094"  textLength="54.8" lengthAdjust="spacingAndGlyphs">answers</text>
+<text x="47.3" y="1111" fill="#8fd18a" textLength="47.0" lengthAdjust="spacingAndGlyphs">[PASS]</text>
+<text x="102.1" y="1111"  textLength="39.1" lengthAdjust="spacingAndGlyphs">Local</text>
+<text x="149.1" y="1111"  textLength="39.1" lengthAdjust="spacingAndGlyphs">clock</text>
+<text x="196.1" y="1111"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="219.6" y="1111"  textLength="47.0" lengthAdjust="spacingAndGlyphs">within</text>
+<text x="274.4" y="1111"  textLength="15.7" lengthAdjust="spacingAndGlyphs">0s</text>
+<text x="297.9" y="1111"  textLength="15.7" lengthAdjust="spacingAndGlyphs">of</text>
+<text x="321.4" y="1111"  textLength="23.5" lengthAdjust="spacingAndGlyphs">NTP</text>
+<text x="47.3" y="1145" fill="#e8c46a" textLength="31.3" lengthAdjust="spacingAndGlyphs">WARN</text>
+<text x="86.5" y="1145"  textLength="78.3" lengthAdjust="spacingAndGlyphs">Preflight:</text>
+<text x="172.6" y="1145"  textLength="15.7" lengthAdjust="spacingAndGlyphs">46</text>
+<text x="196.1" y="1145"  textLength="54.8" lengthAdjust="spacingAndGlyphs">passed,</text>
+<text x="258.7" y="1145"  textLength="7.8" lengthAdjust="spacingAndGlyphs">1</text>
+<text x="274.4" y="1145"  textLength="70.5" lengthAdjust="spacingAndGlyphs">warnings,</text>
+<text x="352.7" y="1145"  textLength="7.8" lengthAdjust="spacingAndGlyphs">0</text>
+<text x="368.4" y="1145"  textLength="47.0" lengthAdjust="spacingAndGlyphs">failed</text>
+<text x="16.0" y="1162" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1162" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">[3/14]</text>
+<text x="102.1" y="1162" fill="#6fb3ff" font-weight="bold" textLength="39.1" lengthAdjust="spacingAndGlyphs">Tools</text>
+<text x="47.3" y="1179" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="1179"  textLength="140.9" lengthAdjust="spacingAndGlyphs">openshift-install,</text>
+<text x="227.4" y="1179"  textLength="23.5" lengthAdjust="spacingAndGlyphs">oc,</text>
+<text x="258.7" y="1179"  textLength="39.1" lengthAdjust="spacingAndGlyphs">tofu,</text>
+<text x="305.7" y="1179"  textLength="54.8" lengthAdjust="spacingAndGlyphs">butane,</text>
+<text x="368.4" y="1179"  textLength="78.3" lengthAdjust="spacingAndGlyphs">nmstatectl</text>
+<text x="454.5" y="1179"  textLength="39.1" lengthAdjust="spacingAndGlyphs">ready</text>
+<text x="16.0" y="1196" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1196" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">[4/14]</text>
+<text x="102.1" y="1196" fill="#6fb3ff" font-weight="bold" textLength="70.5" lengthAdjust="spacingAndGlyphs">Rendering</text>
+<text x="180.4" y="1196" fill="#6fb3ff" font-weight="bold" textLength="148.8" lengthAdjust="spacingAndGlyphs">install-config.yaml</text>
+<text x="337.0" y="1196" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="368.4" y="1196" fill="#6fb3ff" font-weight="bold" textLength="133.1" lengthAdjust="spacingAndGlyphs">agent-config.yaml</text>
+<text x="47.3" y="1213" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="1213"  textLength="156.6" lengthAdjust="spacingAndGlyphs">install-config.yaml,</text>
+<text x="243.1" y="1213"  textLength="133.1" lengthAdjust="spacingAndGlyphs">agent-config.yaml</text>
+<text x="384.0" y="1213"  textLength="62.6" lengthAdjust="spacingAndGlyphs">rendered</text>
+<text x="454.5" y="1213"  textLength="62.6" lengthAdjust="spacingAndGlyphs">(sources</text>
+<text x="525.0" y="1213"  textLength="78.3" lengthAdjust="spacingAndGlyphs">untouched)</text>
+<text x="16.0" y="1230" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1230" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">[5/14]</text>
+<text x="102.1" y="1230" fill="#6fb3ff" font-weight="bold" textLength="70.5" lengthAdjust="spacingAndGlyphs">Rendering</text>
+<text x="180.4" y="1230" fill="#6fb3ff" font-weight="bold" textLength="62.6" lengthAdjust="spacingAndGlyphs">Pre-Boot</text>
+<text x="250.9" y="1230" fill="#6fb3ff" font-weight="bold" textLength="70.5" lengthAdjust="spacingAndGlyphs">manifests</text>
+<text x="47.3" y="1247" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="1247"  textLength="7.8" lengthAdjust="spacingAndGlyphs">8</text>
+<text x="94.3" y="1247"  textLength="94.0" lengthAdjust="spacingAndGlyphs">manifest(s):</text>
+<text x="196.1" y="1247"  textLength="227.1" lengthAdjust="spacingAndGlyphs">99-master-okd-pve-chrony.yaml</text>
+<text x="431.0" y="1247"  textLength="219.2" lengthAdjust="spacingAndGlyphs">99-master-okd-pve-kargs.yaml</text>
+<text x="658.1" y="1247"  textLength="203.6" lengthAdjust="spacingAndGlyphs">99-master-okd-pve-ssh.yaml</text>
+<text x="869.5" y="1247"  textLength="7.8" lengthAdjust="spacingAndGlyphs">…</text>
+<text x="16.0" y="1264" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1264" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">[6/14]</text>
+<text x="102.1" y="1264" fill="#6fb3ff" font-weight="bold" textLength="62.6" lengthAdjust="spacingAndGlyphs">Building</text>
+<text x="172.6" y="1264" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="203.9" y="1264" fill="#6fb3ff" font-weight="bold" textLength="39.1" lengthAdjust="spacingAndGlyphs">agent</text>
+<text x="250.9" y="1264" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">ISO</text>
+<text x="47.3" y="1281"  textLength="133.1" lengthAdjust="spacingAndGlyphs">openshift-install</text>
+<text x="188.3" y="1281"  textLength="39.1" lengthAdjust="spacingAndGlyphs">agent</text>
+<text x="235.2" y="1281"  textLength="47.0" lengthAdjust="spacingAndGlyphs">create</text>
+<text x="290.1" y="1281"  textLength="39.1" lengthAdjust="spacingAndGlyphs">image</text>
+<text x="337.0" y="1281"  textLength="47.0" lengthAdjust="spacingAndGlyphs">(takes</text>
+<text x="391.8" y="1281"  textLength="7.8" lengthAdjust="spacingAndGlyphs">a</text>
+<text x="407.5" y="1281"  textLength="23.5" lengthAdjust="spacingAndGlyphs">few</text>
+<text x="438.8" y="1281"  textLength="62.6" lengthAdjust="spacingAndGlyphs">minutes;</text>
+<text x="509.3" y="1281"  textLength="70.5" lengthAdjust="spacingAndGlyphs">downloads</text>
+<text x="587.6" y="1281"  textLength="23.5" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="618.9" y="1281"  textLength="31.3" lengthAdjust="spacingAndGlyphs">base</text>
+<text x="658.1" y="1281"  textLength="23.5" lengthAdjust="spacingAndGlyphs">ISO</text>
+<text x="689.4" y="1281"  textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="712.9" y="1281"  textLength="39.1" lengthAdjust="spacingAndGlyphs">first</text>
+<text x="759.9" y="1281"  textLength="31.3" lengthAdjust="spacingAndGlyphs">use)</text>
+<text x="63.0" y="1298"  textLength="7.8" lengthAdjust="spacingAndGlyphs">|</text>
+<text x="78.6" y="1298"  textLength="101.8" lengthAdjust="spacingAndGlyphs">Configuration</text>
+<text x="188.3" y="1298"  textLength="23.5" lengthAdjust="spacingAndGlyphs">has</text>
+<text x="219.6" y="1298"  textLength="7.8" lengthAdjust="spacingAndGlyphs">3</text>
+<text x="235.2" y="1298"  textLength="47.0" lengthAdjust="spacingAndGlyphs">master</text>
+<text x="290.1" y="1298"  textLength="70.5" lengthAdjust="spacingAndGlyphs">replicas,</text>
+<text x="368.4" y="1298"  textLength="7.8" lengthAdjust="spacingAndGlyphs">0</text>
+<text x="384.0" y="1298"  textLength="54.8" lengthAdjust="spacingAndGlyphs">arbiter</text>
+<text x="446.6" y="1298"  textLength="70.5" lengthAdjust="spacingAndGlyphs">replicas,</text>
+<text x="525.0" y="1298"  textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="556.3" y="1298"  textLength="7.8" lengthAdjust="spacingAndGlyphs">3</text>
+<text x="571.9" y="1298"  textLength="47.0" lengthAdjust="spacingAndGlyphs">worker</text>
+<text x="626.7" y="1298"  textLength="62.6" lengthAdjust="spacingAndGlyphs">replicas</text>
+<text x="63.0" y="1315"  textLength="7.8" lengthAdjust="spacingAndGlyphs">|</text>
+<text x="78.6" y="1315"  textLength="23.5" lengthAdjust="spacingAndGlyphs">The</text>
+<text x="110.0" y="1315"  textLength="78.3" lengthAdjust="spacingAndGlyphs">rendezvous</text>
+<text x="196.1" y="1315"  textLength="31.3" lengthAdjust="spacingAndGlyphs">host</text>
+<text x="235.2" y="1315"  textLength="15.7" lengthAdjust="spacingAndGlyphs">IP</text>
+<text x="258.7" y="1315"  textLength="47.0" lengthAdjust="spacingAndGlyphs">(node0</text>
+<text x="313.5" y="1315"  textLength="23.5" lengthAdjust="spacingAndGlyphs">IP)</text>
+<text x="344.9" y="1315"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="368.4" y="1315"  textLength="78.3" lengthAdjust="spacingAndGlyphs">192.0.2.11</text>
+<text x="63.0" y="1332"  textLength="7.8" lengthAdjust="spacingAndGlyphs">|</text>
+<text x="78.6" y="1332"  textLength="39.1" lengthAdjust="spacingAndGlyphs">Using</text>
+<text x="125.6" y="1332"  textLength="47.0" lengthAdjust="spacingAndGlyphs">cached</text>
+<text x="180.4" y="1332"  textLength="31.3" lengthAdjust="spacingAndGlyphs">Base</text>
+<text x="219.6" y="1332"  textLength="23.5" lengthAdjust="spacingAndGlyphs">ISO</text>
+<text x="250.9" y="1332"  textLength="344.5" lengthAdjust="spacingAndGlyphs">~/.cache/agent/image_cache/coreos-x86_64.iso</text>
+<text x="47.3" y="1349" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="1349"  textLength="39.1" lengthAdjust="spacingAndGlyphs">Agent</text>
+<text x="125.6" y="1349"  textLength="23.5" lengthAdjust="spacingAndGlyphs">ISO</text>
+<text x="156.9" y="1349"  textLength="39.1" lengthAdjust="spacingAndGlyphs">built</text>
+<text x="203.9" y="1349"  textLength="15.7" lengthAdjust="spacingAndGlyphs">in</text>
+<text x="227.4" y="1349"  textLength="54.8" lengthAdjust="spacingAndGlyphs">18m54s:</text>
+<text x="290.1" y="1349"  textLength="23.5" lengthAdjust="spacingAndGlyphs">0.9</text>
+<text x="321.4" y="1349"  textLength="23.5" lengthAdjust="spacingAndGlyphs">GiB</text>
+<text x="16.0" y="1366" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1366" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">[7/14]</text>
+<text x="102.1" y="1366" fill="#6fb3ff" font-weight="bold" textLength="70.5" lengthAdjust="spacingAndGlyphs">Uploading</text>
+<text x="180.4" y="1366" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="211.8" y="1366" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">ISO</text>
+<text x="243.1" y="1366" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="274.4" y="1366" fill="#6fb3ff" font-weight="bold" textLength="62.6" lengthAdjust="spacingAndGlyphs">creating</text>
+<text x="344.9" y="1366" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">VMs</text>
+<text x="376.2" y="1366" fill="#6fb3ff" font-weight="bold" textLength="78.3" lengthAdjust="spacingAndGlyphs">(OpenTofu)</text>
+<text x="47.3" y="1383" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="1383"  textLength="62.6" lengthAdjust="spacingAndGlyphs">OpenTofu</text>
+<text x="149.1" y="1383"  textLength="39.1" lengthAdjust="spacingAndGlyphs">apply</text>
+<text x="196.1" y="1383"  textLength="62.6" lengthAdjust="spacingAndGlyphs">finished</text>
+<text x="266.6" y="1383"  textLength="15.7" lengthAdjust="spacingAndGlyphs">in</text>
+<text x="290.1" y="1383"  textLength="47.0" lengthAdjust="spacingAndGlyphs">17m49s</text>
+<text x="16.0" y="1400" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1400" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">[8/14]</text>
+<text x="102.1" y="1400" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">Waiting</text>
+<text x="164.8" y="1400" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">for</text>
+<text x="196.1" y="1400" fill="#6fb3ff" font-weight="bold" textLength="70.5" lengthAdjust="spacingAndGlyphs">bootstrap</text>
+<text x="63.0" y="1417" fill-opacity="0.55" textLength="7.8" lengthAdjust="spacingAndGlyphs">·</text>
+<text x="78.6" y="1417" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">17:37</text>
+<text x="125.6" y="1417" fill-opacity="0.55" textLength="23.5" lengthAdjust="spacingAndGlyphs">API</text>
+<text x="156.9" y="1417" fill-opacity="0.55" textLength="23.5" lengthAdjust="spacingAndGlyphs">not</text>
+<text x="188.3" y="1417" fill-opacity="0.55" textLength="70.5" lengthAdjust="spacingAndGlyphs">reachable</text>
+<text x="266.6" y="1417" fill-opacity="0.55" textLength="23.5" lengthAdjust="spacingAndGlyphs">yet</text>
+<text x="297.9" y="1417" fill-opacity="0.55" textLength="7.8" lengthAdjust="spacingAndGlyphs">·</text>
+<text x="313.5" y="1417" fill-opacity="0.55" textLength="23.5" lengthAdjust="spacingAndGlyphs">6/6</text>
+<text x="344.9" y="1417" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">nodes</text>
+<text x="391.8" y="1417" fill-opacity="0.55" textLength="47.0" lengthAdjust="spacingAndGlyphs">answer</text>
+<text x="446.6" y="1417" fill-opacity="0.55" textLength="31.3" lengthAdjust="spacingAndGlyphs">ping</text>
+<text x="63.0" y="1434" fill-opacity="0.55" textLength="7.8" lengthAdjust="spacingAndGlyphs">·</text>
+<text x="78.6" y="1434" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">17:41</text>
+<text x="125.6" y="1434" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">nodes</text>
+<text x="172.6" y="1434" fill-opacity="0.55" textLength="23.5" lengthAdjust="spacingAndGlyphs">0/6</text>
+<text x="203.9" y="1434" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">Ready</text>
+<text x="250.9" y="1434" fill-opacity="0.55" textLength="7.8" lengthAdjust="spacingAndGlyphs">·</text>
+<text x="266.6" y="1434" fill-opacity="0.55" textLength="70.5" lengthAdjust="spacingAndGlyphs">operators</text>
+<text x="344.9" y="1434" fill-opacity="0.55" textLength="31.3" lengthAdjust="spacingAndGlyphs">1/34</text>
+<text x="384.0" y="1434" fill-opacity="0.55" textLength="70.5" lengthAdjust="spacingAndGlyphs">available</text>
+<text x="462.3" y="1434" fill-opacity="0.55" textLength="7.8" lengthAdjust="spacingAndGlyphs">·</text>
+<text x="478.0" y="1434" fill-opacity="0.55" textLength="78.3" lengthAdjust="spacingAndGlyphs">installing</text>
+<text x="564.1" y="1434" fill-opacity="0.55" textLength="148.8" lengthAdjust="spacingAndGlyphs">4.22.0-okd-scos.10,</text>
+<text x="720.7" y="1434" fill-opacity="0.55" textLength="70.5" lengthAdjust="spacingAndGlyphs">operators</text>
+<text x="799.0" y="1434" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">still</text>
+<text x="846.0" y="1434" fill-opacity="0.55" textLength="62.6" lengthAdjust="spacingAndGlyphs">starting</text>
+<text x="78.6" y="1451" fill="#e8c46a" textLength="54.8" lengthAdjust="spacingAndGlyphs">waiting</text>
+<text x="141.3" y="1451" fill="#e8c46a" textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="164.8" y="1451" fill="#e8c46a" textLength="117.5" lengthAdjust="spacingAndGlyphs">authentication:</text>
+<text x="290.1" y="1451" fill="#e8c46a" textLength="15.7" lengthAdjust="spacingAndGlyphs">no</text>
+<text x="313.5" y="1451" fill="#e8c46a" textLength="47.0" lengthAdjust="spacingAndGlyphs">status</text>
+<text x="368.4" y="1451" fill="#e8c46a" textLength="23.5" lengthAdjust="spacingAndGlyphs">yet</text>
+<text x="78.6" y="1468" fill="#e8c46a" textLength="7.8" lengthAdjust="spacingAndGlyphs">…</text>
+<text x="94.3" y="1468" fill="#e8c46a" textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="125.6" y="1468" fill="#e8c46a" textLength="15.7" lengthAdjust="spacingAndGlyphs">32</text>
+<text x="149.1" y="1468" fill="#e8c46a" textLength="31.3" lengthAdjust="spacingAndGlyphs">more</text>
+<text x="188.3" y="1468" fill="#e8c46a" textLength="86.1" lengthAdjust="spacingAndGlyphs">operator(s)</text>
+<text x="63.0" y="1485"  textLength="7.8" lengthAdjust="spacingAndGlyphs">|</text>
+<text x="78.6" y="1485"  textLength="70.5" lengthAdjust="spacingAndGlyphs">Bootstrap</text>
+<text x="156.9" y="1485"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="180.4" y="1485"  textLength="62.6" lengthAdjust="spacingAndGlyphs">complete</text>
+<text x="16.0" y="1502" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1502" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">[9/14]</text>
+<text x="102.1" y="1502" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">Waiting</text>
+<text x="164.8" y="1502" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">for</text>
+<text x="196.1" y="1502" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="227.4" y="1502" fill="#6fb3ff" font-weight="bold" textLength="94.0" lengthAdjust="spacingAndGlyphs">installation</text>
+<text x="329.2" y="1502" fill="#6fb3ff" font-weight="bold" textLength="15.7" lengthAdjust="spacingAndGlyphs">to</text>
+<text x="352.7" y="1502" fill="#6fb3ff" font-weight="bold" textLength="62.6" lengthAdjust="spacingAndGlyphs">complete</text>
+<text x="63.0" y="1519" fill-opacity="0.55" textLength="7.8" lengthAdjust="spacingAndGlyphs">·</text>
+<text x="78.6" y="1519" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">18:37</text>
+<text x="125.6" y="1519" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">nodes</text>
+<text x="172.6" y="1519" fill-opacity="0.55" textLength="23.5" lengthAdjust="spacingAndGlyphs">5/6</text>
+<text x="203.9" y="1519" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">Ready</text>
+<text x="250.9" y="1519" fill-opacity="0.55" textLength="7.8" lengthAdjust="spacingAndGlyphs">·</text>
+<text x="266.6" y="1519" fill-opacity="0.55" textLength="70.5" lengthAdjust="spacingAndGlyphs">operators</text>
+<text x="344.9" y="1519" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">30/34</text>
+<text x="391.8" y="1519" fill-opacity="0.55" textLength="70.5" lengthAdjust="spacingAndGlyphs">available</text>
+<text x="470.1" y="1519" fill-opacity="0.55" textLength="7.8" lengthAdjust="spacingAndGlyphs">·</text>
+<text x="485.8" y="1519" fill-opacity="0.55" textLength="78.3" lengthAdjust="spacingAndGlyphs">installing</text>
+<text x="571.9" y="1519" fill-opacity="0.55" textLength="148.8" lengthAdjust="spacingAndGlyphs">4.22.0-okd-scos.10,</text>
+<text x="728.5" y="1519" fill-opacity="0.55" textLength="70.5" lengthAdjust="spacingAndGlyphs">operators</text>
+<text x="806.8" y="1519" fill-opacity="0.55" textLength="39.1" lengthAdjust="spacingAndGlyphs">still</text>
+<text x="853.8" y="1519" fill-opacity="0.55" textLength="62.6" lengthAdjust="spacingAndGlyphs">starting</text>
+<text x="78.6" y="1536" fill="#e8c46a" textLength="54.8" lengthAdjust="spacingAndGlyphs">waiting</text>
+<text x="141.3" y="1536" fill="#e8c46a" textLength="15.7" lengthAdjust="spacingAndGlyphs">on</text>
+<text x="164.8" y="1536" fill="#e8c46a" textLength="62.6" lengthAdjust="spacingAndGlyphs">console:</text>
+<text x="235.2" y="1536" fill="#e8c46a" textLength="156.6" lengthAdjust="spacingAndGlyphs">RouteHealthDegraded:</text>
+<text x="399.7" y="1536" fill="#e8c46a" textLength="39.1" lengthAdjust="spacingAndGlyphs">route</text>
+<text x="446.6" y="1536" fill="#e8c46a" textLength="23.5" lengthAdjust="spacingAndGlyphs">not</text>
+<text x="478.0" y="1536" fill="#e8c46a" textLength="23.5" lengthAdjust="spacingAndGlyphs">yet</text>
+<text x="509.3" y="1536" fill="#e8c46a" textLength="70.5" lengthAdjust="spacingAndGlyphs">available</text>
+<text x="78.6" y="1553" fill="#e8c46a" textLength="7.8" lengthAdjust="spacingAndGlyphs">…</text>
+<text x="94.3" y="1553" fill="#e8c46a" textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="125.6" y="1553" fill="#e8c46a" textLength="7.8" lengthAdjust="spacingAndGlyphs">3</text>
+<text x="141.3" y="1553" fill="#e8c46a" textLength="31.3" lengthAdjust="spacingAndGlyphs">more</text>
+<text x="180.4" y="1553" fill="#e8c46a" textLength="86.1" lengthAdjust="spacingAndGlyphs">operator(s)</text>
+<text x="63.0" y="1570"  textLength="7.8" lengthAdjust="spacingAndGlyphs">|</text>
+<text x="78.6" y="1570"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Cluster</text>
+<text x="141.3" y="1570"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="164.8" y="1570"  textLength="70.5" lengthAdjust="spacingAndGlyphs">installed</text>
+<text x="16.0" y="1587" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1587" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">[10/14]</text>
+<text x="110.0" y="1587" fill="#6fb3ff" font-weight="bold" textLength="70.5" lengthAdjust="spacingAndGlyphs">Detaching</text>
+<text x="188.3" y="1587" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="219.6" y="1587" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">ISO</text>
+<text x="47.3" y="1604" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="1604"  textLength="62.6" lengthAdjust="spacingAndGlyphs">OpenTofu</text>
+<text x="149.1" y="1604"  textLength="39.1" lengthAdjust="spacingAndGlyphs">apply</text>
+<text x="196.1" y="1604"  textLength="62.6" lengthAdjust="spacingAndGlyphs">finished</text>
+<text x="266.6" y="1604"  textLength="15.7" lengthAdjust="spacingAndGlyphs">in</text>
+<text x="290.1" y="1604"  textLength="15.7" lengthAdjust="spacingAndGlyphs">9s</text>
+<text x="16.0" y="1621" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1621" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">[11/14]</text>
+<text x="110.0" y="1621" fill="#6fb3ff" font-weight="bold" textLength="39.1" lengthAdjust="spacingAndGlyphs">Infra</text>
+<text x="156.9" y="1621" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">labels</text>
+<text x="211.8" y="1621" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="243.1" y="1621" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">taints</text>
+<text x="47.3" y="1638" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="1638"  textLength="39.1" lengthAdjust="spacingAndGlyphs">Infra</text>
+<text x="125.6" y="1638"  textLength="47.0" lengthAdjust="spacingAndGlyphs">labels</text>
+<text x="180.4" y="1638"  textLength="23.5" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="211.8" y="1638"  textLength="47.0" lengthAdjust="spacingAndGlyphs">taints</text>
+<text x="266.6" y="1638"  textLength="54.8" lengthAdjust="spacingAndGlyphs">updated</text>
+<text x="16.0" y="1655" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1655" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">[12/14]</text>
+<text x="110.0" y="1655" fill="#6fb3ff" font-weight="bold" textLength="70.5" lengthAdjust="spacingAndGlyphs">Verifying</text>
+<text x="188.3" y="1655" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="219.6" y="1655" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">cluster</text>
+<text x="47.3" y="1672" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="1672"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Cluster</text>
+<text x="141.3" y="1672"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="164.8" y="1672"  textLength="54.8" lengthAdjust="spacingAndGlyphs">healthy</text>
+<text x="16.0" y="1689" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1689" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">[13/14]</text>
+<text x="110.0" y="1689" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">Storage</text>
+<text x="47.3" y="1706"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Skipped</text>
+<text x="110.0" y="1706"  textLength="133.1" lengthAdjust="spacingAndGlyphs">(storage.backend:</text>
+<text x="250.9" y="1706"  textLength="39.1" lengthAdjust="spacingAndGlyphs">none)</text>
+<text x="16.0" y="1723" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1723" fill="#6fb3ff" font-weight="bold" textLength="54.8" lengthAdjust="spacingAndGlyphs">[14/14]</text>
+<text x="110.0" y="1723" fill="#6fb3ff" font-weight="bold" textLength="94.0" lengthAdjust="spacingAndGlyphs">Post-Install</text>
+<text x="211.8" y="1723" fill="#6fb3ff" font-weight="bold" textLength="39.1" lengthAdjust="spacingAndGlyphs">hooks</text>
+<text x="16.0" y="1740" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1740" fill="#6fb3ff" font-weight="bold" textLength="31.3" lengthAdjust="spacingAndGlyphs">Hook</text>
+<text x="86.5" y="1740" fill="#6fb3ff" font-weight="bold" textLength="187.9" lengthAdjust="spacingAndGlyphs">30-ingress-controller.sh</text>
+<text x="282.2" y="1740" fill="#6fb3ff" font-weight="bold" textLength="70.5" lengthAdjust="spacingAndGlyphs">(builtin)</text>
+<text x="47.3" y="1757"  textLength="7.8" lengthAdjust="spacingAndGlyphs">|</text>
+<text x="63.0" y="1757"  textLength="39.1" lengthAdjust="spacingAndGlyphs">info:</text>
+<text x="110.0" y="1757"  textLength="203.6" lengthAdjust="spacingAndGlyphs">ingresscontroller/default:</text>
+<text x="321.4" y="1757"  textLength="54.8" lengthAdjust="spacingAndGlyphs">patched</text>
+<text x="47.3" y="1774"  textLength="7.8" lengthAdjust="spacingAndGlyphs">|</text>
+<text x="63.0" y="1774"  textLength="47.0" lengthAdjust="spacingAndGlyphs">HTTP/2</text>
+<text x="117.8" y="1774"  textLength="54.8" lengthAdjust="spacingAndGlyphs">enabled</text>
+<text x="180.4" y="1774"  textLength="23.5" lengthAdjust="spacingAndGlyphs">for</text>
+<text x="211.8" y="1774"  textLength="23.5" lengthAdjust="spacingAndGlyphs">all</text>
+<text x="243.1" y="1774"  textLength="47.0" lengthAdjust="spacingAndGlyphs">routes</text>
+<text x="297.9" y="1774"  textLength="211.4" lengthAdjust="spacingAndGlyphs">(ingresses.config/cluster).</text>
+<text x="47.3" y="1791" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="1791"  textLength="187.9" lengthAdjust="spacingAndGlyphs">30-ingress-controller.sh</text>
+<text x="274.4" y="1791"  textLength="62.6" lengthAdjust="spacingAndGlyphs">finished</text>
+<text x="344.9" y="1791"  textLength="15.7" lengthAdjust="spacingAndGlyphs">in</text>
+<text x="368.4" y="1791"  textLength="39.1" lengthAdjust="spacingAndGlyphs">3m50s</text>
+<text x="47.3" y="1808"  textLength="7.8" lengthAdjust="spacingAndGlyphs">…</text>
+<text x="16.0" y="1842" fill="#6fb3ff" font-weight="bold" textLength="23.5" lengthAdjust="spacingAndGlyphs">==&gt;</text>
+<text x="47.3" y="1842" fill="#6fb3ff" font-weight="bold" textLength="31.3" lengthAdjust="spacingAndGlyphs">Hook</text>
+<text x="86.5" y="1842" fill="#6fb3ff" font-weight="bold" textLength="47.0" lengthAdjust="spacingAndGlyphs">report</text>
+<text x="47.3" y="1859"  textLength="31.3" lengthAdjust="spacingAndGlyphs">HOOK</text>
+<text x="376.2" y="1859"  textLength="47.0" lengthAdjust="spacingAndGlyphs">SOURCE</text>
+<text x="446.6" y="1859"  textLength="62.6" lengthAdjust="spacingAndGlyphs">DURATION</text>
+<text x="525.0" y="1859"  textLength="47.0" lengthAdjust="spacingAndGlyphs">RESULT</text>
+<text x="47.3" y="1876"  textLength="133.1" lengthAdjust="spacingAndGlyphs">10-infra-nodes.sh</text>
+<text x="376.2" y="1876"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="1876"  textLength="15.7" lengthAdjust="spacingAndGlyphs">4s</text>
+<text x="525.0" y="1876"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="1893"  textLength="156.6" lengthAdjust="spacingAndGlyphs">15-scc-anyuid-nfs.sh</text>
+<text x="376.2" y="1893"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="1893"  textLength="15.7" lengthAdjust="spacingAndGlyphs">1s</text>
+<text x="525.0" y="1893"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="1910"  textLength="203.6" lengthAdjust="spacingAndGlyphs">20-operatorhub-catalogs.sh</text>
+<text x="376.2" y="1910"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="1910"  textLength="39.1" lengthAdjust="spacingAndGlyphs">1m13s</text>
+<text x="525.0" y="1910"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="1927"  textLength="187.9" lengthAdjust="spacingAndGlyphs">30-ingress-controller.sh</text>
+<text x="376.2" y="1927"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="1927"  textLength="39.1" lengthAdjust="spacingAndGlyphs">3m50s</text>
+<text x="525.0" y="1927"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="1944"  textLength="125.3" lengthAdjust="spacingAndGlyphs">40-monitoring.sh</text>
+<text x="376.2" y="1944"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="1944"  textLength="15.7" lengthAdjust="spacingAndGlyphs">7s</text>
+<text x="525.0" y="1944"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="1961"  textLength="211.4" lengthAdjust="spacingAndGlyphs">45-alertmanager-receiver.sh</text>
+<text x="376.2" y="1961"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="1961"  textLength="15.7" lengthAdjust="spacingAndGlyphs">1s</text>
+<text x="525.0" y="1961"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="1978"  textLength="172.3" lengthAdjust="spacingAndGlyphs">50-operator-logging.sh</text>
+<text x="376.2" y="1978"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="1978"  textLength="39.1" lengthAdjust="spacingAndGlyphs">3m53s</text>
+<text x="525.0" y="1978"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="1995"  textLength="203.6" lengthAdjust="spacingAndGlyphs">51-operator-descheduler.sh</text>
+<text x="376.2" y="1995"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="1995"  textLength="39.1" lengthAdjust="spacingAndGlyphs">1m00s</text>
+<text x="525.0" y="1995"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="2012"  textLength="313.2" lengthAdjust="spacingAndGlyphs">52-operator-cluster-resource-override.sh</text>
+<text x="376.2" y="2012"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="2012"  textLength="23.5" lengthAdjust="spacingAndGlyphs">50s</text>
+<text x="525.0" y="2012"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="2029"  textLength="211.4" lengthAdjust="spacingAndGlyphs">53-operator-cert-manager.sh</text>
+<text x="376.2" y="2029"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="2029"  textLength="39.1" lengthAdjust="spacingAndGlyphs">1m29s</text>
+<text x="525.0" y="2029"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="2046"  textLength="211.4" lengthAdjust="spacingAndGlyphs">54-operator-web-terminal.sh</text>
+<text x="376.2" y="2046"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="2046"  textLength="39.1" lengthAdjust="spacingAndGlyphs">1m19s</text>
+<text x="525.0" y="2046"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="2063"  textLength="133.1" lengthAdjust="spacingAndGlyphs">55-eventrouter.sh</text>
+<text x="376.2" y="2063"  textLength="54.8" lengthAdjust="spacingAndGlyphs">builtin</text>
+<text x="446.6" y="2063"  textLength="15.7" lengthAdjust="spacingAndGlyphs">9s</text>
+<text x="525.0" y="2063"  textLength="15.7" lengthAdjust="spacingAndGlyphs">ok</text>
+<text x="47.3" y="2097" fill="#8fd18a" textLength="15.7" lengthAdjust="spacingAndGlyphs">OK</text>
+<text x="78.6" y="2097"  textLength="54.8" lengthAdjust="spacingAndGlyphs">Cluster</text>
+<text x="141.3" y="2097"  textLength="125.3" lengthAdjust="spacingAndGlyphs">demo.example.com</text>
+<text x="274.4" y="2097"  textLength="15.7" lengthAdjust="spacingAndGlyphs">is</text>
+<text x="297.9" y="2097"  textLength="39.1" lengthAdjust="spacingAndGlyphs">ready</text>
+<text x="344.9" y="2097"  textLength="70.5" lengthAdjust="spacingAndGlyphs">(1h52m10s</text>
+<text x="423.2" y="2097"  textLength="31.3" lengthAdjust="spacingAndGlyphs">this</text>
+<text x="462.3" y="2097"  textLength="31.3" lengthAdjust="spacingAndGlyphs">run)</text>
+<text x="47.3" y="2114"  textLength="62.6" lengthAdjust="spacingAndGlyphs">Console:</text>
+<text x="141.3" y="2114"  textLength="430.6" lengthAdjust="spacingAndGlyphs">https://console-openshift-console.apps.demo.example.com</text>
+<text x="47.3" y="2131"  textLength="86.1" lengthAdjust="spacingAndGlyphs">Kubeconfig:</text>
+<text x="141.3" y="2131"  textLength="47.0" lengthAdjust="spacingAndGlyphs">export</text>
+<text x="196.1" y="2131"  textLength="313.2" lengthAdjust="spacingAndGlyphs">KUBECONFIG=clusters/demo/auth/kubeconfig</text>
+<text x="47.3" y="2148"  textLength="70.5" lengthAdjust="spacingAndGlyphs">Password:</text>
+<text x="141.3" y="2148"  textLength="289.7" lengthAdjust="spacingAndGlyphs">clusters/demo/auth/kubeadmin-password</text>
+<text x="438.8" y="2148"  textLength="39.1" lengthAdjust="spacingAndGlyphs">(user</text>
+<text x="485.8" y="2148"  textLength="78.3" lengthAdjust="spacingAndGlyphs">kubeadmin)</text>
 </g></svg>

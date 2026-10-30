@@ -7,121 +7,123 @@
 <path d="M0 8a8 8 0 0 1 8-8h786a8 8 0 0 1 8 8v22H0z" fill="#2b313b"/>
 <circle cx="18" cy="15" r="5.5" fill="#ff5f57"/><circle cx="36" cy="15" r="5.5" fill="#febc2e"/><circle cx="54" cy="15" r="5.5" fill="#28c840"/>
 <text x="401.0" y="19.5" fill="#9aa3ad" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">okd-pve tui</text>
-<rect x="14.0" y="44" width="774.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="63" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="63" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="63" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="82" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="82" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="82" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="82" width="27.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="101" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="101" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="101" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="101" width="27.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="120" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="120" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="120" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="120" width="27.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="139" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="139" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="139" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="139" width="27.4" height="19.4" fill="#2f56a8"/>
+<g shape-rendering="crispEdges">
+<rect x="14.0" y="44" width="774.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="63" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="63" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="63" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="82" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="82" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="82" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="82" width="27.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="101" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="101" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="101" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="101" width="27.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="120" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="120" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="120" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="120" width="27.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="139" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="139" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="139" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="139" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="139" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="158" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="158" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="158" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="158" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="158" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="158" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="158" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="158" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="158" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="177" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="177" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="177" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="177" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="177" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="177" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="177" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="177" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="177" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="196" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="196" width="63.4" height="19.4" fill="#cfd4da"/>
-<rect x="113.0" y="196" width="549.4" height="19.4" fill="#c94f4f"/>
-<rect x="662.0" y="196" width="90.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="196" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="196" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="196" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="196" width="63.4" height="20" fill="#cfd4da"/>
+<rect x="113.0" y="196" width="549.4" height="20" fill="#c94f4f"/>
+<rect x="662.0" y="196" width="90.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="196" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="196" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="196" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="1"/>
-<rect x="14.0" y="215" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="215" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="215" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="215" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="215" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="215" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="215" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="215" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="215" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="234" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="234" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="234" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="234" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="234" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="234" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="234" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="234" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="234" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="253" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="253" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="253" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="253" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="253" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="253" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="253" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="253" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="253" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="272" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="272" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="272" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="272" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="272" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="272" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="272" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="272" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="272" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="291" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="291" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="291" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="291" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="291" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="291" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="291" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="291" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="291" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="310" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="310" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="310" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="310" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="310" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="310" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="310" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="310" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="310" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="329" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="329" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="329" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="329" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="329" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="329" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="329" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="329" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="329" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="348" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="348" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="348" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="348" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="348" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="348" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="348" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="348" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="348" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="367" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="367" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="367" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="367" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="367" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="367" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="367" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="367" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="367" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="386" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="386" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="386" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="386" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="386" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="386" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="386" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="386" width="27.4" height="20" fill="#2f56a8"/>
 <rect x="681.5" y="386" width="6.0" height="19.4" fill="#1b1f24" fill-opacity="0.35"/>
-<rect x="14.0" y="405" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="405" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="405" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="405" width="27.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="424" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="424" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="424" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="424" width="27.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="443" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="443" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="443" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="443" width="27.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="462" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="462" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="462" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="462" width="27.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="481" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="481" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="481" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="481" width="27.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="500" width="36.4" height="19.4" fill="#2f56a8"/>
-<rect x="50.0" y="500" width="702.4" height="19.4" fill="#cfd4da"/>
-<rect x="752.0" y="500" width="9.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="500" width="27.4" height="19.4" fill="#2f56a8"/>
-<rect x="14.0" y="519" width="45.4" height="19.4" fill="#2f56a8"/>
-<rect x="59.0" y="519" width="702.4" height="19.4" fill="#1b1f24"/>
-<rect x="761.0" y="519" width="27.4" height="19.4" fill="#2f56a8"/>
+<rect x="14.0" y="405" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="405" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="405" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="405" width="27.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="424" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="424" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="424" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="424" width="27.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="443" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="443" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="443" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="443" width="27.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="462" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="462" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="462" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="462" width="27.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="481" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="481" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="481" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="481" width="27.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="500" width="36.4" height="20" fill="#2f56a8"/>
+<rect x="50.0" y="500" width="702.4" height="20" fill="#cfd4da"/>
+<rect x="752.0" y="500" width="9.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="500" width="27.4" height="20" fill="#2f56a8"/>
+<rect x="14.0" y="519" width="45.4" height="20" fill="#2f56a8"/>
+<rect x="59.0" y="519" width="702.4" height="20" fill="#1b1f24"/>
+<rect x="761.0" y="519" width="27.4" height="20" fill="#2f56a8"/>
+</g>
 <g stroke-width="1.6" stroke-linecap="square">
 <line x1="54.5" y1="72.5" x2="59.0" y2="72.5" stroke="#1b1f24"/>
 <line x1="54.5" y1="72.5" x2="54.5" y2="82.0" stroke="#1b1f24"/>
@@ -476,24 +478,99 @@
 <line x1="747.5" y1="509.5" x2="743.0" y2="509.5" stroke="#1b1f24"/>
 <line x1="747.5" y1="509.5" x2="747.5" y2="500.0" stroke="#1b1f24"/>
 </g>
-<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="14.5" xml:space="preserve">
-<text x="293.0" y="77" fill="#c94f4f" textLength="207.0" lengthAdjust="spacingAndGlyphs">okd-pve [clusters/demo]</text>
-<text x="59.0" y="96" fill="#1b1f24" textLength="684.0" lengthAdjust="spacingAndGlyphs"> Choose an action                                                           </text>
-<text x="59.0" y="134" fill="#1b1f24" textLength="684.0" lengthAdjust="spacingAndGlyphs">      dir         Select cluster directory                           ↑      </text>
-<text x="59.0" y="153" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      init        Create a new cluster configuration                 </text>
-<text x="59.0" y="172" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      preflight   Run preflight checks (changes nothing)             </text>
-<text x="59.0" y="191" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      dry-run     Show what create would do                          </text>
-<text x="113.0" y="210" fill="#cfd4da" textLength="549.0" lengthAdjust="spacingAndGlyphs">create      Create / continue creating the cluster           </text>
-<text x="59.0" y="229" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      verify      Check cluster health                               </text>
-<text x="59.0" y="248" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      nodes       List nodes                                         </text>
-<text x="59.0" y="267" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      node-add    Add worker or infra nodes                          </text>
-<text x="59.0" y="286" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      node-remove Remove a node                                      </text>
-<text x="59.0" y="305" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      reconcile   Re-apply infra labels and taints                   </text>
-<text x="59.0" y="324" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      storage     Install the storage backend                        </text>
-<text x="59.0" y="343" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      hooks       List Post-Install hooks                            </text>
-<text x="59.0" y="362" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      hooks-run   Run Post-Install hooks                             </text>
-<text x="59.0" y="381" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      kubeconfig  Show the kubeconfig path                           </text>
-<text x="59.0" y="400" fill="#1b1f24" textLength="621.0" lengthAdjust="spacingAndGlyphs">      logs        Show the latest log                                </text>
-<text x="59.0" y="419" fill="#1b1f24" textLength="684.0" lengthAdjust="spacingAndGlyphs">      logs-follow Follow the log, also of later runs (Ctrl-C: back)  ↓      </text>
-<text x="59.0" y="476" fill="#1b1f24" textLength="684.0" lengthAdjust="spacingAndGlyphs">                    &lt;Ok&gt;                        &lt;Cancel&gt;                    </text>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="14.5">
+<text x="293.0" y="77" fill="#c94f4f" textLength="63.0" lengthAdjust="spacingAndGlyphs">okd-pve</text>
+<text x="365.0" y="77" fill="#c94f4f" textLength="135.0" lengthAdjust="spacingAndGlyphs">[clusters/demo]</text>
+<text x="68.0" y="96" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">Choose</text>
+<text x="131.0" y="96" fill="#1b1f24" textLength="18.0" lengthAdjust="spacingAndGlyphs">an</text>
+<text x="158.0" y="96" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">action</text>
+<text x="113.0" y="134" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">dir</text>
+<text x="221.0" y="134" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">Select</text>
+<text x="284.0" y="134" fill="#1b1f24" textLength="63.0" lengthAdjust="spacingAndGlyphs">cluster</text>
+<text x="356.0" y="134" fill="#1b1f24" textLength="81.0" lengthAdjust="spacingAndGlyphs">directory</text>
+<text x="680.0" y="134" fill="#1b1f24" textLength="9.0" lengthAdjust="spacingAndGlyphs">↑</text>
+<text x="113.0" y="153" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">init</text>
+<text x="221.0" y="153" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">Create</text>
+<text x="284.0" y="153" fill="#1b1f24" textLength="9.0" lengthAdjust="spacingAndGlyphs">a</text>
+<text x="302.0" y="153" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">new</text>
+<text x="338.0" y="153" fill="#1b1f24" textLength="63.0" lengthAdjust="spacingAndGlyphs">cluster</text>
+<text x="410.0" y="153" fill="#1b1f24" textLength="117.0" lengthAdjust="spacingAndGlyphs">configuration</text>
+<text x="113.0" y="172" fill="#1b1f24" textLength="81.0" lengthAdjust="spacingAndGlyphs">preflight</text>
+<text x="221.0" y="172" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">Run</text>
+<text x="257.0" y="172" fill="#1b1f24" textLength="81.0" lengthAdjust="spacingAndGlyphs">preflight</text>
+<text x="347.0" y="172" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">checks</text>
+<text x="410.0" y="172" fill="#1b1f24" textLength="72.0" lengthAdjust="spacingAndGlyphs">(changes</text>
+<text x="491.0" y="172" fill="#1b1f24" textLength="72.0" lengthAdjust="spacingAndGlyphs">nothing)</text>
+<text x="113.0" y="191" fill="#1b1f24" textLength="63.0" lengthAdjust="spacingAndGlyphs">dry-run</text>
+<text x="221.0" y="191" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">Show</text>
+<text x="266.0" y="191" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">what</text>
+<text x="311.0" y="191" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">create</text>
+<text x="374.0" y="191" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">would</text>
+<text x="428.0" y="191" fill="#1b1f24" textLength="18.0" lengthAdjust="spacingAndGlyphs">do</text>
+<text x="113.0" y="210" fill="#cfd4da" textLength="54.0" lengthAdjust="spacingAndGlyphs">create</text>
+<text x="221.0" y="210" fill="#cfd4da" textLength="54.0" lengthAdjust="spacingAndGlyphs">Create</text>
+<text x="284.0" y="210" fill="#cfd4da" textLength="9.0" lengthAdjust="spacingAndGlyphs">/</text>
+<text x="302.0" y="210" fill="#cfd4da" textLength="72.0" lengthAdjust="spacingAndGlyphs">continue</text>
+<text x="383.0" y="210" fill="#cfd4da" textLength="72.0" lengthAdjust="spacingAndGlyphs">creating</text>
+<text x="464.0" y="210" fill="#cfd4da" textLength="27.0" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="500.0" y="210" fill="#cfd4da" textLength="63.0" lengthAdjust="spacingAndGlyphs">cluster</text>
+<text x="113.0" y="229" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">verify</text>
+<text x="221.0" y="229" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">Check</text>
+<text x="275.0" y="229" fill="#1b1f24" textLength="63.0" lengthAdjust="spacingAndGlyphs">cluster</text>
+<text x="347.0" y="229" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">health</text>
+<text x="113.0" y="248" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">nodes</text>
+<text x="221.0" y="248" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">List</text>
+<text x="266.0" y="248" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">nodes</text>
+<text x="113.0" y="267" fill="#1b1f24" textLength="72.0" lengthAdjust="spacingAndGlyphs">node-add</text>
+<text x="221.0" y="267" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">Add</text>
+<text x="257.0" y="267" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">worker</text>
+<text x="320.0" y="267" fill="#1b1f24" textLength="18.0" lengthAdjust="spacingAndGlyphs">or</text>
+<text x="347.0" y="267" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">infra</text>
+<text x="401.0" y="267" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">nodes</text>
+<text x="113.0" y="286" fill="#1b1f24" textLength="99.0" lengthAdjust="spacingAndGlyphs">node-remove</text>
+<text x="221.0" y="286" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">Remove</text>
+<text x="284.0" y="286" fill="#1b1f24" textLength="9.0" lengthAdjust="spacingAndGlyphs">a</text>
+<text x="302.0" y="286" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">node</text>
+<text x="113.0" y="305" fill="#1b1f24" textLength="81.0" lengthAdjust="spacingAndGlyphs">reconcile</text>
+<text x="221.0" y="305" fill="#1b1f24" textLength="72.0" lengthAdjust="spacingAndGlyphs">Re-apply</text>
+<text x="302.0" y="305" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">infra</text>
+<text x="356.0" y="305" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">labels</text>
+<text x="419.0" y="305" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">and</text>
+<text x="455.0" y="305" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">taints</text>
+<text x="113.0" y="324" fill="#1b1f24" textLength="63.0" lengthAdjust="spacingAndGlyphs">storage</text>
+<text x="221.0" y="324" fill="#1b1f24" textLength="63.0" lengthAdjust="spacingAndGlyphs">Install</text>
+<text x="293.0" y="324" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="329.0" y="324" fill="#1b1f24" textLength="63.0" lengthAdjust="spacingAndGlyphs">storage</text>
+<text x="401.0" y="324" fill="#1b1f24" textLength="63.0" lengthAdjust="spacingAndGlyphs">backend</text>
+<text x="113.0" y="343" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">hooks</text>
+<text x="221.0" y="343" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">List</text>
+<text x="266.0" y="343" fill="#1b1f24" textLength="108.0" lengthAdjust="spacingAndGlyphs">Post-Install</text>
+<text x="383.0" y="343" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">hooks</text>
+<text x="113.0" y="362" fill="#1b1f24" textLength="81.0" lengthAdjust="spacingAndGlyphs">hooks-run</text>
+<text x="221.0" y="362" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">Run</text>
+<text x="257.0" y="362" fill="#1b1f24" textLength="108.0" lengthAdjust="spacingAndGlyphs">Post-Install</text>
+<text x="374.0" y="362" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">hooks</text>
+<text x="113.0" y="381" fill="#1b1f24" textLength="90.0" lengthAdjust="spacingAndGlyphs">kubeconfig</text>
+<text x="221.0" y="381" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">Show</text>
+<text x="266.0" y="381" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="302.0" y="381" fill="#1b1f24" textLength="90.0" lengthAdjust="spacingAndGlyphs">kubeconfig</text>
+<text x="401.0" y="381" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">path</text>
+<text x="113.0" y="400" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">logs</text>
+<text x="221.0" y="400" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">Show</text>
+<text x="266.0" y="400" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="302.0" y="400" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">latest</text>
+<text x="365.0" y="400" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">log</text>
+<text x="113.0" y="419" fill="#1b1f24" textLength="99.0" lengthAdjust="spacingAndGlyphs">logs-follow</text>
+<text x="221.0" y="419" fill="#1b1f24" textLength="54.0" lengthAdjust="spacingAndGlyphs">Follow</text>
+<text x="284.0" y="419" fill="#1b1f24" textLength="27.0" lengthAdjust="spacingAndGlyphs">the</text>
+<text x="320.0" y="419" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">log,</text>
+<text x="365.0" y="419" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">also</text>
+<text x="410.0" y="419" fill="#1b1f24" textLength="18.0" lengthAdjust="spacingAndGlyphs">of</text>
+<text x="437.0" y="419" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">later</text>
+<text x="491.0" y="419" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">runs</text>
+<text x="536.0" y="419" fill="#1b1f24" textLength="72.0" lengthAdjust="spacingAndGlyphs">(Ctrl-C:</text>
+<text x="617.0" y="419" fill="#1b1f24" textLength="45.0" lengthAdjust="spacingAndGlyphs">back)</text>
+<text x="680.0" y="419" fill="#1b1f24" textLength="9.0" lengthAdjust="spacingAndGlyphs">↓</text>
+<text x="239.0" y="476" fill="#1b1f24" textLength="36.0" lengthAdjust="spacingAndGlyphs">&lt;Ok&gt;</text>
+<text x="491.0" y="476" fill="#1b1f24" textLength="72.0" lengthAdjust="spacingAndGlyphs">&lt;Cancel&gt;</text>
 </g></svg>
