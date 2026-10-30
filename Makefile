@@ -11,13 +11,22 @@ export BATS_LIB_PATH := $(TOOLS)
 SHELL_FILES := okd-pve $(wildcard lib/*.sh) $(wildcard hooks/*.sh) $(wildcard scripts/*.sh) $(shell find test/mocks -type f)
 EXAMPLE_HOOKS := $(wildcard hooks/*.example)
 
+# "# renovate:" comments let Renovate propose updates (.github/renovate.json5).
+# renovate: datasource=github-releases depName=mvdan/sh
 SHFMT_VERSION   := 3.14.1
+# renovate: datasource=github-releases depName=mikefarah/yq
 YQ_VERSION      := 4.54.1
+# renovate: datasource=github-releases depName=coreos/butane
 BUTANE_VERSION  := 0.29.0
+# renovate: datasource=github-releases depName=opentofu/opentofu
 TOFU_VERSION    := 1.13.2
+# renovate: datasource=github-releases depName=terraform-linters/tflint
 TFLINT_VERSION  := 0.64.0
+# renovate: datasource=github-tags depName=bats-core/bats-core
 BATS_VERSION    := 1.14.0
+# renovate: datasource=github-tags depName=bats-core/bats-support
 BATS_SUPPORT_VERSION := 0.3.0
+# renovate: datasource=github-tags depName=bats-core/bats-assert
 BATS_ASSERT_VERSION  := 2.2.4
 
 .PHONY: all check lint fmt fmt-fix test terraform leakcheck tools clean-tools

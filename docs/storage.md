@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The okd-proxmox Authors -->
 # Storage
 
 `okd-pve storage install` (also run by `create` before the hooks) deploys

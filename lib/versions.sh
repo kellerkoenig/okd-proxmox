@@ -14,10 +14,15 @@ OKD_PVE_VERSION=0.1.0
 
 OKD_MIN_VERSION=4.17
 
+# "# renovate:" comments let Renovate propose updates (.github/renovate.json5).
+# renovate: datasource=github-releases depName=opentofu/opentofu
 TOFU_VERSION=${OKD_PVE_TOFU_VERSION:-1.13.2}
 TOFU_MIN_VERSION=1.8.0
 TOFU_URL_BASE=https://github.com/opentofu/opentofu/releases/download
 
+# Updating Butane needs new checksums below; Renovate only opens that pull
+# request after approval in its dependency dashboard.
+# renovate: datasource=github-releases depName=coreos/butane
 BUTANE_VERSION=${OKD_PVE_BUTANE_VERSION:-0.29.0}
 BUTANE_URL_BASE=https://github.com/coreos/butane/releases/download
 # Butane publishes GPG signatures only; these checksums were taken from
@@ -34,6 +39,7 @@ OKD_RELEASE_IMAGE_REPO=quay.io/okd/scos-release
 
 # OpenTofu provider for Proxmox VE.
 PROXMOX_PROVIDER_SOURCE=bpg/proxmox
+# renovate: datasource=terraform-provider depName=bpg/proxmox
 PROXMOX_PROVIDER_VERSION=${OKD_PVE_PROXMOX_PROVIDER_VERSION:-0.117.0}
 
 # Image used to extract nmstatectl where no nmstate package exists.

@@ -18,7 +18,7 @@ mapfile -t files < <(
 		git ls-files --cached --others --exclude-standard
 	else
 		find . -type f -not -path './.git/*' -not -path './.tools/*' | sed 's|^\./||'
-	fi | grep -vxE 'LICENSE|\.leakcheck-allow' | sort -u
+	fi | grep -vxE 'LICENSE|LICENSES/.*|\.leakcheck-allow' | sort -u
 )
 
 allow=()

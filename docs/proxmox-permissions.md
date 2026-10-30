@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The okd-proxmox Authors -->
 # Proxmox permissions
 
 `okd-pve` works with an API token of an unprivileged Proxmox user. It needs

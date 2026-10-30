@@ -1,0 +1,72 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+name: Bug report
+description: Something does not work as documented.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report! **Do not post real hostnames, domains, IP
+        addresses, tokens, webhook URLs or pull secrets.** okd-pve masks
+        secrets in its logs, but replace everything environment-specific with
+        placeholders (`example.com`, `192.0.2.x`) before pasting.
+        Security problems: please use **Security → Report a vulnerability**
+        instead of an issue.
+  - type: input
+    id: version
+    attributes:
+      label: okd-pve version
+      description: Output of `okd-pve version`.
+      placeholder: okd-pve 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: okd
+    attributes:
+      label: OKD version
+      placeholder: 4.22.0-okd-scos.10
+    validations:
+      required: true
+  - type: input
+    id: pve
+    attributes:
+      label: Proxmox VE version
+      placeholder: "9.2"
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      description: The okd-pve command that failed.
+      placeholder: okd-pve create
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log excerpt
+      description: >
+        The relevant part of `<cluster>/logs/latest.log` (or `okd-pve logs`),
+        with placeholders instead of real names and addresses.
+      render: text
+  - type: textarea
+    id: config
+    attributes:
+      label: Relevant configuration
+      description: The relevant part of cluster.yaml, with placeholders.
+      render: yaml
+  - type: checkboxes
+    id: redacted
+    attributes:
+      label: Before submitting
+      options:
+        - label: I replaced real hostnames, domains, IP addresses and secrets with placeholders.
+          required: true

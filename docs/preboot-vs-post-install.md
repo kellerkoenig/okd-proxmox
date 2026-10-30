@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The okd-proxmox Authors -->
 # Pre-Boot or Post-Install?
 
 There are exactly two ways to get configuration into an OKD cluster. This

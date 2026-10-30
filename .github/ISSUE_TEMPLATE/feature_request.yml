@@ -1,0 +1,33 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+name: Feature request
+description: Suggest an improvement or a new capability.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What do you want to achieve, and what stops you today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How could okd-pve solve it? A command, a cluster.yaml setting, a hook, ...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Workarounds or other approaches you considered.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      description: okd-pve builds and configures the platform; application deployments belong to your deployment automation.
+      options:
+        - label: This is about the cluster platform, not about deploying applications.
+          required: true

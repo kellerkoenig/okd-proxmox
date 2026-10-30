@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The okd-proxmox Authors -->
 # Hook manifests
 
 `*.yaml` / `*.yml` files in a `manifests/` directory of a hooks source are

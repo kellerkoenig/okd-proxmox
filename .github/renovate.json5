@@ -1,0 +1,59 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 The okd-proxmox Authors
+//
+// Renovate (https://docs.renovatebot.com) proposes version updates as pull
+// requests: GitHub Actions (pinned by digest) and every version marked with a
+// "# renovate:" comment in the Makefile and lib/versions.sh.
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
+    'helpers:pinGitHubActionDigests',
+    ':dependencyDashboard',
+  ],
+  timezone: 'Europe/Berlin',
+  schedule: ['before 6am on monday'],
+  labels: ['dependencies'],
+  prConcurrentLimit: 5,
+  // Only what the annotations and workflows declare. The provider range in
+  // terraform/versions.tf is a lower bound; the pinned provider version is
+  // PROXMOX_PROVIDER_VERSION in lib/versions.sh.
+  enabledManagers: ['github-actions', 'custom.regex'],
+  customManagers: [
+    {
+      customType: 'regex',
+      description: 'Versions annotated with "# renovate:" in the Makefile and lib/versions.sh',
+      managerFilePatterns: ['/^Makefile$/', '/^lib/versions\\.sh$/'],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Z_]+\\s*:?=\\s*(?:\\$\\{[A-Z_]+:-)?(?<currentValue>[0-9][0-9.]*)',
+      ],
+      extractVersionTemplate: '^v?(?<version>.*)$',
+    },
+  ],
+  packageRules: [
+    {
+      description: 'Keep OpenTofu in the Makefile and lib/versions.sh in step',
+      matchDepNames: ['opentofu/opentofu'],
+      groupName: 'OpenTofu',
+    },
+    {
+      description: 'bats and its helper libraries together',
+      matchDepNames: ['bats-core/**'],
+      groupName: 'bats',
+    },
+    {
+      description: 'GitHub Actions in one pull request',
+      matchManagers: ['github-actions'],
+      groupName: 'GitHub Actions',
+    },
+    {
+      description: 'Butane needs new checksums in lib/versions.sh: open the PR only after approval in the dependency dashboard',
+      matchDepNames: ['coreos/butane'],
+      groupName: 'Butane',
+      dependencyDashboardApproval: true,
+      prBodyNotes: [
+        '⚠️ Before merging: add the new `BUTANE_SHA256` entries in `lib/versions.sh` (four platforms) from release binaries whose GPG signatures you verified. The test "every pinned Butane version has checksums" fails until then.',
+      ],
+    },
+  ],
+}

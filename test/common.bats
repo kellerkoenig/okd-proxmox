@@ -106,3 +106,16 @@ setup() {
 	run confirm "really?" </dev/null
 	assert_failure
 }
+
+@test "every pinned Butane version has checksums for all platforms" {
+	local p
+	for p in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu x86_64-apple-darwin aarch64-apple-darwin; do
+		[[ ${BUTANE_SHA256[${BUTANE_VERSION}/${p}]:-} =~ ^[0-9a-f]{64}$ ]] ||
+			fail "BUTANE_SHA256 has no checksum for ${BUTANE_VERSION}/${p} (lib/versions.sh)"
+	done
+}
+
+@test "Makefile and lib/versions.sh pin the same OpenTofu and Butane versions" {
+	assert_equal "$(sed -n 's/^TOFU_VERSION *:= *//p' "${OKD_PVE_ROOT}/Makefile")" "${TOFU_VERSION}"
+	assert_equal "$(sed -n 's/^BUTANE_VERSION *:= *//p' "${OKD_PVE_ROOT}/Makefile")" "${BUTANE_VERSION}"
+}

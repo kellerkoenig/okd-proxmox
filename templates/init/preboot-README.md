@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The okd-proxmox Authors -->
 # Pre-Boot manifests
 
 Files in this directory are added to the agent ISO and take effect at the

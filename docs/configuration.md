@@ -1,4 +1,5 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The okd-proxmox Authors -->
 # Configuration reference
 
 A cluster directory (default `./clusters/<name>/`, or `--dir`) contains:

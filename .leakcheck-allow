@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
 # Patterns (extended regex, whole match) that scripts/check-leaks.sh accepts.
 
 # --- IPv4: documentation ranges (RFC 5737), OKD default networks, specials
@@ -38,6 +39,9 @@ www\.proxmox\.com
 www\.gnu\.org
 # README badges
 img\.shields\.io
+# OpenSSF Scorecard badge and viewer, Renovate schema
+([a-z0-9-]+\.)*scorecard\.dev
+docs\.renovatebot\.com
 # --- Kubernetes/OpenShift API groups, provisioners and label prefixes
 ([a-z0-9-]+\.)*openshift\.io
 ([a-z0-9-]+\.)*coreos\.com

@@ -6,6 +6,8 @@
 [![Build & Tests](https://img.shields.io/github/actions/workflow/status/kellerkoenig/okd-proxmox/ci.yaml?branch=main&label=Build%20%26%20Tests&logo=githubactions&logoColor=white)](https://github.com/kellerkoenig/okd-proxmox/actions/workflows/ci.yaml)
 [![Release](https://img.shields.io/github/v/release/kellerkoenig/okd-proxmox?include_prereleases&sort=semver&label=Release&logo=github)](https://github.com/kellerkoenig/okd-proxmox/releases)
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue)](LICENSE)
+[![REUSE compliant](https://api.reuse.software/badge/github.com/kellerkoenig/okd-proxmox)](https://api.reuse.software/info/github.com/kellerkoenig/okd-proxmox)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/kellerkoenig/okd-proxmox/badge)](https://scorecard.dev/viewer/?uri=github.com/kellerkoenig/okd-proxmox)
 [![OKD ≥ 4.17](https://img.shields.io/badge/OKD-%E2%89%A5%204.17-326CE5?logo=kubernetes&logoColor=white)](https://okd.io)
 [![Proxmox VE 8 | 9](https://img.shields.io/badge/Proxmox%20VE-8%20%7C%209-E57000?logo=proxmox&logoColor=white)](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview)
 [![OpenTofu](https://img.shields.io/badge/OpenTofu-bpg%2Fproxmox-FFDA18?logo=opentofu&logoColor=black)](https://opentofu.org)
@@ -304,6 +306,13 @@ RFC 5737 addresses in examples.
 Layout: `okd-pve` (entry point), `lib/` (all logic), `terraform/` (OpenTofu
 module), `templates/` (init, Pre-Boot and storage templates, defaults),
 `hooks/` (generic example hooks), `examples/`, `test/`, `docs/`.
+
+How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md). Security problems:
+[SECURITY.md](SECURITY.md), never as a public issue. Every file carries
+license information ([REUSE](https://reuse.software)); Renovate proposes
+updates for the pinned tool versions and GitHub Actions. Pushing a tag
+`vX.Y.Z` (matching `OKD_PVE_VERSION`) runs all checks and attaches a source
+tarball, `SHA256SUMS` and build provenance to the release.
 
 ## License
 
