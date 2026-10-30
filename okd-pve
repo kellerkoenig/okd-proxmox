@@ -1,0 +1,633 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# okd-pve: build, verify, scale and destroy OKD clusters on Proxmox VE with
+# the agent-based installer and OpenTofu.
+
+set -euo pipefail
+
+if ((BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4))); then
+	echo "okd-pve needs bash 4.4 or newer (found ${BASH_VERSION})." >&2
+	exit 1
+fi
+
+_okd_pve_root() {
+	local src=${BASH_SOURCE[0]} dir
+	while [[ -L ${src} ]]; do
+		dir=$(cd -P "$(dirname "${src}")" && pwd)
+		src=$(readlink "${src}")
+		[[ ${src} == /* ]] || src=${dir}/${src}
+	done
+	cd -P "$(dirname "${src}")" && pwd
+}
+OKD_PVE_ROOT=$(_okd_pve_root)
+export OKD_PVE_ROOT
+
+# shellcheck source=lib/common.sh
+source "${OKD_PVE_ROOT}/lib/common.sh"
+# shellcheck source=lib/versions.sh
+source "${OKD_PVE_ROOT}/lib/versions.sh"
+# shellcheck source=lib/config.sh
+source "${OKD_PVE_ROOT}/lib/config.sh"
+# shellcheck source=lib/state.sh
+source "${OKD_PVE_ROOT}/lib/state.sh"
+# shellcheck source=lib/tools.sh
+source "${OKD_PVE_ROOT}/lib/tools.sh"
+# shellcheck source=lib/proxmox.sh
+source "${OKD_PVE_ROOT}/lib/proxmox.sh"
+# shellcheck source=lib/manifests.sh
+source "${OKD_PVE_ROOT}/lib/manifests.sh"
+# shellcheck source=lib/preflight.sh
+source "${OKD_PVE_ROOT}/lib/preflight.sh"
+# shellcheck source=lib/terraform.sh
+source "${OKD_PVE_ROOT}/lib/terraform.sh"
+# shellcheck source=lib/installer.sh
+source "${OKD_PVE_ROOT}/lib/installer.sh"
+# shellcheck source=lib/oclib.sh
+source "${OKD_PVE_ROOT}/lib/oclib.sh"
+# shellcheck source=lib/catalog.sh
+source "${OKD_PVE_ROOT}/lib/catalog.sh"
+# shellcheck source=lib/nodes.sh
+source "${OKD_PVE_ROOT}/lib/nodes.sh"
+# shellcheck source=lib/hooks.sh
+source "${OKD_PVE_ROOT}/lib/hooks.sh"
+# shellcheck source=lib/verify.sh
+source "${OKD_PVE_ROOT}/lib/verify.sh"
+# shellcheck source=lib/storage.sh
+source "${OKD_PVE_ROOT}/lib/storage.sh"
+# shellcheck source=lib/tui.sh
+source "${OKD_PVE_ROOT}/lib/tui.sh"
+
+DIR_FLAG=''
+SKIP_PREFLIGHT=0
+CREATE_STEPS=14
+
+usage() {
+	cat <<EOF
+okd-pve ${OKD_PVE_VERSION} - OKD clusters on Proxmox VE (agent-based installer + OpenTofu)
+
+Usage: okd-pve [global flags] <command> [arguments]
+
+Commands:
+  init <cluster>                      Create a commented configuration skeleton
+  preflight                           Run all checks without changing anything
+  create [--skip-preflight]           Build the cluster (resumes where it stopped)
+  verify [--wait] [--timeout S]       Check cluster health
+  destroy                             Delete VMs, disks, ISOs and state
+  node add --role worker|infra --count N [--group G]
+  node remove <node> [--drain-timeout 10m] [--force-control-plane]
+  node list                           Nodes with VMID, host, IP, MAC and status
+  node reconcile                      Re-apply infra labels and taints
+  storage install                     Deploy the configured storage backend (CSI)
+  hooks list                          Show Post-Install hooks and last results
+  hooks run [name | --from name]      Run hooks (all, one, or from one on)
+  kubeconfig [--export]               Print the kubeconfig path
+  logs [--installer] [--follow]       Show the latest log (--follow moves on to later runs)
+  tui                                 Text user interface (whiptail/dialog)
+  version                             Show versions
+
+Global flags:
+  --dir DIR          Cluster directory (default: ./clusters/<name> or the current dir)
+  --config FILE      cluster.yaml to use (default: <dir>/cluster.yaml)
+  --hooks-dir DIR    External (private) hooks directory
+  --dry-run          Show what would happen, change nothing
+  --yes, -y          Answer yes to all questions
+  --debug            Verbose output, shell trace into the log file
+  --no-color         Disable colors
+  --log-file FILE    Log file (default: <dir>/logs/okd-pve-<command>-<time>.log)
+
+Exit codes: 0 ok, 1 error, 2 configuration error, 3 preflight failed, 4 hook failed.
+Documentation: README.md and docs/ in ${OKD_PVE_ROOT}
+EOF
+}
+
+abspath() {
+	if [[ $1 == /* ]]; then printf '%s' "$1"; else printf '%s/%s' "${PWD}" "$1"; fi
+}
+
+# parse_global_flags <args...>: sets globals, leaves the rest in ARGS.
+ARGS=()
+parse_global_flags() {
+	ARGS=()
+	while (($#)); do
+		case $1 in
+		--dir) DIR_FLAG=${2:?--dir needs a value} && shift 2 ;;
+		--dir=*) DIR_FLAG=${1#*=} && shift ;;
+		--config) CONFIG_FILE=$(abspath "${2:?--config needs a value}") && shift 2 ;;
+		--config=*) CONFIG_FILE=$(abspath "${1#*=}") && shift ;;
+		--hooks-dir) HOOKS_DIR_OVERRIDE=$(abspath "${2:?--hooks-dir needs a value}") && shift 2 ;;
+		--hooks-dir=*) HOOKS_DIR_OVERRIDE=$(abspath "${1#*=}") && shift ;;
+		--dry-run) DRY_RUN=1 && shift ;;
+		--yes | -y) ASSUME_YES=1 && shift ;;
+		--debug) DEBUG=1 && shift ;;
+		--no-color) NO_COLOR=1 && shift ;;
+		--log-file) LOG_FILE=$(abspath "${2:?--log-file needs a value}") && shift 2 ;;
+		--log-file=*) LOG_FILE=$(abspath "${1#*=}") && shift ;;
+		--skip-preflight) SKIP_PREFLIGHT=1 && shift ;;
+		-h | --help) ARGS+=(help) && shift ;;
+		--) shift && ARGS+=("$@") && break ;;
+		*) ARGS+=("$1") && shift ;;
+		esac
+	done
+}
+
+setup_logging() {
+	local cmd=$1
+	if [[ -z ${LOG_FILE} ]]; then
+		mkdir -p "${LOG_DIR}"
+		chmod 700 "${LOG_DIR}"
+		LOG_FILE=${LOG_DIR}/okd-pve-${cmd}-$(date +%Y%m%d-%H%M%S).log
+		# latest.log points to the newest real run, not to "okd-pve logs".
+		[[ ${cmd%%-*} == logs ]] || ln -sfn "${LOG_FILE##*/}" "${LOG_DIR}/latest.log"
+	else
+		mkdir -p "$(dirname "${LOG_FILE}")"
+	fi
+	: >>"${LOG_FILE}"
+	chmod 600 "${LOG_FILE}"
+	_log_to_file START "okd-pve ${OKD_PVE_VERSION} ${cmd} (dir ${CLUSTER_DIR}, dry-run=${DRY_RUN})"
+}
+
+# setup_debug_trace: shell trace into the log file, through the redaction
+# filter. Called after the secrets are registered.
+setup_debug_trace() {
+	((DEBUG)) || return 0
+	exec {OKD_PVE_XTRACE_FD}> >(redact_stream --log "${LOG_FILE}")
+	BASH_XTRACEFD=${OKD_PVE_XTRACE_FD}
+	PS4='+ ${BASH_SOURCE[0]##*/}:${LINENO} ${FUNCNAME[0]:-main}: '
+	set -x
+}
+
+# cluster_context_load <command>: cluster dir, logging, configuration.
+cluster_context_load() {
+	resolve_cluster_dir "${DIR_FLAG}"
+	tools_path
+	setup_logging "$1"
+	config_load
+	config_validate
+	# Credentials are loaded (if present) before any tracing starts so the
+	# token is registered for redaction in every output channel.
+	if [[ -f ${PROXMOX_CONF_FILE} || -n ${PROXMOX_VE_API_TOKEN:-} ]]; then
+		proxmox_conf_load
+	fi
+	register_pull_secret
+	[[ -f ${AUTH_DIR}/kubeadmin-password ]] && redact_register "$(cat "${AUTH_DIR}/kubeadmin-password")"
+	setup_debug_trace
+	nodes_json >/dev/null
+}
+
+proxmox_require() {
+	[[ -n ${PROXMOX_VE_API_TOKEN:-} ]] || proxmox_conf_load
+}
+
+# ---------------------------------------------------------------------------
+# init
+# ---------------------------------------------------------------------------
+
+cmd_init() {
+	local name=${1:-}
+	[[ ${name} =~ ^[a-z0-9]([a-z0-9-]{0,30}[a-z0-9])?$ ]] ||
+		die "${EXIT_CONFIG}" "init needs a cluster name (lowercase letters, digits, dashes; max 32 chars)." "okd-pve init <name>"
+	local dir=${DIR_FLAG:-./clusters/${name}}
+	local files=(cluster.yaml install-config.yaml proxmox.conf .gitignore preboot/README.md)
+	local f
+	for f in "${files[@]}"; do
+		[[ -e ${dir}/${f} ]] && die "${EXIT_CONFIG}" "${dir}/${f} already exists; refusing to overwrite." \
+			"Use another --dir or remove the file."
+	done
+	if ((DRY_RUN)); then
+		for f in "${files[@]}"; do dry_run_note "would create ${dir}/${f}"; done
+		return 0
+	fi
+	mkdir -p "${dir}/preboot"
+	TPL=([NAME]=${name})
+	for f in cluster.yaml install-config.yaml proxmox.conf; do
+		render_template "${OKD_PVE_ROOT}/templates/init/${f}.tpl" >"${dir}/${f}"
+	done
+	cp "${OKD_PVE_ROOT}/templates/init/gitignore" "${dir}/.gitignore"
+	cp "${OKD_PVE_ROOT}/templates/init/preboot-README.md" "${dir}/preboot/README.md"
+	chmod 600 "${dir}/proxmox.conf"
+	log_ok "Created cluster configuration in ${dir}"
+	log_info "Next steps:"
+	log_info "  1. Edit ${dir}/install-config.yaml (base domain, VIPs, machine network)"
+	log_info "  2. Edit ${dir}/cluster.yaml (Proxmox nodes, storage, node groups, IPs)"
+	log_info "  3. Put the API token into ${dir}/proxmox.conf (docs/proxmox-permissions.md)"
+	log_info "  4. okd-pve preflight --dir ${dir}"
+}
+
+# ---------------------------------------------------------------------------
+# preflight
+# ---------------------------------------------------------------------------
+
+cmd_preflight() {
+	proxmox_require
+	preflight_run || die "${EXIT_PREFLIGHT}" "Preflight failed." "Fix the FAIL items above and run 'okd-pve preflight' again."
+}
+
+# ---------------------------------------------------------------------------
+# create
+# ---------------------------------------------------------------------------
+
+create_step() {
+	log_step "[$1/${CREATE_STEPS}] $2"
+}
+
+cmd_create() {
+	local start=${SECONDS}
+	proxmox_require
+	((DRY_RUN)) || state_init
+	if ! state_inventory_matches_config; then
+		die "${EXIT_CONFIG}" "node_groups counts in cluster.yaml differ from the existing VMs." \
+			"Scale an installed cluster with 'okd-pve node add/remove'; restore the counts to continue create."
+	fi
+
+	create_step 1 "Configuration"
+	log_ok "Cluster ${CLUSTER_NAME}.${BASE_DOMAIN}, OKD $(cfg '.okd.version'), $(nodes_query 'length') nodes"
+	state_step_done install && log_info "Cluster is already installed; continuing with the remaining steps"
+
+	create_step 2 "Preflight"
+	if ((SKIP_PREFLIGHT)); then
+		log_warn "Skipped (--skip-preflight)"
+	elif state_step_done install; then
+		log_info "Skipped (cluster already installed)"
+	else
+		preflight_run || die "${EXIT_PREFLIGHT}" "Preflight failed." \
+			"Fix the FAIL items above (or, at your own risk, use --skip-preflight)."
+	fi
+
+	create_step 3 "Tools"
+	tools_ensure
+	((DRY_RUN)) || log_ok "openshift-install, oc, tofu, butane, nmstatectl ready"
+
+	local stage=${OKD_PVE_TMP}/stage inputs_hash=''
+	create_step 4 "Rendering install-config.yaml and agent-config.yaml"
+	# Rendered on every run until the cluster is installed, so a configuration
+	# change after the ISO was built is detected (step 6).
+	if ! state_step_done install || ((DRY_RUN)); then
+		[[ -n ${BUTANE} ]] || BUTANE=$(tool_check butane | cut -f1 || true)
+		installer_stage "${stage}"
+		log_ok "install-config.yaml, agent-config.yaml rendered (sources untouched)"
+		create_step 5 "Rendering Pre-Boot manifests"
+		log_ok "$(find "${stage}/openshift" -type f | wc -l | tr -d ' ') manifest(s): $(find "${stage}/openshift" -type f -exec basename {} \; | sort | paste -sd' ' -)"
+		inputs_hash=$(installer_inputs_hash "${stage}")
+	else
+		log_info "Skipped (cluster already installed)"
+		create_step 5 "Rendering Pre-Boot manifests"
+		log_info "Skipped (cluster already installed)"
+	fi
+
+	create_step 6 "Building the agent ISO"
+	local changed=0
+	if state_step_done image && [[ -n ${inputs_hash} && ${inputs_hash} != "$(cat "${STATE_DIR}/image.sha256" 2>/dev/null)" ]]; then
+		changed=1
+	fi
+	if state_step_done image && ! state_step_done vms; then
+		# No VM booted the ISO yet, so it can still be replaced: rebuild it
+		# when the configuration changed or its certificates are about to expire.
+		local age max
+		age=$(installer_iso_age_hours)
+		max=$(cfg '.install.iso_max_age_hours')
+		if ((changed)); then
+			log_warn "The configuration changed since the ISO was built; rebuilding it (no VM uses it yet)"
+			state_step_clear image
+		elif ((age >= max)); then
+			log_warn "The agent ISO is ${age}h old (its certificates expire after 24h); rebuilding it"
+			state_step_clear image
+		fi
+	fi
+	if state_step_done image; then
+		if ((changed)); then
+			die "${EXIT_CONFIG}" "The configuration changed after the agent ISO was built." \
+				"An existing cluster cannot be re-rendered (new CA, new certificates). Revert the change, or destroy and create again."
+		fi
+		log_info "Already built (.generated/${AGENT_ISO_NAME})"
+	elif ! dry_run_note "would run openshift-install agent create image in a fresh ${GENERATED_DIR}"; then
+		installer_create_image "${stage}"
+		printf '%s\n' "${inputs_hash}" >"${STATE_DIR}/image.sha256"
+		state_step_mark image
+	fi
+
+	create_step 7 "Uploading the ISO and creating VMs (OpenTofu)"
+	local hosts
+	hosts=$(nodes_query '[.[].host] | unique')
+	if state_step_done vms; then
+		log_info "Already done"
+	elif ((DRY_RUN)); then
+		if [[ -n ${TOFU} ]]; then
+			local iso=${GENERATED_DIR}/${AGENT_ISO_NAME}
+			[[ -f ${iso} ]] || { iso=${OKD_PVE_TMP}/placeholder.iso && : >"${iso}"; }
+			tf_isos_json() { jq -cn --arg p "${iso}" --arg f "$(tf_iso_file_name agent "${iso}")" --argjson h "${hosts}" '{agent: {path: $p, file_name: $f, hosts: $h}}'; }
+			tf_node_isos() { nodes_query 'map({key: .name, value: "agent"}) | from_entries'; }
+			tf_plan
+		else
+			dry_run_note "would run tofu apply (tofu plan skipped: tofu is not installed yet)"
+		fi
+	else
+		state_inventory_freeze
+		tf_iso_register agent "${GENERATED_DIR}/${AGENT_ISO_NAME}" "${hosts}"
+		tf_node_isos_set "$(nodes_query -c 'map({key: .name, value: "agent"}) | from_entries')"
+		tf_apply
+		state_step_mark vms
+	fi
+
+	create_step 8 "Waiting for bootstrap"
+	if state_step_done bootstrap; then
+		log_info "Already done"
+	elif ! dry_run_note "would run openshift-install agent wait-for bootstrap-complete"; then
+		installer_wait bootstrap-complete ||
+			die "${EXIT_ERROR}" "Bootstrap did not complete." \
+				"Check the rendezvous node console (qm terminal $(nodes_query -r --arg ip "$(cfg '.network.rendezvous_ip')" '.[] | select(.ip == $ip) | .vmid')) and ${GENERATED_DIR}/.openshift_install.log; re-run create to keep waiting."
+		state_step_mark bootstrap
+	fi
+
+	create_step 9 "Waiting for the installation to complete"
+	if state_step_done install; then
+		log_info "Already done"
+	elif ! dry_run_note "would run openshift-install agent wait-for install-complete"; then
+		installer_wait install-complete ||
+			die "${EXIT_ERROR}" "Installation did not complete in time." \
+				"Re-run 'okd-pve create' to keep waiting; check 'oc get co' with ${KUBECONFIG_FILE}."
+		installer_copy_auth
+		state_step_mark install
+	fi
+
+	create_step 10 "Detaching the ISO"
+	if state_step_done iso-detached; then
+		log_info "Already done"
+	elif ! dry_run_note "would detach the ISO, set the boot order to disk only and delete the ISO from Proxmox"; then
+		tf_node_isos_set '{}'
+		tf_iso_unregister agent
+		tf_apply
+		state_step_mark iso-detached
+	fi
+
+	create_step 11 "Infra labels and taints"
+	if ((DRY_RUN)); then
+		dry_run_note "would label/taint infra nodes: $(nodes_query '[.[] | select(.infra) | .name] | join(" ")')"
+	else
+		cluster_api_init
+		nodes_reconcile_labels
+		state_step_mark labels
+	fi
+
+	create_step 12 "Verifying the cluster"
+	if ! dry_run_note "would run verify --wait"; then
+		local vstart=${SECONDS}
+		until verify_once --no-storage; do
+			((SECONDS - vstart < 3600)) || die "${EXIT_ERROR}" "The cluster did not become healthy within 60 minutes." \
+				"Run 'okd-pve verify' for details; re-run create to continue with storage and hooks."
+			log_info "Not healthy yet (${VF_FAIL} failure(s)), checking again in 60s"
+			sleep 60
+		done
+		log_ok "Cluster is healthy"
+		installer_prune_failed_installers
+		state_step_mark verified
+	fi
+
+	create_step 13 "Storage"
+	if [[ $(cfg '.storage.backend') == none ]]; then
+		log_info "Skipped (storage.backend: none)"
+	elif state_step_done storage && ! ((DRY_RUN)); then
+		log_info "Already done"
+	else
+		cmd_storage_install
+		state_step_mark storage
+	fi
+
+	create_step 14 "Post-Install hooks"
+	if ((DRY_RUN)); then
+		hooks_run
+	elif state_step_done hooks; then
+		log_info "Already done (re-run with 'okd-pve hooks run')"
+	else
+		cluster_api_init
+		hooks_run
+		state_step_mark hooks
+	fi
+
+	((DRY_RUN)) && {
+		log_ok "Dry run finished; nothing was changed"
+		return 0
+	}
+	printf '\n'
+	log_ok "Cluster ${CLUSTER_NAME}.${BASE_DOMAIN} is ready ($(elapsed "${start}") this run)"
+	log_info "Console:    https://console-openshift-console.apps.${CLUSTER_NAME}.${BASE_DOMAIN}"
+	log_info "Kubeconfig: export KUBECONFIG=${KUBECONFIG_FILE}"
+	log_info "Password:   ${AUTH_DIR}/kubeadmin-password (user kubeadmin)"
+}
+
+# ---------------------------------------------------------------------------
+# destroy
+# ---------------------------------------------------------------------------
+
+cmd_destroy() {
+	proxmox_require
+	tools_ensure tofu
+	log_step "Destroying cluster ${CLUSTER_NAME}.${BASE_DOMAIN}"
+	if tf_has_state; then
+		log_info "VMs in state: $(jq -r '[.resources[]? | select(.type == "proxmox_virtual_environment_vm") | .instances[].index_key] | join(" ")' "${TOFU_DIR}/terraform.tfstate")"
+	else
+		log_info "No OpenTofu state; nothing to delete on Proxmox from state"
+	fi
+	if ((DRY_RUN)); then
+		if tf_has_state; then
+			tf_isos_json() { echo '{}'; }
+			tf_node_isos() { echo '{}'; }
+			tf_plan -destroy
+		fi
+		dry_run_note "would delete ${GENERATED_DIR}, ${STATE_DIR}, ${AUTH_DIR} and the OpenTofu state"
+		return 0
+	fi
+	if ! ((ASSUME_YES)); then
+		is_interactive || die "${EXIT_ERROR}" "destroy needs confirmation." "Run interactively or pass --yes."
+		log_warn "This deletes all VMs, disks and ISOs of ${CLUSTER_NAME} and its local state."
+		confirm_typed "${CLUSTER_NAME}" "Type the cluster name (${CLUSTER_NAME}) to confirm" ||
+			die "${EXIT_ERROR}" "Aborted; nothing was deleted."
+	fi
+	if tf_has_state; then
+		# Without ISOs in the configuration the destroy plan does not need the
+		# local ISO files any more.
+		tf_isos_json() { echo '{}'; }
+		tf_node_isos() { echo '{}'; }
+		tf_destroy
+	fi
+	destroy_report_leftovers
+	rm -rf "${GENERATED_DIR}" "${AUTH_DIR}" "${TOFU_DIR}/terraform.tfstate" "${TOFU_DIR}/terraform.tfstate.backup" \
+		"${TOFU_DIR}/cluster.auto.json"
+	state_wipe
+	log_ok "Cluster ${CLUSTER_NAME} destroyed. Configuration files and logs were kept."
+}
+
+# destroy_report_leftovers: VMs of this cluster still in the pool.
+destroy_report_leftovers() {
+	local vms left
+	vms=$(pve_cluster_vms 2>/dev/null) || return 0
+	# Match by node name, or by the cluster tag when proxmox.tags is on.
+	left=$(jq -r --arg p "$(pool_name)" --arg c "${CLUSTER_NAME}" --argjson names "$(nodes_query -c '[.[].name]')" \
+		'[.[] | select((.pool // "") == $p)
+		 | select((.name as $n | $names | index($n)) or ((.tags // "") | split(";") | index($c)))
+		 | "\(.name) (VMID \(.vmid) on \(.node))"] | join(", ")' <<<"${vms}")
+	if [[ -n ${left} ]]; then
+		log_warn "VMs of this cluster are still in pool $(pool_name) but not in the OpenTofu state: ${left}"
+		log_hint "Delete them in the Proxmox UI or with 'qm destroy <vmid> --purge' after checking."
+	fi
+}
+
+# ---------------------------------------------------------------------------
+# kubeconfig, logs, version
+# ---------------------------------------------------------------------------
+
+cmd_kubeconfig() {
+	[[ -f ${KUBECONFIG_FILE} ]] || die "${EXIT_ERROR}" "No kubeconfig yet (${KUBECONFIG_FILE})." "Run 'okd-pve create'."
+	if [[ ${1:-} == --export ]]; then
+		printf 'export KUBECONFIG=%q\n' "${KUBECONFIG_FILE}"
+	else
+		printf '%s\n' "${KUBECONFIG_FILE}"
+	fi
+}
+
+# _logs_newest: newest log of another command (this invocation writes a
+# "-logs-" log).
+_logs_newest() {
+	local file='' f
+	for f in "${LOG_DIR}"/okd-pve-*.log; do
+		[[ -f ${f} && ${f} != *-logs-* ]] || continue
+		[[ -z ${file} || ${f} -nt ${file} ]] && file=${f}
+	done
+	printf '%s' "${file}"
+}
+
+# _logs_started <file>: start time from the log file name (YYYYmmdd-HHMMSS).
+_logs_started() {
+	[[ ${1##*/} =~ -([0-9]{8}-[0-9]{6})\.log$ ]] && printf '%s' "${BASH_REMATCH[1]}"
+}
+
+# _logs_follow <file>: tail -f that moves on to the next log file when a
+# later okd-pve run starts (e.g. a resumed create).
+_logs_follow() {
+	local file=$1 next
+	# disown: no "Terminated" job messages when the tail is replaced or stopped.
+	tail -n 50 -f "${file}" &
+	_LOGS_TAIL_PID=$!
+	disown
+	trap 'kill "${_LOGS_TAIL_PID}" 2>/dev/null; exit 0' INT TERM EXIT
+	while :; do
+		# wait, unlike a foreground sleep, lets the trap run at once.
+		sleep 2 &
+		wait $!
+		next=$(_logs_newest)
+		[[ -n ${next} && ${next} != "${file}" ]] || continue
+		[[ $(_logs_started "${next}") > $(_logs_started "${file}") ]] || continue
+		sleep 1 # let the old tail print the last lines
+		kill "${_LOGS_TAIL_PID}" 2>/dev/null || true
+		file=${next}
+		printf '\n==> %s\n' "${file}"
+		tail -n +1 -f "${file}" &
+		_LOGS_TAIL_PID=$!
+		disown
+	done
+}
+
+cmd_logs() {
+	local file follow=0 installer=0
+	file=$(_logs_newest)
+	while (($#)); do
+		case $1 in
+		--installer) file=${GENERATED_DIR}/.openshift_install.log installer=1 && shift ;;
+		--follow | -f) follow=1 && shift ;;
+		*) die "${EXIT_CONFIG}" "logs: unknown argument $1" ;;
+		esac
+	done
+	[[ -n ${file} && -f ${file} ]] || die "${EXIT_ERROR}" "No log file found." "Logs are written to ${LOG_DIR}."
+	printf '==> %s\n' "${file}" >&2
+	if ((follow && installer)); then
+		tail -n 50 -f "${file}" | redact
+	elif ((follow)); then
+		# In the background with wait, so the trap runs at once on Ctrl-C or
+		# TERM: it stops the follower, which stops its tail. Ending a log
+		# view interrupts nothing, so it exits 0 without an error.
+		_logs_follow "${file}" | redact &
+		trap 'pkill -P $$ 2>/dev/null; exit 0' INT TERM
+		wait
+	else
+		tail -n 200 "${file}" | redact
+	fi
+}
+
+cmd_version() {
+	printf 'okd-pve %s\n' "${OKD_PVE_VERSION}"
+	printf '  minimum OKD:      %s\n' "${OKD_MIN_VERSION}"
+	printf '  OpenTofu:         %s (pinned download)\n' "${TOFU_VERSION}"
+	printf '  butane:           %s (pinned download)\n' "${BUTANE_VERSION}"
+	printf '  Proxmox provider: %s %s\n' "${PROXMOX_PROVIDER_SOURCE}" "${PROXMOX_PROVIDER_VERSION}"
+}
+
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
+
+main() {
+	parse_global_flags "$@"
+	set -- "${ARGS[@]+"${ARGS[@]}"}"
+	setup_colors
+	setup_traps
+	setup_tmp
+	local cmd=${1:-help}
+	shift || true
+	case ${cmd} in
+	help) usage && return 0 ;;
+	version | --version) cmd_version && return 0 ;;
+	init) cmd_init "$@" && return 0 ;;
+	tui) tui_main && return 0 ;;
+	esac
+
+	local sub=${1:-}
+	case ${cmd} in
+	preflight | create | verify | destroy | kubeconfig | logs) ;;
+	node | storage | hooks) [[ -n ${sub} ]] || die "${EXIT_CONFIG}" "${cmd} needs a subcommand." "okd-pve help" ;;
+	*) usage >&2 && die "${EXIT_CONFIG}" "Unknown command: ${cmd}" ;;
+	esac
+	cluster_context_load "${cmd}${sub:+-${sub}}"
+
+	case ${cmd} in
+	preflight) cmd_preflight "$@" ;;
+	create) cmd_create "$@" ;;
+	verify) cmd_verify "$@" ;;
+	destroy) cmd_destroy "$@" ;;
+	kubeconfig) cmd_kubeconfig "$@" ;;
+	logs) cmd_logs "$@" ;;
+	node)
+		shift
+		case ${sub} in
+		add) proxmox_require && cmd_node_add "$@" ;;
+		remove) proxmox_require && cmd_node_remove "$@" ;;
+		list) cmd_node_list "$@" ;;
+		reconcile) cmd_node_reconcile "$@" ;;
+		*) die "${EXIT_CONFIG}" "Unknown node subcommand: ${sub}" "okd-pve node add|remove|list|reconcile" ;;
+		esac
+		;;
+	storage)
+		shift
+		case ${sub} in
+		install) cmd_storage_install "$@" ;;
+		*) die "${EXIT_CONFIG}" "Unknown storage subcommand: ${sub}" "okd-pve storage install" ;;
+		esac
+		;;
+	hooks)
+		shift
+		case ${sub} in
+		list) cmd_hooks_list "$@" ;;
+		run)
+			((DRY_RUN)) || cluster_api_init
+			hooks_run "$@"
+			;;
+		*) die "${EXIT_CONFIG}" "Unknown hooks subcommand: ${sub}" "okd-pve hooks list|run" ;;
+		esac
+		;;
+	esac
+}
+
+# Allow sourcing for tests without running main.
+if [[ ${BASH_SOURCE[0]} == "${0}" ]]; then
+	main "$@"
+fi

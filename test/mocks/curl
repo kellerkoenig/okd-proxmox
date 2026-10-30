@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# curl mock for the Proxmox API. Maps /api2/json/<path> to a fixture file
+# <path with / replaced by _>.json in $MOCK_PVE_FIXTURES and appends
+# "\n<http code>" like `curl -w '\n%{http_code}'`.
+#   MOCK_PVE_USED_VMIDS   space separated VMIDs reported as taken
+#   MOCK_PVE_FAIL=1       simulate an unreachable API
+set -euo pipefail
+url=''
+config=''
+for a in "$@"; do
+	[[ ${a} == http* ]] && url=${a}
+	[[ ${a} == -K ]] && config=stdin
+done
+[[ ${config} == stdin ]] && cat >"${MOCK_LOG:-/dev/null}.curl-config"
+echo "curl ${url}" >>"${MOCK_LOG:-/dev/null}"
+if [[ ${MOCK_PVE_FAIL:-0} == 1 ]]; then
+	echo "curl: (7) Failed to connect to pve.example.com port 8006" >&2
+	exit 7
+fi
+path=${url#*api2/json}
+query=''
+[[ ${path} == *\?* ]] && query=${path#*\?} && path=${path%%\?*}
+if [[ ${path} == /cluster/nextid ]]; then
+	vmid=${query#vmid=}
+	if [[ " ${MOCK_PVE_USED_VMIDS:-} " == *" ${vmid} "* ]]; then
+		printf '{"errors":{"vmid":"VM %s already exists"},"data":null}\n400' "${vmid}"
+	else
+		printf '{"data":"%s"}\n200' "${vmid}"
+	fi
+	exit 0
+fi
+if [[ ${path} == /access/permissions ]]; then
+	p=$(printf '%b' "${query#path=}" | sed 's/%2F/\//g')
+	jq -c --arg p "${p}" '{data: {($p): (.[$p] // {})}}' "${MOCK_PVE_FIXTURES}/permissions.json"
+	printf '\n200'
+	exit 0
+fi
+f=${MOCK_PVE_FIXTURES}/$(sed 's|^/||; s|/|_|g' <<<"${path}").json
+if [[ -f ${f} ]]; then
+	jq -c '{data: .}' "${f}"
+	printf '\n200'
+else
+	printf '{"data":null,"message":"no such fixture %s"}\n404' "${path}"
+fi

@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# Proxmox credentials for cluster "{{NAME}}". Shell format, sourced by
+# okd-pve. Must not be readable by group or others (chmod 600). Environment
+# variables with the same names take precedence (CI).
+#
+# Create the token with docs/proxmox-permissions.md. Never commit this file.
+PROXMOX_VE_ENDPOINT="https://pve.example.com:8006/"
+PROXMOX_VE_API_TOKEN="terraform-okd@pve!okd=00000000-0000-0000-0000-000000000000"
+PROXMOX_VE_INSECURE="false"

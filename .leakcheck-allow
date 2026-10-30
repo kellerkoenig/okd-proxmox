@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Patterns (extended regex, whole match) that scripts/check-leaks.sh accepts.
+
+# --- IPv4: documentation ranges (RFC 5737), OKD default networks, specials
+192\.0\.2\.[0-9]+
+198\.51\.100\.[0-9]+
+203\.0\.113\.[0-9]+
+10\.128\.0\.0
+172\.30\.0\.0
+0\.0\.0\.0
+127\.0\.0\.1
+# test of an address range crossing an octet boundary (test/nodes.bats)
+198\.51\.101\.[01]
+
+# --- Domains: placeholders
+([a-z0-9-]+\.)*example\.(com|org|net)
+# --- Public services and projects the tool talks to or links
+([a-z0-9-]+\.)*github\.com
+([a-z0-9-]+\.)*githubusercontent\.com
+([a-z0-9-]+\.)*github\.io
+# XML namespace (SVG images)
+www\.w3\.org
+quay\.io
+registry\.redhat\.io
+registry\.access\.redhat\.com
+console\.redhat\.com
+([a-z0-9-]+\.)*opentofu\.org
+okd\.io
+docs\.okd\.io
+fedoraproject\.org
+www\.shellcheck\.net
+# SSH key type sk-ssh-ed25519@openssh.com
+openssh\.com
+([a-z0-9-]+\.)*k8s\.io
+([a-z0-9-]+\.)*kubernetes\.io
+pve\.proxmox\.com
+www\.proxmox\.com
+# --- Kubernetes/OpenShift API groups, provisioners and label prefixes
+([a-z0-9-]+\.)*openshift\.io
+([a-z0-9-]+\.)*coreos\.com
+([a-z0-9-]+\.)*ceph\.com
+([a-z0-9-]+\.)*devfile\.io
+([a-z0-9-]+\.)*argoproj\.io
+([a-z0-9-]+\.)*sinextra\.dev
+# --- Test token (fake)
+terraform-okd@pve!okd=11111111-2222-3333-4444-555555555555
+terraform-okd@pve!okd=00000000-0000-0000-0000-000000000000
+11111111-2222-3333-4444-555555555555
+00000000-0000-0000-0000-000000000000

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# openshift-install mock. Like the real one, "agent create image" consumes
+# (deletes) install-config.yaml and agent-config.yaml.
+#   MOCK_OKD_VERSION     reported version
+#   MOCK_WAIT_FAIL       "bootstrap-complete" or "install-complete" fails
+set -euo pipefail
+echo "openshift-install $*" >>"${MOCK_LOG:-/dev/null}"
+dir=''
+args=("$@")
+for ((i = 0; i < ${#args[@]}; i++)); do
+	[[ ${args[i]} == --dir ]] && dir=${args[i + 1]}
+done
+case "$1 ${2:-} ${3:-}" in
+"version  ")
+	echo "openshift-install ${MOCK_OKD_VERSION:-4.21.0-okd-scos.11}"
+	echo "release image quay.io/okd/scos-release@sha256:0000"
+	;;
+"agent create image")
+	[[ -f ${dir}/install-config.yaml && -f ${dir}/agent-config.yaml ]] || {
+		echo 'level=fatal msg="missing install-config.yaml or agent-config.yaml"'
+		exit 1
+	}
+	echo 'level=info msg="Configuration has 3 master replicas and 3 worker replicas"'
+	echo 'level=debug msg="noise"'
+	rm -f "${dir}/install-config.yaml" "${dir}/agent-config.yaml"
+	rm -rf "${dir}/openshift"
+	mkdir -p "${dir}/auth"
+	echo "iso" >"${dir}/agent.x86_64.iso"
+	echo "apiVersion: v1" >"${dir}/auth/kubeconfig"
+	echo "Kubeadmin-Pass-12345" >"${dir}/auth/kubeadmin-password"
+	echo '{}' >"${dir}/.openshift_install_state.json"
+	echo 'level=info msg="Generated ISO at agent.x86_64.iso"'
+	;;
+"agent wait-for bootstrap-complete" | "agent wait-for install-complete")
+	if [[ ${MOCK_WAIT_FAIL:-} == "$3" ]]; then
+		echo 'level=error msg="Timed out"'
+		exit 1
+	fi
+	echo "level=info msg=\"$3 done\""
+	;;
+*)
+	echo "unexpected: $*" >&2
+	exit 2
+	;;
+esac

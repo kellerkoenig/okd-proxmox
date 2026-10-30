@@ -1,0 +1,131 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The okd-proxmox Authors -->
+<!-- Example okd-pve create run (example.com, 192.0.2.0/24), rendered from the tool's ANSI output. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1003" height="2168" viewBox="0 0 1003 2168" role="img" aria-label="okd-pve create">
+<title>okd-pve create</title>
+<rect width="1003" height="2168" rx="8" fill="#1e2229"/>
+<path d="M0 8a8 8 0 0 1 8-8h987a8 8 0 0 1 8 8v22H0z" fill="#2b313b"/>
+<circle cx="18" cy="15" r="5.5" fill="#ff5f57"/><circle cx="36" cy="15" r="5.5" fill="#febc2e"/><circle cx="54" cy="15" r="5.5" fill="#28c840"/>
+<text x="501.5" y="19.5" fill="#9aa3ad" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">okd-pve create</text>
+<g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#d0d4db" xml:space="preserve">
+<text x="16" y="57">$ ./okd-pve --dir clusters/demo create</text>
+<text x="16" y="91"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [1/14] Configuration</tspan></text>
+<text x="16" y="108">    <tspan fill="#8fd18a">OK</tspan>  Cluster demo.example.com, OKD 4.22.0-okd-scos.10, 6 nodes</text>
+<text x="16" y="125"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [2/14] Preflight</tspan></text>
+<text x="16" y="142"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: configuration</tspan></text>
+<text x="16" y="159">    <tspan fill="#8fd18a">[PASS]</tspan> cluster.yaml and install-config.yaml are valid (cluster demo.example.com, OKD 4.22.0-okd-scos.10)</text>
+<text x="16" y="176">    <tspan fill="#8fd18a">[PASS]</tspan> Topology: 3 control-plane, 3 other node(s) (3 with infra role)</text>
+<text x="16" y="193">    <tspan fill="#8fd18a">[PASS]</tspan> Pull secret is valid JSON (source: clusters/demo/pull-secret.json)</text>
+<text x="16" y="210">    <tspan fill="#8fd18a">[PASS]</tspan> SSH public key found (ssh-ed25519)</text>
+<text x="16" y="227">    <tspan fill="#8fd18a">[PASS]</tspan> Pre-Boot manifests render cleanly (8 files)</text>
+<text x="16" y="244">    <tspan fill-opacity="0.55">[INFO]</tspan> No StorageClass for monitoring configured; Prometheus/Alertmanager use emptyDir</text>
+<text x="16" y="261"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: local workstation</tspan></text>
+<text x="16" y="278">    <tspan fill="#8fd18a">[PASS]</tspan> bash 5.2.21</text>
+<text x="16" y="295">    <tspan fill="#8fd18a">[PASS]</tspan> jq 1.7, yq v4.54.1</text>
+<text x="16" y="312">    <tspan fill="#8fd18a">[PASS]</tspan> nmstatectl 2.2.62 (clusters/demo/bin/nmstatectl; openshift-install validates the static network config with it)</text>
+<text x="16" y="329">    <tspan fill="#8fd18a">[PASS]</tspan> openshift-install 4.22.0-okd-scos.10 (clusters/demo/bin/openshift-install)</text>
+<text x="16" y="346">    <tspan fill="#8fd18a">[PASS]</tspan> oc 4.22.0-okd-scos.10 (clusters/demo/bin/oc)</text>
+<text x="16" y="363">    <tspan fill="#8fd18a">[PASS]</tspan> tofu 1.13.2 (clusters/demo/bin/tofu)</text>
+<text x="16" y="380">    <tspan fill="#8fd18a">[PASS]</tspan> butane 0.29.0 (clusters/demo/bin/butane)</text>
+<text x="16" y="397">    <tspan fill="#8fd18a">[PASS]</tspan> Cluster directory: 642.5 GiB free</text>
+<text x="16" y="414">    <tspan fill="#8fd18a">[PASS]</tspan> Upload buffer /tmp: 642.5 GiB free</text>
+<text x="16" y="431"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: Proxmox VE</tspan></text>
+<text x="16" y="448">    <tspan fill="#8fd18a">[PASS]</tspan> API reachable, token valid (Proxmox VE 9.2.21)</text>
+<text x="16" y="465">    <tspan fill="#8fd18a">[PASS]</tspan> Proxmox VE 9.2.21 is supported</text>
+<text x="16" y="482">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /nodes/pve1</text>
+<text x="16" y="499">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /nodes/pve2</text>
+<text x="16" y="516">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /pool/okd</text>
+<text x="16" y="533">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /sdn/zones/localnetwork/vmbr0</text>
+<text x="16" y="550">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /storage/iso-nfs</text>
+<text x="16" y="567">    <tspan fill="#8fd18a">[PASS]</tspan> Privileges on /storage/vm-nfs</text>
+<text x="16" y="584">    <tspan fill="#8fd18a">[PASS]</tspan> Node pve1 is online</text>
+<text x="16" y="601">    <tspan fill="#8fd18a">[PASS]</tspan> Node pve2 is online</text>
+<text x="16" y="618">    <tspan fill="#8fd18a">[PASS]</tspan> Resource pool okd exists</text>
+<text x="16" y="635">    <tspan fill="#8fd18a">[PASS]</tspan> All 6 VMIDs are free</text>
+<text x="16" y="652">    <tspan fill="#8fd18a">[PASS]</tspan> Storage vm-nfs on pve1 allows images</text>
+<text x="16" y="669">    <tspan fill="#8fd18a">[PASS]</tspan> Storage iso-nfs on pve1 allows iso</text>
+<text x="16" y="686">    <tspan fill="#8fd18a">[PASS]</tspan> Storage vm-nfs on pve2 allows images</text>
+<text x="16" y="703">    <tspan fill="#8fd18a">[PASS]</tspan> Storage iso-nfs on pve2 allows iso</text>
+<text x="16" y="720">    <tspan fill="#8fd18a">[PASS]</tspan> Space on vm-nfs (shared): need 744.0 GiB, 1145.8 GiB available</text>
+<text x="16" y="737">    <tspan fill="#8fd18a">[PASS]</tspan> Bridge vmbr0 exists on pve1</text>
+<text x="16" y="754">    <tspan fill="#8fd18a">[PASS]</tspan> Bridge vmbr0 exists on pve2</text>
+<text x="16" y="771">    <tspan fill="#8fd18a">[PASS]</tspan> Host pve1 CPU supports x86-64-v3</text>
+<text x="16" y="788">    <tspan fill="#8fd18a">[PASS]</tspan> Host pve2 CPU supports x86-64-v3</text>
+<text x="16" y="805">    <tspan fill="#8fd18a">[PASS]</tspan> No visible VM uses one of the generated MAC addresses (prefix 02:00:41)</text>
+<text x="16" y="822"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: capacity</tspan></text>
+<text x="16" y="839">      HOST   THREADS  vCPU RUNNING  vCPU NEW  CPU RATIO  RAM TOTAL  RAM RUNNING  RAM NEW    RAM FREE AFTER</text>
+<text x="16" y="856">      pve1   32       0             32        1.0:1      377.8 GiB  0.0 GiB      192.0 GiB  177.8 GiB</text>
+<text x="16" y="873">      pve2   32       0             16        0.5:1      377.8 GiB  0.0 GiB      96.0 GiB   273.8 GiB</text>
+<text x="16" y="890">      TOTAL  64       0             48        -          755.5 GiB  0.0 GiB      288.0 GiB  -</text>
+<text x="16" y="907">    <tspan fill="#8fd18a">[PASS]</tspan> RAM fits on every host (host reserve 8 GiB)</text>
+<text x="16" y="924">    <tspan fill="#8fd18a">[PASS]</tspan> No CPU overcommit</text>
+<text x="16" y="941"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Preflight: network, DNS and time</tspan></text>
+<text x="16" y="958">    <tspan fill="#8fd18a">[PASS]</tspan> DNS: api resolves to 192.0.2.5</text>
+<text x="16" y="975">    <tspan fill="#8fd18a">[PASS]</tspan> DNS: *.apps resolves to 192.0.2.6</text>
+<text x="16" y="992">    <tspan fill="#8fd18a">[PASS]</tspan> VIPs and node IPs do not answer (free)</text>
+<text x="16" y="1009">    <tspan fill="#e8c46a">[WARN]</tspan> Gateway 192.0.2.1 does not answer ICMP from here</text>
+<text x="16" y="1026">           <tspan fill-opacity="0.55">-&gt; Fine if this workstation is in another network or ICMP is filtered; otherwise check network.gateway.</tspan></text>
+<text x="16" y="1043">    <tspan fill="#8fd18a">[PASS]</tspan> 3 NTP servers configured</text>
+<text x="16" y="1060">    <tspan fill="#8fd18a">[PASS]</tspan> NTP server ntp1.example.com answers</text>
+<text x="16" y="1077">    <tspan fill="#8fd18a">[PASS]</tspan> NTP server ntp2.example.com answers</text>
+<text x="16" y="1094">    <tspan fill="#8fd18a">[PASS]</tspan> NTP server ntp3.example.com answers</text>
+<text x="16" y="1111">    <tspan fill="#8fd18a">[PASS]</tspan> Local clock is within 0s of NTP</text>
+<text x="16" y="1145">    <tspan fill="#e8c46a">WARN</tspan> Preflight: 46 passed, 1 warnings, 0 failed</text>
+<text x="16" y="1162"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [3/14] Tools</tspan></text>
+<text x="16" y="1179">    <tspan fill="#8fd18a">OK</tspan>  openshift-install, oc, tofu, butane, nmstatectl ready</text>
+<text x="16" y="1196"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [4/14] Rendering install-config.yaml and agent-config.yaml</tspan></text>
+<text x="16" y="1213">    <tspan fill="#8fd18a">OK</tspan>  install-config.yaml, agent-config.yaml rendered (sources untouched)</text>
+<text x="16" y="1230"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [5/14] Rendering Pre-Boot manifests</tspan></text>
+<text x="16" y="1247">    <tspan fill="#8fd18a">OK</tspan>  8 manifest(s): 99-master-okd-pve-chrony.yaml 99-master-okd-pve-kargs.yaml 99-master-okd-pve-ssh.yaml …</text>
+<text x="16" y="1264"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [6/14] Building the agent ISO</tspan></text>
+<text x="16" y="1281">    openshift-install agent create image (takes a few minutes; downloads the base ISO on first use)</text>
+<text x="16" y="1298">      | Configuration has 3 master replicas, 0 arbiter replicas, and 3 worker replicas</text>
+<text x="16" y="1315">      | The rendezvous host IP (node0 IP) is 192.0.2.11</text>
+<text x="16" y="1332">      | Using cached Base ISO ~/.cache/agent/image_cache/coreos-x86_64.iso</text>
+<text x="16" y="1349">    <tspan fill="#8fd18a">OK</tspan>  Agent ISO built in 18m54s: 0.9 GiB</text>
+<text x="16" y="1366"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [7/14] Uploading the ISO and creating VMs (OpenTofu)</tspan></text>
+<text x="16" y="1383">    <tspan fill="#8fd18a">OK</tspan>  OpenTofu apply finished in 17m49s</text>
+<text x="16" y="1400"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [8/14] Waiting for bootstrap</tspan></text>
+<text x="16" y="1417">      <tspan fill-opacity="0.55">· 17:37 API not reachable yet · 6/6 nodes answer ping</tspan></text>
+<text x="16" y="1434">      <tspan fill-opacity="0.55">· 17:41 nodes 0/6 Ready · operators 1/34 available · installing 4.22.0-okd-scos.10, operators still starting</tspan></text>
+<text x="16" y="1451">        <tspan fill="#e8c46a">waiting on authentication: no status yet</tspan></text>
+<text x="16" y="1468">        <tspan fill="#e8c46a">… and 32 more operator(s)</tspan></text>
+<text x="16" y="1485">      | Bootstrap is complete</text>
+<text x="16" y="1502"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [9/14] Waiting for the installation to complete</tspan></text>
+<text x="16" y="1519">      <tspan fill-opacity="0.55">· 18:37 nodes 5/6 Ready · operators 30/34 available · installing 4.22.0-okd-scos.10, operators still starting</tspan></text>
+<text x="16" y="1536">        <tspan fill="#e8c46a">waiting on console: RouteHealthDegraded: route not yet available</tspan></text>
+<text x="16" y="1553">        <tspan fill="#e8c46a">… and 3 more operator(s)</tspan></text>
+<text x="16" y="1570">      | Cluster is installed</text>
+<text x="16" y="1587"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [10/14] Detaching the ISO</tspan></text>
+<text x="16" y="1604">    <tspan fill="#8fd18a">OK</tspan>  OpenTofu apply finished in 9s</text>
+<text x="16" y="1621"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [11/14] Infra labels and taints</tspan></text>
+<text x="16" y="1638">    <tspan fill="#8fd18a">OK</tspan>  Infra labels and taints updated</text>
+<text x="16" y="1655"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [12/14] Verifying the cluster</tspan></text>
+<text x="16" y="1672">    <tspan fill="#8fd18a">OK</tspan>  Cluster is healthy</text>
+<text x="16" y="1689"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [13/14] Storage</tspan></text>
+<text x="16" y="1706">    Skipped (storage.backend: none)</text>
+<text x="16" y="1723"><tspan fill="#6fb3ff" font-weight="bold">==&gt; [14/14] Post-Install hooks</tspan></text>
+<text x="16" y="1740"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Hook 30-ingress-controller.sh (builtin)</tspan></text>
+<text x="16" y="1757">    | info: ingresscontroller/default: patched</text>
+<text x="16" y="1774">    | HTTP/2 enabled for all routes (ingresses.config/cluster).</text>
+<text x="16" y="1791">    <tspan fill="#8fd18a">OK</tspan>  30-ingress-controller.sh finished in 3m50s</text>
+<text x="16" y="1808">    …</text>
+<text x="16" y="1842"><tspan fill="#6fb3ff" font-weight="bold">==&gt; Hook report</tspan></text>
+<text x="16" y="1859">    HOOK                                      SOURCE   DURATION  RESULT</text>
+<text x="16" y="1876">    10-infra-nodes.sh                         builtin  4s        ok</text>
+<text x="16" y="1893">    15-scc-anyuid-nfs.sh                      builtin  1s        ok</text>
+<text x="16" y="1910">    20-operatorhub-catalogs.sh                builtin  1m13s     ok</text>
+<text x="16" y="1927">    30-ingress-controller.sh                  builtin  3m50s     ok</text>
+<text x="16" y="1944">    40-monitoring.sh                          builtin  7s        ok</text>
+<text x="16" y="1961">    45-alertmanager-receiver.sh               builtin  1s        ok</text>
+<text x="16" y="1978">    50-operator-logging.sh                    builtin  3m53s     ok</text>
+<text x="16" y="1995">    51-operator-descheduler.sh                builtin  1m00s     ok</text>
+<text x="16" y="2012">    52-operator-cluster-resource-override.sh  builtin  50s       ok</text>
+<text x="16" y="2029">    53-operator-cert-manager.sh               builtin  1m29s     ok</text>
+<text x="16" y="2046">    54-operator-web-terminal.sh               builtin  1m19s     ok</text>
+<text x="16" y="2063">    55-eventrouter.sh                         builtin  9s        ok</text>
+<text x="16" y="2097">    <tspan fill="#8fd18a">OK</tspan>  Cluster demo.example.com is ready (1h52m10s this run)</text>
+<text x="16" y="2114">    Console:    https://console-openshift-console.apps.demo.example.com</text>
+<text x="16" y="2131">    Kubeconfig: export KUBECONFIG=clusters/demo/auth/kubeconfig</text>
+<text x="16" y="2148">    Password:   clusters/demo/auth/kubeadmin-password (user kubeadmin)</text>
+</g></svg>

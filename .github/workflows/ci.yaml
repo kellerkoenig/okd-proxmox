@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shell:
+    name: shellcheck + shfmt
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: make tools
+      - name: shellcheck
+        run: make lint
+      - name: shfmt
+        run: make fmt
+
+  test:
+    name: bats
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: make tools
+      - name: bats
+        run: make test
+
+  terraform:
+    name: tofu validate + tflint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install tools
+        run: make tools
+      - name: tofu fmt / validate / tflint
+        run: make terraform
+
+  leakcheck:
+    name: no environment-specific data
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for real hostnames, IPs, webhooks and tokens
+        run: make leakcheck

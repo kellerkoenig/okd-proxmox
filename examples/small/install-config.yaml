@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+apiVersion: v1
+baseDomain: example.com
+metadata:
+  name: small
+networking:
+  networkType: OVNKubernetes
+  machineNetwork:
+    - cidr: 192.0.2.0/24
+  clusterNetwork:
+    - cidr: 10.128.0.0/14
+      hostPrefix: 23
+  serviceNetwork:
+    - 172.30.0.0/16
+platform:
+  baremetal:
+    apiVIPs:
+      - 192.0.2.5
+    ingressVIPs:
+      - 192.0.2.6

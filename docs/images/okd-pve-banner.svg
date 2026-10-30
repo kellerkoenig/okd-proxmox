@@ -1,0 +1,89 @@
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!-- Copyright (C) 2026 The okd-proxmox Authors -->
+<!-- README banner: wordmark, the 14 create steps, cluster nodes spread over Proxmox hosts. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-label="okd-pve: OKD clusters on Proxmox VE">
+<title>okd-pve: OKD clusters on Proxmox VE</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#151a21"/><stop offset="1" stop-color="#1f2733"/></linearGradient>
+<pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#ffffff" fill-opacity="0.05"/></pattern>
+<radialGradient id="glow" cx="0.78" cy="0.45" r="0.5"><stop offset="0" stop-color="#6fb3ff" stop-opacity="0.13"/><stop offset="1" stop-color="#6fb3ff" stop-opacity="0"/></radialGradient>
+</defs>
+<rect width="1280" height="320" rx="16" fill="url(#bg)"/>
+<rect width="1280" height="320" rx="16" fill="url(#dots)"/>
+<rect width="1280" height="320" rx="16" fill="url(#glow)"/>
+<text x="64" y="92" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="20" fill="#8b95a3"><tspan fill="#8fd18a">$</tspan> ./okd-pve create</text>
+<text x="60" y="166" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="76" font-weight="bold" fill="#e6e9ee" textLength="300" lengthAdjust="spacingAndGlyphs">okd<tspan fill="#8b95a3">-</tspan><tspan fill="#f0a25a">pve</tspan></text>
+<rect x="376" y="112" width="34" height="58" rx="3" fill="#e6e9ee" fill-opacity="0.85"/>
+<text x="64" y="210" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="23" fill="#e6e9ee">OKD clusters on Proxmox VE</text>
+<text x="64" y="240" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#8b95a3">reproducible <tspan fill="#5b6573">·</tspan> configured when the run ends <tspan fill="#5b6573">·</tspan> rebuilt in a few hours</text>
+<rect x="64" y="270" width="24" height="8" rx="4" fill="#6fb3ff"/>
+<rect x="94" y="270" width="24" height="8" rx="4" fill="#71b5f6"/>
+<rect x="124" y="270" width="24" height="8" rx="4" fill="#74b8ed"/>
+<rect x="154" y="270" width="24" height="8" rx="4" fill="#76bae4"/>
+<rect x="184" y="270" width="24" height="8" rx="4" fill="#79bcdb"/>
+<rect x="214" y="270" width="24" height="8" rx="4" fill="#7bbfd2"/>
+<rect x="244" y="270" width="24" height="8" rx="4" fill="#7ec1c9"/>
+<rect x="274" y="270" width="24" height="8" rx="4" fill="#80c3c0"/>
+<rect x="304" y="270" width="24" height="8" rx="4" fill="#83c5b7"/>
+<rect x="334" y="270" width="24" height="8" rx="4" fill="#85c8ae"/>
+<rect x="364" y="270" width="24" height="8" rx="4" fill="#88caa5"/>
+<rect x="394" y="270" width="24" height="8" rx="4" fill="#8acc9c"/>
+<rect x="424" y="270" width="24" height="8" rx="4" fill="#8dcf93"/>
+<rect x="454" y="270" width="24" height="8" rx="4" fill="#8fd18a"/>
+<text x="492" y="278" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#8fd18a">14/14 ready</text>
+<text x="969.0" y="50" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#8b95a3" text-anchor="middle" letter-spacing="1.5">ONE OKD CLUSTER · ANY NUMBER OF PROXMOX HOSTS</text>
+<circle cx="1035" cy="177" r="2.6" fill="#f0a25a" fill-opacity="0.7"/>
+<circle cx="1044" cy="177" r="2.6" fill="#f0a25a" fill-opacity="0.7"/>
+<circle cx="1053" cy="177" r="2.6" fill="#f0a25a" fill-opacity="0.7"/>
+<rect x="708" y="70" width="150" height="214" rx="12" fill="#232b37" stroke="#f0a25a" stroke-opacity="0.55" stroke-width="1.5"/>
+<circle cx="726" cy="92" r="4" fill="#f0a25a"/>
+<text x="738" y="97" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#f0a25a">pve1</text>
+<rect x="720" y="114" width="126" height="44" rx="8" fill="#1a2029" stroke="#6fb3ff" stroke-opacity="0.6"/>
+<polygon points="749.7,141.0 741.0,146.0 732.3,141.0 732.3,131.0 741.0,126.0 749.7,131.0" fill="#6fb3ff" fill-opacity="0.18" stroke="#6fb3ff" stroke-width="1.6"/>
+<polygon points="744.1,137.8 741.0,139.6 737.9,137.8 737.9,134.2 741.0,132.4 744.1,134.2" fill="#6fb3ff"/>
+<text x="758" y="140" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#e6e9ee">master-0</text>
+<circle cx="836" cy="136" r="3.5" fill="#8fd18a"/>
+<rect x="720" y="168" width="126" height="44" rx="8" fill="#1a2029" stroke="#8fd18a" stroke-opacity="0.6"/>
+<polygon points="749.7,195.0 741.0,200.0 732.3,195.0 732.3,185.0 741.0,180.0 749.7,185.0" fill="#8fd18a" fill-opacity="0.18" stroke="#8fd18a" stroke-width="1.6"/>
+<polygon points="744.1,191.8 741.0,193.6 737.9,191.8 737.9,188.2 741.0,186.4 744.1,188.2" fill="#8fd18a"/>
+<text x="758" y="194" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#e6e9ee">worker-0</text>
+<circle cx="836" cy="190" r="3.5" fill="#8fd18a"/>
+<rect x="720" y="222" width="126" height="44" rx="8" fill="#1a2029" stroke="#c49bff" stroke-opacity="0.6"/>
+<polygon points="749.7,249.0 741.0,254.0 732.3,249.0 732.3,239.0 741.0,234.0 749.7,239.0" fill="#c49bff" fill-opacity="0.18" stroke="#c49bff" stroke-width="1.6"/>
+<polygon points="744.1,245.8 741.0,247.6 737.9,245.8 737.9,242.2 741.0,240.4 744.1,242.2" fill="#c49bff"/>
+<text x="758" y="248" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#e6e9ee">infra-0</text>
+<circle cx="836" cy="244" r="3.5" fill="#8fd18a"/>
+<rect x="872" y="70" width="150" height="214" rx="12" fill="#232b37" stroke="#f0a25a" stroke-opacity="0.55" stroke-width="1.5"/>
+<circle cx="890" cy="92" r="4" fill="#f0a25a"/>
+<text x="902" y="97" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#f0a25a">pve2</text>
+<rect x="884" y="114" width="126" height="44" rx="8" fill="#1a2029" stroke="#6fb3ff" stroke-opacity="0.6"/>
+<polygon points="913.7,141.0 905.0,146.0 896.3,141.0 896.3,131.0 905.0,126.0 913.7,131.0" fill="#6fb3ff" fill-opacity="0.18" stroke="#6fb3ff" stroke-width="1.6"/>
+<polygon points="908.1,137.8 905.0,139.6 901.9,137.8 901.9,134.2 905.0,132.4 908.1,134.2" fill="#6fb3ff"/>
+<text x="922" y="140" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#e6e9ee">master-1</text>
+<circle cx="1000" cy="136" r="3.5" fill="#8fd18a"/>
+<rect x="884" y="168" width="126" height="44" rx="8" fill="#1a2029" stroke="#8fd18a" stroke-opacity="0.6"/>
+<polygon points="913.7,195.0 905.0,200.0 896.3,195.0 896.3,185.0 905.0,180.0 913.7,185.0" fill="#8fd18a" fill-opacity="0.18" stroke="#8fd18a" stroke-width="1.6"/>
+<polygon points="908.1,191.8 905.0,193.6 901.9,191.8 901.9,188.2 905.0,186.4 908.1,188.2" fill="#8fd18a"/>
+<text x="922" y="194" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#e6e9ee">worker-1</text>
+<circle cx="1000" cy="190" r="3.5" fill="#8fd18a"/>
+<rect x="884" y="222" width="126" height="44" rx="8" fill="#1a2029" stroke="#c49bff" stroke-opacity="0.6"/>
+<polygon points="913.7,249.0 905.0,254.0 896.3,249.0 896.3,239.0 905.0,234.0 913.7,239.0" fill="#c49bff" fill-opacity="0.18" stroke="#c49bff" stroke-width="1.6"/>
+<polygon points="908.1,245.8 905.0,247.6 901.9,245.8 901.9,242.2 905.0,240.4 908.1,242.2" fill="#c49bff"/>
+<text x="922" y="248" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#e6e9ee">infra-1</text>
+<circle cx="1000" cy="244" r="3.5" fill="#8fd18a"/>
+<rect x="1080" y="70" width="150" height="214" rx="12" fill="#232b37" stroke="#f0a25a" stroke-opacity="0.55" stroke-width="1.5"/>
+<circle cx="1098" cy="92" r="4" fill="#f0a25a"/>
+<text x="1110" y="97" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="15" fill="#f0a25a">pveN</text>
+<rect x="1092" y="114" width="126" height="44" rx="8" fill="#1a2029" stroke="#6fb3ff" stroke-opacity="0.6"/>
+<polygon points="1121.7,141.0 1113.0,146.0 1104.3,141.0 1104.3,131.0 1113.0,126.0 1121.7,131.0" fill="#6fb3ff" fill-opacity="0.18" stroke="#6fb3ff" stroke-width="1.6"/>
+<polygon points="1116.1,137.8 1113.0,139.6 1109.9,137.8 1109.9,134.2 1113.0,132.4 1116.1,134.2" fill="#6fb3ff"/>
+<text x="1130" y="140" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#e6e9ee">master-2</text>
+<circle cx="1208" cy="136" r="3.5" fill="#8fd18a"/>
+<rect x="1092" y="168" width="126" height="44" rx="8" fill="#1a2029" stroke="#8fd18a" stroke-opacity="0.6"/>
+<polygon points="1121.7,195.0 1113.0,200.0 1104.3,195.0 1104.3,185.0 1113.0,180.0 1121.7,185.0" fill="#8fd18a" fill-opacity="0.18" stroke="#8fd18a" stroke-width="1.6"/>
+<polygon points="1116.1,191.8 1113.0,193.6 1109.9,191.8 1109.9,188.2 1113.0,186.4 1116.1,188.2" fill="#8fd18a"/>
+<text x="1130" y="194" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="13" fill="#e6e9ee">worker-2</text>
+<circle cx="1208" cy="190" r="3.5" fill="#8fd18a"/>
+<rect x="1092" y="222" width="126" height="44" rx="8" fill="none" stroke="#8b95a3" stroke-opacity="0.6" stroke-dasharray="5 4"/>
+<text x="1155.0" y="249" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="14" fill="#8b95a3" text-anchor="middle">+ node add</text>
+</svg>

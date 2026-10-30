@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# tofu mock: records calls and a snapshot of the variables of every apply,
+# keeps a fake state with one VM resource per node.
+set -euo pipefail
+dir=.
+if [[ ${1:-} == -chdir=* ]]; then
+	dir=${1#-chdir=}
+	shift
+fi
+echo "tofu $*" >>"${MOCK_LOG:-/dev/null}"
+case ${1:-} in
+version) echo '{"terraform_version":"1.13.2"}' ;;
+init) mkdir -p "${dir}/.terraform" && touch "${dir}/.terraform.lock.hcl" ;;
+plan) echo "Plan: mocked" ;;
+apply)
+	if [[ ${MOCK_TOFU_FAIL:-} == apply ]]; then
+		echo "Error: VM create: 403 Permission check failed"
+		exit 1
+	fi
+	n=$(find "${MOCK_LOG%/*}" -name 'apply-*.json' 2>/dev/null | wc -l)
+	cp "${dir}/cluster.auto.json" "${MOCK_LOG%/*}/apply-${n}.json"
+	jq '{resources: [{type: "proxmox_virtual_environment_vm", instances: [.nodes | keys[] | {index_key: .}]}]}' \
+		"${dir}/cluster.auto.json" >"${dir}/terraform.tfstate"
+	echo "Apply complete!"
+	;;
+destroy)
+	echo '{"resources": []}' >"${dir}/terraform.tfstate"
+	echo "Destroy complete!"
+	;;
+esac

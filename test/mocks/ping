@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+# ping mock: only addresses listed in MOCK_PING_UP answer.
+for a in "$@"; do ip=${a}; done
+[[ " ${MOCK_PING_UP:-} " == *" ${ip} "* ]]

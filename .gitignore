@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Local development tools (make tools)
+/.tools/
+# Cluster working directories never belong into this repository
+/clusters/
+logs/
+.generated/
+.state/
+auth/
+tofu/
+*.tfstate
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+proxmox.conf
+proxmox-csi.conf
+ceph-csi.conf
+pull-secret.json
+*.bak

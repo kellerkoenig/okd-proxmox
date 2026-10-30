@@ -1,0 +1,71 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# Small cluster: 3 control-plane nodes and 3 combined worker/infra nodes on
+# a three-node Proxmox cluster. Ingress, monitoring and the registry share
+# the worker nodes with applications (no infra taint).
+okd:
+  version: "4.21.0-okd-scos.11"
+
+proxmox:
+  nodes: [pve1, pve2, pve3]
+  vm_storage: local-lvm
+  iso_storage: local
+  bridge: vmbr0
+  vlan_tag: 0
+  pool: okd-small
+  vmid_start: 4100
+  vmid_end: 4159
+  vmid_block: 20
+  mac_prefix: "02:00:41"
+
+network:
+  interface: ens18
+  prefix_length: 24
+  gateway: 192.0.2.1
+  dns_servers: [192.0.2.53]
+  ntp_servers: [192.0.2.123, 192.0.2.124, 192.0.2.125]
+  rendezvous_ip: 192.0.2.11
+
+node_groups:
+  - name: master
+    roles: [master]
+    count: 3
+    cpu: 8
+    memory_gib: 32
+    disk_gib: 120
+    ips: ["192.0.2.11-192.0.2.13"]
+
+  - name: worker
+    roles: [worker, infra]
+    taint_infra: false            # combined nodes must not be tainted
+    count: 3
+    cpu: 8
+    memory_gib: 64                # Prometheus + routers + applications
+    disk_gib: 256
+    ips: ["192.0.2.21-192.0.2.29"]   # spare addresses for node add
+
+storage:
+  backend: nfs
+  storage_class: nfs
+  retain_class: true
+  default: false
+  nfs:
+    server: 192.0.2.200
+    path: /export/okd-small
+
+monitoring:
+  storage_class: nfs
+
+hooks:
+  builtin:
+    - 10-infra-nodes
+    - 20-operatorhub-catalogs
+    - 30-ingress-controller
+    - 35-image-registry
+    - 40-monitoring
+  env:
+    OKD_PVE_CATALOG_PROFILE: okderators
+    INGRESS_REPLICAS: "3"
+    MONITORING_RETENTION: 7d
+    MONITORING_PROMETHEUS_SIZE: 30Gi

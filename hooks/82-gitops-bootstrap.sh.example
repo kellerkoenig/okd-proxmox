@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# EXAMPLE (not run): bootstrap a GitOps tool (Argo CD via the GitOps
+# operator) and point it at a repository with the application deployments.
+# From then on deployments are the GitOps tool's job, not okd-pve's.
+# Copy into your private hooks directory, rename to 82-gitops-bootstrap.sh,
+# chmod +x and adapt.
+#
+#   GITOPS_REPO_URL   e.g. https://git.example.com/platform/apps.git
+#   GITOPS_REPO_PATH  default: clusters/${OKD_PVE_CLUSTER_NAME}
+#   GITOPS_REVISION   default: main
+set -euo pipefail
+# shellcheck source=../lib/oclib.sh
+source "${OKD_PVE_LIB_DIR:?run via okd-pve hooks run}/oclib.sh"
+# shellcheck source=../lib/catalog.sh
+source "${OKD_PVE_LIB_DIR}/catalog.sh"
+
+: "${GITOPS_REPO_URL:?}"
+install_operator_by_key gitops
+wait_for_crd applications.argoproj.io
+oc_wait 900 "namespace openshift-gitops" oc get namespace openshift-gitops
+
+apply_idempotent - <<YAML
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: bootstrap
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: ${GITOPS_REPO_URL}
+    path: ${GITOPS_REPO_PATH:-clusters/${OKD_PVE_CLUSTER_NAME}}
+    targetRevision: ${GITOPS_REVISION:-main}
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+YAML

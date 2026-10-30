@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# EXAMPLE (not run): service account with read access to all metrics
+# (cluster-monitoring-view) and a long-lived token for an external Grafana
+# that uses the Thanos Querier as a Prometheus data source.
+# Copy into your private hooks directory, rename to 83-grafana-datasource-token.sh,
+# chmod +x and adapt.
+#
+# In Grafana: data source type Prometheus, URL = the thanos-querier route
+# printed below, custom HTTP header "Authorization: Bearer <token>". After a
+# reinstall the token changes; update the data source.
+#
+#   GRAFANA_NAMESPACE   default: okd-pve-grafana
+#   GRAFANA_TOKEN_FILE  where to write the token (mode 600); default: print nothing
+set -euo pipefail
+# shellcheck source=../lib/oclib.sh
+source "${OKD_PVE_LIB_DIR:?run via okd-pve hooks run}/oclib.sh"
+
+ns=${GRAFANA_NAMESPACE:-okd-pve-grafana}
+oc get namespace "${ns}" >/dev/null 2>&1 || oc create namespace "${ns}" >/dev/null
+apply_idempotent - <<YAML
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: okd-pve-grafana-datasource
+subjects:
+  - kind: ServiceAccount
+    name: grafana-datasource
+    namespace: ${ns}
+roleRef:
+  kind: ClusterRole
+  name: cluster-monitoring-view
+  apiGroup: rbac.authorization.k8s.io
+YAML
+
+# Long-lived token (Secret of type kubernetes.io/service-account-token);
+# "oc serviceaccounts get-token" no longer exists.
+token=$(sa_token grafana-datasource "${ns}" --long-lived)
+if [[ -n ${GRAFANA_TOKEN_FILE:-} ]]; then
+	(umask 077 && printf '%s\n' "${token}" >"${GRAFANA_TOKEN_FILE}")
+	echo "Token written to ${GRAFANA_TOKEN_FILE}."
+fi
+echo "Data source URL: https://$(oc -n openshift-monitoring get route thanos-querier -o jsonpath='{.spec.host}')"

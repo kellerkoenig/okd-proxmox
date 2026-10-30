@@ -1,0 +1,1 @@
+[{"iface":"vmbr0","type":"bridge","active":1},{"iface":"vmbr1","type":"bridge","active":1},{"iface":"eno1","type":"eth","active":1}]

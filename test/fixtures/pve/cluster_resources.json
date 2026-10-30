@@ -1,0 +1,22 @@
+[
+  {
+    "vmid": 100,
+    "name": "unrelated-vm",
+    "node": "pve1",
+    "type": "qemu",
+    "status": "running",
+    "maxcpu": 8,
+    "maxmem": 17179869184,
+    "pool": ""
+  },
+  {
+    "vmid": 101,
+    "name": "stopped-vm",
+    "node": "pve2",
+    "type": "qemu",
+    "status": "stopped",
+    "maxcpu": 64,
+    "maxmem": 549755813888,
+    "pool": ""
+  }
+]

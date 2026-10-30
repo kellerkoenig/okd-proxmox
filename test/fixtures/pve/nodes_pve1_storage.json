@@ -1,0 +1,42 @@
+[
+  {
+    "storage": "local-lvm",
+    "type": "lvmthin",
+    "content": "images,rootdir",
+    "active": 1,
+    "enabled": 1,
+    "shared": 0,
+    "avail": 2147483648000,
+    "total": 2147483648000
+  },
+  {
+    "storage": "local",
+    "type": "dir",
+    "content": "iso,vztmpl,backup",
+    "active": 1,
+    "enabled": 1,
+    "shared": 0,
+    "avail": 107374182400,
+    "total": 107374182400
+  },
+  {
+    "storage": "ceph-vm",
+    "type": "rbd",
+    "content": "images",
+    "active": 1,
+    "enabled": 1,
+    "shared": 1,
+    "avail": 10737418240000,
+    "total": 10737418240000
+  },
+  {
+    "storage": "cephfs",
+    "type": "cephfs",
+    "content": "iso,vztmpl",
+    "active": 1,
+    "enabled": 1,
+    "shared": 1,
+    "avail": 1073741824000,
+    "total": 1073741824000
+  }
+]

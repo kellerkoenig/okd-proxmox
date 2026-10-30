@@ -1,0 +1,70 @@
+{
+  "/pool/okd-small": {
+    "VM.Allocate": 1,
+    "VM.Audit": 1,
+    "VM.Config.CDROM": 1,
+    "VM.Config.CPU": 1,
+    "VM.Config.Disk": 1,
+    "VM.Config.HWType": 1,
+    "VM.Config.Memory": 1,
+    "VM.Config.Network": 1,
+    "VM.Config.Options": 1,
+    "VM.PowerMgmt": 1,
+    "Pool.Audit": 1
+  },
+  "/pool/okd-large": {
+    "VM.Allocate": 1,
+    "VM.Audit": 1,
+    "VM.Config.CDROM": 1,
+    "VM.Config.CPU": 1,
+    "VM.Config.Disk": 1,
+    "VM.Config.HWType": 1,
+    "VM.Config.Memory": 1,
+    "VM.Config.Network": 1,
+    "VM.Config.Options": 1,
+    "VM.PowerMgmt": 1,
+    "Pool.Audit": 1
+  },
+  "/storage/local-lvm": {
+    "Datastore.AllocateSpace": 1,
+    "Datastore.AllocateTemplate": 1,
+    "Datastore.Audit": 1,
+    "Datastore.Allocate": 1
+  },
+  "/storage/local": {
+    "Datastore.AllocateSpace": 1,
+    "Datastore.AllocateTemplate": 1,
+    "Datastore.Audit": 1,
+    "Datastore.Allocate": 1
+  },
+  "/storage/ceph-vm": {
+    "Datastore.AllocateSpace": 1,
+    "Datastore.AllocateTemplate": 1,
+    "Datastore.Audit": 1,
+    "Datastore.Allocate": 1
+  },
+  "/storage/cephfs": {
+    "Datastore.AllocateSpace": 1,
+    "Datastore.AllocateTemplate": 1,
+    "Datastore.Audit": 1,
+    "Datastore.Allocate": 1
+  },
+  "/nodes/pve1": {
+    "Sys.Audit": 1
+  },
+  "/nodes/pve2": {
+    "Sys.Audit": 1
+  },
+  "/nodes/pve3": {
+    "Sys.Audit": 1
+  },
+  "/nodes/pve4": {
+    "Sys.Audit": 1
+  },
+  "/sdn/zones/localnetwork/vmbr0": {
+    "SDN.Use": 1
+  },
+  "/sdn/zones/localnetwork/vmbr1": {
+    "SDN.Use": 1
+  }
+}

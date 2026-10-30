@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# Complete component list for cluster-monitoring-config and
+# user-workload-monitoring-config. "workload" is the object whose existence
+# proves that this OKD version knows the component; missing ones are
+# skipped. node-exporter is a DaemonSet on every node and not placed.
+platform:
+  - {key: prometheusK8s, workload: statefulset/prometheus-k8s, retention: platform, pvc: prometheus}
+  - {key: alertmanagerMain, workload: statefulset/alertmanager-main, pvc: alertmanager}
+  - {key: prometheusOperator, workload: deployment/prometheus-operator}
+  - {key: prometheusOperatorAdmissionWebhook, workload: deployment/prometheus-operator-admission-webhook}
+  - {key: kubeStateMetrics, workload: deployment/kube-state-metrics}
+  - {key: openshiftStateMetrics, workload: deployment/openshift-state-metrics}
+  - {key: telemeterClient, workload: deployment/telemeter-client}
+  - {key: thanosQuerier, workload: deployment/thanos-querier}
+  - {key: monitoringPlugin, workload: deployment/monitoring-plugin}
+  - {key: metricsServer, workload: deployment/metrics-server}
+  - {key: k8sPrometheusAdapter, workload: deployment/prometheus-adapter}
+user_workload:
+  - {key: prometheus, retention: user, pvc: uwm-prometheus}
+  - {key: prometheusOperator}
+  - {key: thanosRuler, pvc: thanos-ruler}

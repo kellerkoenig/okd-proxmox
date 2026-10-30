@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# EXAMPLE (not run): OpenID Connect login against an identity provider.
+# Copy into your private hooks directory, rename to 80-oauth-oidc.sh,
+# chmod +x and adapt. The client secret comes from the environment only.
+#
+#   OIDC_ISSUER_URL     e.g. https://sso.example.com/realms/example
+#   OIDC_CLIENT_ID      e.g. okd
+#   OIDC_CLIENT_SECRET  from the environment / a secret store, never a file in git
+#   OIDC_NAME           identity provider name shown on the login page
+set -euo pipefail
+# shellcheck source=../lib/oclib.sh
+source "${OKD_PVE_LIB_DIR:?run via okd-pve hooks run}/oclib.sh"
+
+: "${OIDC_ISSUER_URL:?}" "${OIDC_CLIENT_ID:?}" "${OIDC_CLIENT_SECRET:?}"
+name=${OIDC_NAME:-sso}
+
+oc create secret generic oidc-client-secret -n openshift-config \
+	--from-file=clientSecret=/dev/stdin --dry-run=client -o yaml <<<"${OIDC_CLIENT_SECRET}" |
+	apply_idempotent - >/dev/null
+
+# Replaces the identityProviders list; keep htpasswd etc. here if you use it.
+patch_merge oauth/cluster "$(jq -cn --arg name "${name}" --arg id "${OIDC_CLIENT_ID}" --arg url "${OIDC_ISSUER_URL}" '{
+	spec: {identityProviders: [{
+		name: $name, mappingMethod: "claim", type: "OpenID",
+		openID: {
+			clientID: $id, clientSecret: {name: "oidc-client-secret"}, issuer: $url,
+			claims: {preferredUsername: ["preferred_username"], name: ["name"], email: ["email"], groups: ["groups"]}
+		}
+	}]}}')"
+echo "OAuth: identity provider ${name} configured; the authentication operator rolls out the change."

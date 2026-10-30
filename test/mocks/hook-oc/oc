@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# Generic oc mock for hook smoke tests: answers every call a built-in hook
+# makes with a plausible "everything is ready" response and logs the call.
+echo "oc $*" >>"${MOCK_LOG:-/dev/null}"
+args=" $* "
+[[ ${args} == *" -f - "* || ${args} == *" -f /dev/stdin "* ]] && cat >>"${MOCK_LOG:-/dev/null}"
+case ${args} in
+*" create configmap "*)
+	# Keep the --from-file content so dry-run validations can inspect it.
+	src=$(printf '%s\n' "$@" | sed -n 's/^--from-file=[^=]*=//p')
+	printf 'apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: x\ndata:\n  config.yaml: |\n'
+	[[ -n ${src} ]] && sed 's/^/    /' "${src}"
+	;;
+*" create secret "*)
+	cat >>"${MOCK_LOG:-/dev/null}"
+	printf 'apiVersion: v1\nkind: Secret\nmetadata:\n  name: x\n'
+	;;
+*" create token "*) echo "eyJ.fake" ;;
+*" get packagemanifests "*)
+	jq -n '{items: ([ "cluster-logging", "cluster-kube-descheduler-operator", "clusterresourceoverride",
+		"openshift-cert-manager-operator", "cert-manager-operator", "web-terminal", "local-storage-operator",
+		"odf-operator", "openshift-gitops-operator", "gitops-operator" ] | map({metadata: {name: .},
+		status: {defaultChannel: "stable", channels: [{name: "stable", currentCSVDesc: {installModes: [
+		{type: "OwnNamespace", supported: true}, {type: "AllNamespaces", supported: true}]}}]}}))}'
+	;;
+*" get subscription.operators.coreos.com "*) echo "fake.v1.0.0" ;;
+*" get csv "*" jsonpath"*) echo "Succeeded" ;;
+*" get csv "*) echo '{"spec":{"customresourcedefinitions":{"owned":[{"name":"fakes.example.com"}]}}}' ;;
+*" get crd "*) echo '{"status":{"conditions":[{"type":"Established","status":"True"}]}}' ;;
+*" get operatorgroups "*) echo '{"items":[]}' ;;
+*" get co image-registry "*) echo "True" ;;
+*" get clusteroperators "* | *" get co -o json "*) echo '{"items":[]}' ;;
+*" get scc anyuid "*) echo '{"volumes":["configMap","secret"]}' ;;
+*" get secret pull-secret "*) printf '%s' '{"auths":{"registry.redhat.io":{"auth":"eDp5"}}}' | base64 -w0 ;;
+*" get catalogsource "*) echo "READY" ;;
+*" get operatorhub cluster "*) echo '{"spec":{"sources":[{"name":"community-operators","disabled":true}]}}' ;;
+*" get deployment router-default "*) echo '{"spec":{"replicas":2},"status":{"updatedReplicas":2,"availableReplicas":2}}' ;;
+*" get "*" -o jsonpath"*) echo "" ;;
+*" get "*" -o json "*) echo '{"spec":{},"metadata":{"name":"x"}}' ;;
+*) ;;
+esac
+exit 0

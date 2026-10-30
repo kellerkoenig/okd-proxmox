@@ -1,0 +1,94 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+#
+# Larger cluster: 3 control-plane nodes, 3 dedicated (tainted) infra nodes
+# with their own MachineConfigPool, 6 workers with a raw data disk each for
+# the Local Storage Operator, spread over four Proxmox hosts in VLAN 120.
+okd:
+  version: "4.21.0-okd-scos.11"
+
+install:
+  pull_secret_file: pull-secret.json   # Red Hat pull secret for redhat-operators
+
+proxmox:
+  nodes: [pve1, pve2, pve3, pve4]
+  vm_storage: ceph-vm
+  iso_storage: cephfs
+  bridge: vmbr1
+  vlan_tag: 120
+  pool: okd-large
+  vmid_start: 5100
+  vmid_end: 5199
+  vmid_block: 20
+  mac_prefix: "02:00:51"
+  cpu_type: x86-64-v3
+  host_memory_reserve_gib: 16
+
+network:
+  interface: ens18
+  prefix_length: 24
+  gateway: 198.51.100.1
+  dns_servers: [198.51.100.53, 198.51.100.54]
+  ntp_servers: [198.51.100.123, 198.51.100.124, 198.51.100.125]
+  rendezvous_ip: 198.51.100.11
+
+node_groups:
+  - name: master
+    roles: [master]
+    count: 3
+    cpu: 8
+    memory_gib: 32
+    disk_gib: 120
+    ips: ["198.51.100.11-198.51.100.13"]
+
+  - name: infra
+    roles: [infra]
+    taint_infra: true
+    count: 3
+    cpu: 8
+    memory_gib: 64
+    disk_gib: 256
+    ips: ["198.51.100.21-198.51.100.29"]
+
+  - name: worker
+    roles: [worker]
+    count: 6
+    cpu: 8
+    memory_gib: 36
+    disk_gib: 128
+    data_disks:
+      - 200                          # raw disk for LSO, serial okd<vmid>d1
+    ips: ["198.51.100.31-198.51.100.49"]
+
+infra:
+  taint_key: node-role.kubernetes.io/infra
+  taint_value: reserved
+  taint_effects: [NoSchedule, NoExecute]
+
+preboot:
+  ca_bundle_file: internal-ca.pem   # trusted by CRI-O for an internal registry
+
+storage:
+  backend: proxmox-csi
+  storage_class: proxmox-ceph
+  retain_class: true
+  default: true
+  proxmox_csi:
+    storage: ceph-vm
+    region: dc1
+
+monitoring:
+  storage_class: proxmox-ceph
+
+hooks:
+  dir: ../../private-hooks          # environment-specific hooks, not in this repo
+  builtin: all
+  skip: [15-scc-anyuid-nfs]
+  env:
+    OKD_PVE_CATALOG_PROFILE: redhat
+    INGRESS_REPLICAS: "3"
+    MONITORING_RETENTION: 30d
+    MONITORING_PROMETHEUS_SIZE: 100Gi
+    DESCHEDULER_INTERVAL: "3600"
+    CRO_MEMORY_PERCENT: "50"
+    CRO_CPU_PERCENT: "25"

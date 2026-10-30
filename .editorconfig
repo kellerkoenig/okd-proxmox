@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[{*.sh,*.bash,*.bats,okd-pve,*.example}]
+indent_style = tab
+shell_variant = bash
+binary_next_line = true
+switch_case_indent = false
+
+[*.{tf,yaml,yml,json,md,jq,tpl,hcl}]
+indent_style = space
+indent_size = 2

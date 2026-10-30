@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+shell=bash
+external-sources=true
+source-path=SCRIPTDIR
+# SC2016: jq/yq programs are single-quoted on purpose.
+# SC2119: optional function arguments are common in this code base.
+# SC2317: functions called indirectly (oc_wait, traps) look unreachable.
+disable=SC2016,SC2119,SC2317

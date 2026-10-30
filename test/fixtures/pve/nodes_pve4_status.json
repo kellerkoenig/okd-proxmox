@@ -1,0 +1,14 @@
+{
+  "cpuinfo": {
+    "cpus": 32,
+    "cores": 16,
+    "sockets": 1,
+    "model": "Example CPU",
+    "flags": "fpu sse sse2 ssse3 sse4_1 sse4_2 avx avx2 bmi1 bmi2 fma movbe"
+  },
+  "memory": {
+    "total": 274877906944,
+    "free": 214748364800,
+    "used": 60129542144
+  }
+}
