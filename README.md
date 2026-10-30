@@ -3,6 +3,14 @@
 
 # okd-proxmox
 
+[![Build & Tests](https://img.shields.io/github/actions/workflow/status/kellerkoenig/okd-proxmox/ci.yaml?branch=main&label=Build%20%26%20Tests&logo=githubactions&logoColor=white)](https://github.com/kellerkoenig/okd-proxmox/actions/workflows/ci.yaml)
+[![Release](https://img.shields.io/github/v/release/kellerkoenig/okd-proxmox?include_prereleases&sort=semver&label=Release&logo=github)](https://github.com/kellerkoenig/okd-proxmox/releases)
+[![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue)](LICENSE)
+[![OKD ≥ 4.17](https://img.shields.io/badge/OKD-%E2%89%A5%204.17-326CE5?logo=kubernetes&logoColor=white)](https://okd.io)
+[![Proxmox VE 8 | 9](https://img.shields.io/badge/Proxmox%20VE-8%20%7C%209-E57000?logo=proxmox&logoColor=white)](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview)
+[![OpenTofu](https://img.shields.io/badge/OpenTofu-bpg%2Fproxmox-FFDA18?logo=opentofu&logoColor=black)](https://opentofu.org)
+[![Bash ≥ 4.4](https://img.shields.io/badge/Bash-%E2%89%A5%204.4-4EAA25?logo=gnubash&logoColor=white)](https://www.gnu.org/software/bash/)
+
 `okd-pve` builds [OKD](https://okd.io) clusters on Proxmox VE: reproducibly,
 without clicking, and already configured for operation when the run ends.
 You can throw a cluster away and rebuild it identically within a few hours.

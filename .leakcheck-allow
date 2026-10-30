@@ -35,6 +35,9 @@ openssh\.com
 ([a-z0-9-]+\.)*kubernetes\.io
 pve\.proxmox\.com
 www\.proxmox\.com
+www\.gnu\.org
+# README badges
+img\.shields\.io
 # --- Kubernetes/OpenShift API groups, provisioners and label prefixes
 ([a-z0-9-]+\.)*openshift\.io
 ([a-z0-9-]+\.)*coreos\.com
