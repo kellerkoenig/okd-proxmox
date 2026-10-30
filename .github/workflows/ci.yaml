@@ -15,7 +15,7 @@ jobs:
     name: shellcheck + shfmt
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install tools
         run: make tools
       - name: shellcheck
@@ -27,7 +27,7 @@ jobs:
     name: bats
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install tools
         run: make tools
       - name: bats
@@ -37,7 +37,7 @@ jobs:
     name: tofu validate + tflint
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install tools
         run: make tools
       - name: tofu fmt / validate / tflint
@@ -47,6 +47,6 @@ jobs:
     name: no environment-specific data
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check for real hostnames, IPs, webhooks and tokens
         run: make leakcheck
