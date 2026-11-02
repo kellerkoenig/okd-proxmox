@@ -335,8 +335,8 @@ cmd_create() {
 		log_info "Already done"
 	elif ! dry_run_note "would run openshift-install agent wait-for bootstrap-complete"; then
 		installer_wait bootstrap-complete ||
-			die "${EXIT_ERROR}" "Bootstrap did not complete." \
-				"Check the rendezvous node console (qm terminal $(nodes_query -r --arg ip "$(cfg '.network.rendezvous_ip')" '.[] | select(.ip == $ip) | .vmid')) and ${GENERATED_DIR}/.openshift_install.log; re-run create to keep waiting."
+			installer_wait_failed "bootstrap" "Bootstrap did not complete." \
+				"Check the rendezvous node console (qm terminal $(nodes_query -r --arg ip "$(cfg '.network.rendezvous_ip')" '.[] | select(.ip == $ip) | .vmid')) and ${GENERATED_DIR}/.openshift_install.log."
 		state_step_mark bootstrap
 	fi
 
@@ -345,8 +345,8 @@ cmd_create() {
 		log_info "Already done"
 	elif ! dry_run_note "would run openshift-install agent wait-for install-complete"; then
 		installer_wait install-complete ||
-			die "${EXIT_ERROR}" "Installation did not complete in time." \
-				"Re-run 'okd-pve create' to keep waiting; check 'oc get co' with ${KUBECONFIG_FILE}."
+			installer_wait_failed "the installation" "Installation did not complete." \
+				"Check 'oc get co' and 'oc get nodes' with KUBECONFIG=${KUBECONFIG_FILE}."
 		installer_copy_auth
 		state_step_mark install
 	fi

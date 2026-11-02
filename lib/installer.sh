@@ -311,6 +311,38 @@ installer_progress() {
 		"$(jq -r '[.items[] | select(any(.status.conditions[]?; .type == "Available" and .status == "True"))] | length' <<<"${cos}")"
 }
 
+# installer_wait_timed_out: the last wait-for ended because openshift-install
+# ran out of time, not because the installation failed.
+installer_wait_timed_out() {
+	tail -n 40 "${GENERATED_DIR}/.openshift_install.log" 2>/dev/null |
+		grep -qE 'context deadline exceeded|timed out|Timed out'
+}
+
+# installer_nodes_answering: "<answering>/<total>" nodes that answer ping.
+installer_nodes_answering() {
+	local ip up=0 total=0
+	while IFS= read -r ip; do
+		((++total))
+		ping -c 1 -W 1 "${ip}" >/dev/null 2>&1 && ((++up))
+	done < <(nodes_query '.[].ip')
+	printf '%s/%s' "${up}" "${total}"
+}
+
+# installer_wait_failed <what> <error> <hint>: exit after a failed wait. A
+# timeout usually means a slow installation (image downloads through a proxy
+# or registry), not a broken one: say so, and that create keeps waiting when
+# started again. Other failures end with <error> and <hint>.
+installer_wait_failed() {
+	local what=$1 error=$2 hint=$3
+	installer_wait_timed_out || die "${EXIT_ERROR}" "${error}" "${hint}"
+	log_warn "openshift-install stopped waiting for ${what} after its fixed timeout ($(installer_nodes_answering) nodes answer ping)."
+	log_hint "The installation is most likely still running: slow image downloads (proxy, registry) can take longer than openshift-install waits."
+	log_hint "Next step: start 'okd-pve create' again. It skips the ISO and the VMs and keeps waiting where it stopped."
+	log_hint "If it times out again without progress: ${hint}"
+	[[ -n ${LOG_FILE} && -f ${LOG_FILE} ]] && log_hint "Full log: ${LOG_FILE}"
+	exit "${EXIT_ERROR}"
+}
+
 # installer_wait <bootstrap-complete|install-complete>: wait-for with a
 # status line every OKD_PVE_STATUS_INTERVAL seconds (default 120, 0 = off).
 # openshift-install gives up after a fixed time, counted from when it starts

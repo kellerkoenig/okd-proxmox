@@ -70,6 +70,20 @@ applies() {
 	assert_output 0
 }
 
+@test "an openshift-install timeout is a warning that says to start create again" {
+	export MOCK_WAIT_FAIL=bootstrap-complete MOCK_WAIT_TIMEOUT=1
+	create
+	assert_failure 1
+	assert_output --partial "WARN openshift-install stopped waiting for bootstrap after its fixed timeout"
+	assert_output --partial "nodes answer ping"
+	assert_output --partial "Next step: start 'okd-pve create' again. It skips the ISO and the VMs"
+	assert_output --partial "If it times out again without progress: Check the rendezvous node console"
+	refute_output --partial "ERROR"
+	run grep -c "\[HINT\] Next step: start 'okd-pve create' again" "${CLUSTER}"/logs/latest.log
+	assert_output 1
+	unset MOCK_WAIT_FAIL MOCK_WAIT_TIMEOUT
+}
+
 @test "an interrupted install resumes at the step that failed" {
 	export MOCK_WAIT_FAIL=bootstrap-complete
 	create

@@ -6,6 +6,7 @@
 # (deletes) install-config.yaml and agent-config.yaml.
 #   MOCK_OKD_VERSION     reported version
 #   MOCK_WAIT_FAIL       "bootstrap-complete" or "install-complete" fails
+#   MOCK_WAIT_TIMEOUT    1: that failure is openshift-install's own timeout
 set -euo pipefail
 echo "openshift-install $*" >>"${MOCK_LOG:-/dev/null}"
 dir=''
@@ -36,7 +37,12 @@ case "$1 ${2:-} ${3:-}" in
 	;;
 "agent wait-for bootstrap-complete" | "agent wait-for install-complete")
 	if [[ ${MOCK_WAIT_FAIL:-} == "$3" ]]; then
-		echo 'level=error msg="Timed out"'
+		if [[ ${MOCK_WAIT_TIMEOUT:-0} == 1 ]]; then
+			echo 'level=error msg="Bootstrap failed to complete: : bootstrap process timed out: context deadline exceeded"' |
+				tee -a "${dir}/.openshift_install.log"
+		else
+			echo 'level=error msg="Timed out"'
+		fi
 		exit 1
 	fi
 	echo "level=info msg=\"$3 done\""
