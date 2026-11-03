@@ -19,9 +19,10 @@ install:
   # The agent ISO embeds certificates that expire after 24h. While no VM has
   # booted it, create rebuilds an ISO older than this.
   iso_max_age_hours: 20
-  # Reset the rendezvous VM when the agent installer gave up on it and it
-  # stays in the live ISO, then approve its CSRs (see README, Troubleshooting).
-  recover_rendezvous: true
+  # Reset a VM once when the agent installer gave up on it (stage timeout)
+  # and it stays in the live ISO with its disk already written, then approve
+  # its CSRs (see README, Troubleshooting).
+  recover_stuck_hosts: true
 
 proxmox:
   nodes: []

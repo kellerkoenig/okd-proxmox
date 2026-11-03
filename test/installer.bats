@@ -270,23 +270,26 @@ SH
 	assert [ ! -e "${BATS_TEST_TMPDIR}/out/99-worker-okd-pve-ssh.yaml" ]
 }
 
-# A fake oc for installer_rendezvous_recover: the node is missing (or Ready
-# when FAKE_NODE_READY=1), the controller log shows HOSTS_STATUS, CSR calls
-# are served from FAKE_CSRS and approvals logged.
-_rendezvous_fakes() {
+# A fake oc for installer_recover_hosts: nodes are missing unless listed in
+# FAKE_READY, the controller log shows HOSTS_STATUS, CSR calls are served from
+# FAKE_CSRS and approvals logged. RV_* is the rendezvous node, W_* a worker.
+_recover_fakes() {
 	mkdir -p "${AUTH_DIR}" "${STATE_DIR}" "${BATS_TEST_TMPDIR}/bin"
 	echo "apiVersion: v1" >"${KUBECONFIG_FILE}"
 	OC=${BATS_TEST_TMPDIR}/bin/oc
 	export OC_LOG=${BATS_TEST_TMPDIR}/oc.log PVE_LOG=${BATS_TEST_TMPDIR}/pve.log
 	IFS=$'\t' read -r RV_NAME RV_VMID < <(nodes_query --arg ip "$(cfg '.network.rendezvous_ip')" \
 		'.[] | select(.ip == $ip) | [.name, .vmid] | @tsv')
-	export HOSTS_STATUS="time=\"2026-11-02T11:25:20Z\" level=info msg=\"Hosts status: map[${RV_NAME}:[error Waiting for controller waiting for controller pod ready event] small-worker-0:[error Waiting for control plane ]]\""
+	W_NAME=small-worker-0
+	W_VMID=$(nodes_query --arg n "${W_NAME}" '.[] | select(.name == $n) | .vmid')
+	export RV_VMID W_VMID
+	export HOSTS_STATUS="time=\"2026-11-02T11:25:20Z\" level=info msg=\"Hosts status: map[${RV_NAME}:[error Waiting for controller waiting for controller pod ready event] small-master-1:[installed Done ] ${W_NAME}:[installed Done ]]\""
 	cat >"${OC}" <<'SH'
 #!/usr/bin/env bash
 echo "$*" >>"${OC_LOG}"
 case "$*" in
-"get node "*" -o jsonpath="*) [[ ${FAKE_NODE_READY:-0} == 1 ]] && echo True || exit 1 ;;
-"get node "*) exit 1 ;;
+"get node "*" -o jsonpath="*) [[ " ${FAKE_READY:-} " == *" $3 "* ]] && echo True || exit 1 ;;
+"get node "*) [[ " ${FAKE_READY:-} " == *" $3 "* ]] || exit 1 ;;
 "-n assisted-installer logs "*) printf 'time="x" level=info msg="Hosts status: map[old]"\n%s\nlevel=info msg="ConfigMap not found yet"\n' "${HOSTS_STATUS}" ;;
 "get csr -o json") cat "${FAKE_CSRS:-/dev/null}" ;;
 "adm certificate approve "*) ;;
@@ -297,72 +300,112 @@ SH
 	pve_api() {
 		echo "$*" >>"${PVE_LOG}"
 		case $1 in
-		/cluster/resources*) printf '[{"vmid":%s,"node":"pve2","status":"%s"}]\n' "${RV_VMID}" "${FAKE_VM_STATUS:-running}" ;;
+		/cluster/resources*)
+			printf '[{"vmid":%s,"node":"pve2","status":"%s"},{"vmid":%s,"node":"pve1","status":"running"}]\n' \
+				"${RV_VMID}" "${FAKE_VM_STATUS:-running}" "${W_VMID}"
+			;;
 		*/status/reset) echo '"UPID:pve2:reset"' ;;
 		esac
 	}
 }
 
-@test "rendezvous recovery: a rendezvous node stuck in the live ISO is reset once, then its CSRs are approved" {
-	_rendezvous_fakes
-	run installer_rendezvous_recover
+# _csrs <name>...: pending client CSRs (real ones from test/fixtures/csr).
+_csrs() {
+	local n i=0
+	export FAKE_CSRS=${BATS_TEST_TMPDIR}/csrs.json
+	for n in "$@"; do
+		jq -n --arg name "csr-$((i++))" --arg r "$(base64 -w0 <"${OKD_PVE_ROOT}/test/fixtures/csr/${n}.pem")" \
+			'{metadata: {name: $name}, spec: {username: "system:serviceaccount:openshift-machine-config-operator:node-bootstrapper", signerName: "kubernetes.io/kube-apiserver-client-kubelet", request: $r}, status: {}}'
+	done | jq -s '{items: .}' >"${FAKE_CSRS}"
+}
+
+@test "host recovery: a rendezvous node stuck in the live ISO is reset once, then its CSRs are approved" {
+	_recover_fakes
+	run installer_recover_hosts
 	assert_success
-	assert_output "recovery: the agent installer gave up on rendezvous node ${RV_NAME} (stage timeout), so it stayed in the live ISO; reset VM ${RV_VMID} to boot it from its installed disk, its CSRs are approved when it joins"
+	assert_output "recovery: the agent installer gave up on rendezvous node ${RV_NAME} (\"Waiting for controller\" timed out), so it stayed in the live ISO; reset VM ${RV_VMID} to boot it from its installed disk, its CSRs are approved when it joins"
 	run grep -c "/nodes/pve2/qemu/${RV_VMID}/status/reset --data" "${PVE_LOG}"
 	assert_output 1
-	assert [ -f "${STATE_DIR}/rendezvous-reset" ]
+	assert [ -f "${STATE_DIR}/recovered-${RV_NAME}" ]
 	# Next round: no second reset; the client CSR of this node is approved,
 	# the one of another node is not.
-	local req other
-	req=$(printf -- '-----BEGIN CERTIFICATE REQUEST-----\n%s\n-----END CERTIFICATE REQUEST-----\n' \
-		"$(printf 'O=system:nodes, CN=system:node:%s' "${RV_NAME}" | base64 -w0)" | base64 -w0)
-	other=$(printf -- '-----BEGIN CERTIFICATE REQUEST-----\n%s\n-----END CERTIFICATE REQUEST-----\n' \
-		"$(printf 'CN=system:node:intruder' | base64 -w0)" | base64 -w0)
-	export FAKE_CSRS=${BATS_TEST_TMPDIR}/csrs.json
-	jq -n --arg r "${req}" --arg o "${other}" '{items: [
-		{metadata: {name: "csr-a"}, spec: {username: "system:serviceaccount:openshift-machine-config-operator:node-bootstrapper", signerName: "kubernetes.io/kube-apiserver-client-kubelet", request: $r}, status: {}},
-		{metadata: {name: "csr-b"}, spec: {username: "system:serviceaccount:openshift-machine-config-operator:node-bootstrapper", signerName: "kubernetes.io/kube-apiserver-client-kubelet", request: $o}, status: {}}]}' >"${FAKE_CSRS}"
-	run installer_rendezvous_recover
+	_csrs "${RV_NAME}" intruder
+	run installer_recover_hosts
 	assert_success
-	assert_output "Approved CSR csr-a for ${RV_NAME}"
+	assert_output "Approved CSR csr-0 for ${RV_NAME}"
 	run grep -c 'status/reset' "${PVE_LOG}"
 	assert_output 1
 	run grep -c 'adm certificate approve' "${OC_LOG}"
 	assert_output 1
 	# Once the node is Ready, nothing is left to do.
-	export FAKE_NODE_READY=1
+	export FAKE_READY=${RV_NAME}
 	: >"${OC_LOG}"
-	run installer_rendezvous_recover
+	run installer_recover_hosts
 	assert_output ""
 	run grep -c 'csr' "${OC_LOG}"
 	assert_output 0
 }
 
-@test "rendezvous recovery: nothing happens while the rendezvous node is still installing" {
-	_rendezvous_fakes
-	export HOSTS_STATUS="msg=\"Hosts status: map[${RV_NAME}:[installing-in-progress Waiting for controller waiting for controller pod ready event]]\""
-	run installer_rendezvous_recover
+@test "host recovery: a worker that timed out waiting for the control plane is reset" {
+	_recover_fakes
+	export FAKE_READY=${RV_NAME}
+	export HOSTS_STATUS="msg=\"Hosts status: map[${RV_NAME}:[installed Done ] ${W_NAME}:[error Waiting for control plane ] small-worker-1:[installed Done ]]\""
+	run installer_recover_hosts
+	assert_success
+	assert_output "recovery: the agent installer gave up on ${W_NAME} (\"Waiting for control plane\" timed out), so it stayed in the live ISO; reset VM ${W_VMID} to boot it from its installed disk, its CSRs are approved when it joins"
+	run grep -c 'status/reset' "${PVE_LOG}"
+	assert_output 1
+	run grep -c "/nodes/pve1/qemu/${W_VMID}/status/reset --data" "${PVE_LOG}"
+	assert_output 1
+	assert [ -f "${STATE_DIR}/recovered-${W_NAME}" ]
+	assert [ ! -e "${STATE_DIR}/recovered-${RV_NAME}" ]
+}
+
+@test "host recovery: the rendezvous node is left alone while it is the bootstrap node" {
+	_recover_fakes
+	export HOSTS_STATUS="msg=\"Hosts status: map[${RV_NAME}:[error Waiting for control plane waiting for bootstrap to prepare]]\""
+	run installer_recover_hosts
 	assert_success
 	assert_output ""
 	assert [ ! -e "${PVE_LOG}" ]
-	assert [ ! -e "${STATE_DIR}/rendezvous-reset" ]
 }
 
-@test "rendezvous recovery: a stopped VM is reported, not reset" {
-	_rendezvous_fakes
+@test "host recovery: nothing happens while hosts are still installing or have joined" {
+	_recover_fakes
+	export HOSTS_STATUS="msg=\"Hosts status: map[${RV_NAME}:[installing-in-progress Waiting for controller waiting for controller pod ready event] ${W_NAME}:[error Waiting for control plane ]]\""
+	export FAKE_READY=${W_NAME}
+	run installer_recover_hosts
+	assert_success
+	assert_output ""
+	assert [ ! -e "${PVE_LOG}" ]
+	run ls "${STATE_DIR}"
+	refute_output --partial recovered-
+}
+
+@test "host recovery: a stopped VM is reported, not reset" {
+	_recover_fakes
 	export FAKE_VM_STATUS=stopped
-	run installer_rendezvous_recover
+	run installer_recover_hosts
 	assert_output --partial "VM ${RV_VMID} is not running (stopped); start it in Proxmox"
 	run grep -c 'status/reset' "${PVE_LOG}"
 	assert_output 0
 }
 
-@test "rendezvous recovery: install.recover_rendezvous false turns it off" {
-	yq_set '.install.recover_rendezvous = false'
+@test "host recovery: install.recover_stuck_hosts false turns it off" {
+	yq_set '.install.recover_stuck_hosts = false'
 	load_cluster
-	_rendezvous_fakes
-	run installer_rendezvous_recover
+	_recover_fakes
+	run installer_recover_hosts
 	assert_success
 	assert_output ""
+	assert [ ! -e "${OC_LOG}" ]
+}
+
+@test "host recovery: the 0.1.2 setting install.recover_rendezvous false still turns it off" {
+	yq_set '.install.recover_rendezvous = false'
+	load_cluster
+	_recover_fakes
+	run installer_recover_hosts
+	assert_success
 	assert [ ! -e "${OC_LOG}" ]
 }

@@ -84,6 +84,25 @@ nodes_reconcile_labels() {
 # CSRs and readiness
 # ---------------------------------------------------------------------------
 
+# csr_common_name <request>: subject CN of a CSR (.spec.request, base64 of
+# the PEM). Reads the DER structure: the bytes after the CN are often
+# printable too (every EC P-256 key starts with "0Y0"), so a text match runs
+# past the end of the name.
+csr_common_name() {
+	local -a der=()
+	local i len
+	read -r -a der < <(base64 -d <<<"$1" 2>/dev/null | sed '/-----/d' | base64 -d 2>/dev/null |
+		od -An -v -tx1 | tr -s ' \n' '  ') || true
+	for ((i = 0; i + 6 < ${#der[@]}; i++)); do
+		# OID commonName (06 03 55 04 03), string tag, short-form length, value
+		[[ ${der[i]}${der[i + 1]}${der[i + 2]}${der[i + 3]}${der[i + 4]} == 0603550403 ]] || continue
+		len=$((16#${der[i + 6]}))
+		((len < 128)) || return 0
+		printf '%b' "$(printf '\\x%s' "${der[@]:i+7:len}")"
+		return 0
+	done
+}
+
 # csr_approve_for <names...>: approve pending kubelet CSRs, but only those
 # for the given node names (client CSRs from the node bootstrapper with
 # CN=system:node:<name>, serving CSRs requested by system:node:<name>).
@@ -95,8 +114,8 @@ csr_approve_for() {
 		case ${signer} in
 		kubernetes.io/kube-apiserver-client-kubelet)
 			[[ ${user} == system:serviceaccount:openshift-machine-config-operator:node-bootstrapper ]] || continue
-			cn=$(base64 -d <<<"${req}" 2>/dev/null | sed '/-----/d' | base64 -d 2>/dev/null |
-				LC_ALL=C grep -ao 'system:node:[A-Za-z0-9.-]*' | head -n1)
+			cn=$(csr_common_name "${req}")
+			[[ ${cn} == system:node:* ]] || continue
 			cn=${cn#system:node:}
 			;;
 		kubernetes.io/kubelet-serving)

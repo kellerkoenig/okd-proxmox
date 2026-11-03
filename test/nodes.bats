@@ -152,3 +152,10 @@ node() {
 	assert_failure 2
 	assert_output --partial "small_master-0: not a valid hostname"
 }
+
+@test "csr_common_name reads the CN of a real CSR, not the bytes after it" {
+	local req
+	req=$(base64 -w0 <"${OKD_PVE_ROOT}/test/fixtures/csr/small-master-0.pem")
+	assert_equal "$(csr_common_name "${req}")" system:node:small-master-0
+	assert_equal "$(csr_common_name "$(printf 'not a CSR' | base64 -w0)")" ""
+}

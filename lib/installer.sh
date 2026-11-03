@@ -244,52 +244,62 @@ installer_fixups() {
 	done
 }
 
-# installer_rendezvous_recover: the rendezvous node writes its disk early but
-# boots from it only after every other host has reported to the agent service
-# running on it. That service gives up on hosts after fixed stage timeouts
-# (90 min "Waiting for control plane", 60 min "Waiting for controller"), which
-# slow image downloads exceed. A host that misses one still joins the cluster,
-# but the rendezvous node then ends in "error" and stays in the live ISO: no
-# third etcd member, the installation never completes. The in-cluster
-# assisted-installer-controller logs the host states. When they show this,
-# reset the VM once (it boots from its disk and joins) and approve its CSRs,
-# which the controller no longer does. install.recover_rendezvous: false
-# turns this off.
-installer_rendezvous_recover() {
-	local kc=${KUBECONFIG_FILE} oc=${OC:-oc} marker=${STATE_DIR}/rendezvous-reset
-	local name vmid states vm
-	[[ -f ${kc} && $(cfg '.install.recover_rendezvous') == true ]] || return 0
-	IFS=$'\t' read -r name vmid < <(nodes_query --arg ip "$(cfg '.network.rendezvous_ip')" \
-		'.[] | select(.ip == $ip) | [.name, .vmid] | @tsv') || return 0
-	if [[ -f ${marker} ]]; then
-		[[ $(KUBECONFIG=${kc} timeout 15 "${oc}" get node "${name}" \
-			-o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null) == True ]] && return 0
-		(
-			export KUBECONFIG=${kc}
-			[[ ${oc} == */* ]] && PATH=$(dirname "${oc}"):${PATH}
-			csr_approve_for "${name}"
-		) 2>/dev/null | sed 's/^ *//'
-		return 0
-	fi
-	KUBECONFIG=${kc} timeout 15 "${oc}" get node "${name}" >/dev/null 2>&1 && return 0
+# installer_recover_hosts: the agent service gives up on hosts after fixed
+# stage timeouts (90 min "Waiting for control plane", 60 min "Waiting for
+# controller"), which slow image downloads exceed. Such a host ends in "error"
+# and stays in the live ISO although its disk is already written:
+# - a worker that waited too long for two Ready masters (it writes its disk
+#   before that wait),
+# - the rendezvous node, which boots from its disk only after every other host
+#   has reported to the agent service running on it. Without it there is no
+#   third etcd member and the installation never completes. In "Waiting for
+#   control plane" it is still the bootstrap node and is left alone.
+# The in-cluster assisted-installer-controller logs the host states. Each such
+# host missing from oc get nodes is reset once (it boots from its disk and
+# joins), then its CSRs are approved, which the controller no longer does.
+# install.recover_stuck_hosts: false turns this off.
+installer_recover_hosts() {
+	local kc=${KUBECONFIG_FILE} oc=${OC:-oc} rv_ip states name vmid ip stage what vm
+	local -a joining=()
+	[[ -f ${kc} && $(cfg '.install.recover_stuck_hosts') == true ]] || return 0
+	# the name in 0.1.2
+	[[ $(cfg '.install.recover_rendezvous') != false ]] || return 0
+	rv_ip=$(cfg '.network.rendezvous_ip')
 	states=$(KUBECONFIG=${kc} timeout 30 "${oc}" -n assisted-installer logs job/assisted-installer-controller 2>/dev/null |
 		grep -o 'Hosts status: map\[.*' | tail -n 1) || true
-	[[ ${states} == *"[${name}:[error Waiting for controller"* || ${states} == *" ${name}:[error Waiting for controller"* ]] || return 0
-	vm=$(pve_cluster_vms 2>/dev/null | jq -r --argjson id "${vmid}" '.[] | select(.vmid == $id) | "\(.node)\t\(.status)"') || true
-	if [[ ${vm#*$'\t'} != running ]]; then
-		printf 'recovery: the agent installer gave up on rendezvous node %s, but VM %s is not running (%s); start it in Proxmox\n' \
-			"${name}" "${vmid}" "${vm#*$'\t'}"
-		return 0
-	fi
-	if ! pve_vm_reset "${vm%%$'\t'*}" "${vmid}" >/dev/null; then
-		_log_to_file RECOVER "reset of VM ${vmid} failed: ${PVE_API_ERROR}"
-		printf 'recovery: could not reset VM %s (%s); reset it in Proxmox, then approve its CSRs\n' "${vmid}" "${PVE_API_ERROR}"
-		return 0
-	fi
-	printf '%(%Y-%m-%dT%H:%M:%S%z)T\n' -1 >"${marker}"
-	_log_to_file RECOVER "rendezvous node ${name}: ${states}"
-	printf 'recovery: the agent installer gave up on rendezvous node %s (stage timeout), so it stayed in the live ISO; reset VM %s to boot it from its installed disk, its CSRs are approved when it joins\n' \
-		"${name}" "${vmid}"
+	while IFS=$'\t' read -r name vmid ip; do
+		if [[ -f ${STATE_DIR}/recovered-${name} ]]; then
+			[[ $(KUBECONFIG=${kc} timeout 15 "${oc}" get node "${name}" \
+				-o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null) == True ]] ||
+				joining+=("${name}")
+			continue
+		fi
+		stage="Waiting for control plane" what=${name}
+		[[ ${ip} == "${rv_ip}" ]] && stage="Waiting for controller" what="rendezvous node ${name}"
+		[[ ${states} == *"[${name}:[error ${stage}"* || ${states} == *" ${name}:[error ${stage}"* ]] || continue
+		KUBECONFIG=${kc} timeout 15 "${oc}" get node "${name}" >/dev/null 2>&1 && continue
+		vm=$(pve_cluster_vms 2>/dev/null | jq -r --argjson id "${vmid}" '.[] | select(.vmid == $id) | "\(.node)\t\(.status)"') || true
+		if [[ ${vm#*$'\t'} != running ]]; then
+			printf 'recovery: the agent installer gave up on %s, but VM %s is not running (%s); start it in Proxmox\n' \
+				"${what}" "${vmid}" "${vm#*$'\t'}"
+			continue
+		fi
+		if ! pve_vm_reset "${vm%%$'\t'*}" "${vmid}" >/dev/null; then
+			_log_to_file RECOVER "reset of VM ${vmid} failed: ${PVE_API_ERROR}"
+			printf 'recovery: could not reset VM %s (%s); reset it in Proxmox, then approve its CSRs\n' "${vmid}" "${PVE_API_ERROR}"
+			continue
+		fi
+		printf '%(%Y-%m-%dT%H:%M:%S%z)T\n' -1 >"${STATE_DIR}/recovered-${name}"
+		_log_to_file RECOVER "${what}: ${states}"
+		printf 'recovery: the agent installer gave up on %s ("%s" timed out), so it stayed in the live ISO; reset VM %s to boot it from its installed disk, its CSRs are approved when it joins\n' \
+			"${what}" "${stage}" "${vmid}"
+	done < <(nodes_query '.[] | [.name, .vmid, .ip] | @tsv')
+	((${#joining[@]})) || return 0
+	(
+		export KUBECONFIG=${kc}
+		[[ ${oc} == */* ]] && PATH=$(dirname "${oc}"):${PATH}
+		csr_approve_for "${joining[@]}"
+	) 2>/dev/null | sed 's/^ *//'
 }
 
 # installer_status_loop <interval-seconds>: print a status line periodically.
@@ -307,7 +317,7 @@ installer_status_loop() {
 			fi
 		done < <(
 			installer_fixups 2>/dev/null
-			installer_rendezvous_recover 2>/dev/null
+			installer_recover_hosts 2>/dev/null
 			installer_status_line 2>/dev/null
 		)
 	done
