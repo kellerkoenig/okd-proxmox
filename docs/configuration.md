@@ -64,6 +64,7 @@ Maps are merged key by key; lists replace the default list.
 | `install.pull_secret_file` | `""` | pull secret if `install-config.yaml` has none. Order: install-config → `$OKD_PVE_PULL_SECRET_FILE` → this → `<cluster>/pull-secret.json` → OKD placeholder |
 | `install.additional_ssh_keys` | `[]` | more public keys for the `core` user. Only the first key of `sshKey`/key file goes into the generated install-config (more break Metal3/Ironic on baremetal); all others, including extra lines of `sshKey`, become the Pre-Boot MachineConfigs `99-{master,worker}-okd-pve-ssh` |
 | `install.iso_max_age_hours` | `20` | the agent ISO contains certificates valid for 24 h; while no VM has booted it, `create` rebuilds an older ISO |
+| `install.recover_rendezvous` | `true` | while `create` waits for the installation: if the agent installer gave up on the rendezvous node (fixed stage timeouts, typically slow image downloads) and it stays in the live ISO, reset its VM once so it boots from its installed disk, and approve its CSRs. The trigger is the host state the in-cluster `assisted-installer-controller` logs (`error` in "Waiting for controller") while the node is missing from `oc get nodes`; see the README, Troubleshooting |
 | `install.ssh_public_key_file` | `""` | SSH key if install-config has none. Order: install-config → `$OKD_PVE_SSH_PUBLIC_KEY_FILE` → this → `~/.ssh/id_ed25519.pub`, `id_ecdsa.pub`, `id_rsa.pub` |
 
 ### proxmox
