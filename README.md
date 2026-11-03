@@ -8,6 +8,7 @@
 [![License: AGPL-3.0-or-later](https://img.shields.io/badge/License-AGPL--3.0--or--later-blue)](LICENSE)
 [![REUSE compliant](https://api.reuse.software/badge/github.com/kellerkoenig/okd-proxmox)](https://api.reuse.software/info/github.com/kellerkoenig/okd-proxmox)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/kellerkoenig/okd-proxmox/badge)](https://scorecard.dev/viewer/?uri=github.com/kellerkoenig/okd-proxmox)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/16288/badge)](https://www.bestpractices.dev/projects/16288)
 [![OKD ≥ 4.17](https://img.shields.io/badge/OKD-%E2%89%A5%204.17-326CE5?logo=kubernetes&logoColor=white)](https://okd.io)
 [![Proxmox VE 8 | 9](https://img.shields.io/badge/Proxmox%20VE-8%20%7C%209-E57000?logo=proxmox&logoColor=white)](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview)
 [![OpenTofu](https://img.shields.io/badge/OpenTofu-bpg%2Fproxmox-FFDA18?logo=opentofu&logoColor=black)](https://opentofu.org)
@@ -277,6 +278,7 @@ instead of failing.
 | VM does not boot, black console | CPU type: SCOS based on CentOS Stream 10 needs `x86-64-v3` or `host`. Check with `qm terminal <vmid>` (serial console). |
 | Bootstrap stuck, hosts "insufficient" | `okd-pve logs --installer`; usually DNS, NTP or a disk/RAM below the minimum. The rendezvous node console shows the validation messages. |
 | "openshift-install stopped waiting … after its fixed timeout" | The installation is usually still running, slowed down by image downloads (proxy, registry). Start `okd-pve create` again: it skips ISO and VMs and keeps waiting. If it times out again without progress, check the rendezvous node and the proxy throughput. |
+| All nodes Ready except the rendezvous node; etcd "2 healthy member(s) out of the 3 required", authentication "need at least 3 kube-apiservers" | The agent installer has fixed stage timeouts (90 min "Waiting for control plane", 60 min "Waiting for controller"). With slow image downloads a host misses one; it still joins, but the rendezvous node then stays in the live ISO instead of booting its installed disk. `create` detects this and resets the VM once (`recovery:` line in the status output), then approves its CSRs. With `install.recover_rendezvous: false`, or if the reset fails: reset the VM in Proxmox and approve the two CSRs of the node (`oc get csr`, `oc adm certificate approve <name>`). |
 | "Cannot access Rendezvous Host" while the nodes answer ping | A firewall between your workstation and the cluster network blocks TCP 8090 (agent API); the installation itself continues. Check on the rendezvous node: `ssh core@<rendezvous-ip>`, then `curl http://127.0.0.1:8090/...`. Only the first `sshKey` is on the agent ISO; further keys reach the nodes after the installation. |
 | Failed `installer-<n>-...` pods in `openshift-kube-*` / `openshift-etcd` | Bootstrap race (e.g. `configmaps "client-ca" not found`); the operator rolled out a newer revision. `create` removes failed installer pods of revisions the node has replaced; failed pods of the current revision stay and need a look. |
 | `Can't synchronise: no majority` | Fewer than three NTP sources, or they disagree. Pre-Boot chrony uses `network.ntp_servers`. |
@@ -313,7 +315,11 @@ How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md). Security problems:
 license information ([REUSE](https://reuse.software)); Renovate proposes
 updates for the pinned tool versions and GitHub Actions. Pushing a tag
 `vX.Y.Z` (matching `OKD_PVE_VERSION`) runs all checks and attaches a source
-tarball, `SHA256SUMS` and build provenance to the release.
+tarball, `SHA256SUMS` and the signed build provenance (`*.intoto.jsonl`) to
+the release. To verify a tarball:
+`gh attestation verify okd-proxmox-X.Y.Z.tar.gz --repo kellerkoenig/okd-proxmox`
+(add `--bundle okd-proxmox-X.Y.Z.tar.gz.intoto.jsonl` to use the attached
+provenance instead of the GitHub attestation API).
 
 ## License
 
