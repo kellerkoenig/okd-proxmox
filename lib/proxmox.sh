@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 # Copyright (C) 2026 The okd-proxmox Authors
 #
-# Read-only Proxmox VE API helpers used by preflight, destroy and node list.
-# The API token is passed to curl through a config on stdin, never on the
-# command line, so it does not show up in the process list.
+# Proxmox VE API helpers used by preflight, destroy, node list and create.
+# All are read-only except pve_vm_reset. The API token is passed to curl
+# through a config on stdin, never on the command line, so it does not show
+# up in the process list.
 
 # Globals defined here are used by the other libraries and okd-pve.
 # shellcheck disable=SC2034
@@ -87,6 +88,11 @@ pve_cluster_vms() {
 
 pve_vm_config() {
 	pve_api "/nodes/$1/qemu/$2/config"
+}
+
+# pve_vm_reset <node> <vmid>: hard reset, like the Reset button (VM.PowerMgmt).
+pve_vm_reset() {
+	pve_api "/nodes/$1/qemu/$2/status/reset" --data ''
 }
 
 pve_pool() {

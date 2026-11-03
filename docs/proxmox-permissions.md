@@ -30,7 +30,7 @@ Datastore.Allocate Datastore.AllocateSpace Datastore.AllocateTemplate Datastore.
 | Privilege | Why |
 |---|---|
 | `VM.Allocate` on the pool | create and delete VMs in the pool |
-| `VM.Config.*`, `VM.PowerMgmt`, `VM.Audit` | disks, CPU, memory, NIC, CD-ROM, serial console (`HWType`), boot order (`Options`), start/stop, read status |
+| `VM.Config.*`, `VM.PowerMgmt`, `VM.Audit` | disks, CPU, memory, NIC, CD-ROM, serial console (`HWType`), boot order (`Options`), start/stop, reset of a stuck rendezvous node (`install.recover_rendezvous`), read status |
 | `Pool.Audit` | preflight: check that the pool exists |
 | `Datastore.AllocateSpace`, `Datastore.Audit` | create disks, read free space |
 | `Datastore.AllocateTemplate` | upload the ISO |
