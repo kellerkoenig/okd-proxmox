@@ -41,6 +41,8 @@ www\.gnu\.org
 img\.shields\.io
 # OpenSSF Scorecard badge and viewer, Renovate schema
 ([a-z0-9-]+\.)*scorecard\.dev
+# OpenSSF Best Practices badge
+www\.bestpractices\.dev
 docs\.renovatebot\.com
 # --- Kubernetes/OpenShift API groups, provisioners and label prefixes
 ([a-z0-9-]+\.)*openshift\.io
