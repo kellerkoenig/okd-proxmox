@@ -66,6 +66,12 @@ variable "machine" {
   default     = "q35"
 }
 
+variable "guest_agent" {
+  description = "Enable the QEMU guest agent (SCOS ships and starts it)."
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Set Proxmox tags (okd, okd-pve, cluster, roles). Proxmox checks VM.Config.Options on /vms/<vmid> (not the pool) when tags are set at creation."
   type        = bool

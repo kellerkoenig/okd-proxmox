@@ -101,6 +101,14 @@ setup() {
 	assert_output --partial "must be the IP of a control-plane node"
 }
 
+@test "proxmox.guest_agent must be a boolean" {
+	yq_set '.proxmox.guest_agent = "yes"'
+	load_cluster
+	run config_validate
+	assert_failure 2
+	assert_output --partial "proxmox.guest_agent must be true or false"
+}
+
 @test "node IPs outside machineNetwork are rejected" {
 	yq_set '.networking.machineNetwork[0].cidr = "198.51.100.0/24"' "${CLUSTER}/install-config.yaml"
 	load_cluster

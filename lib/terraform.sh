@@ -55,6 +55,7 @@ module "okd" {
   machine            = local.cfg.machine
   upload_timeout     = local.cfg.upload_timeout
   tags               = local.cfg.tags
+  guest_agent        = local.cfg.guest_agent
   ha                 = local.cfg.ha
   isos               = local.cfg.isos
   nodes              = local.cfg.nodes
@@ -171,6 +172,7 @@ tf_write_vars() {
 			machine: $c.proxmox.machine,
 			upload_timeout: $c.proxmox.upload_timeout,
 			tags: $c.proxmox.tags,
+			guest_agent: $c.proxmox.guest_agent,
 			ha: $c.proxmox.ha,
 			isos: $isos,
 			nodes: (map({key: .name, value: {
