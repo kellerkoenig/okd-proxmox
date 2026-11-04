@@ -86,12 +86,29 @@ okd-pve node add --role infra --count 1 --group infra
    OKD ≥ 4.17), which builds a node ISO inside the cluster,
 3. uploads the ISO and creates only the new VMs; existing VMs are not
    touched,
-4. approves the kubelet CSRs of exactly these nodes and waits for `Ready`,
-5. detaches and deletes the ISO, sets infra labels/taints,
-6. writes the new `count` back to `cluster.yaml` (backup `cluster.yaml.bak`)
-   so a rebuild reproduces the topology.
+4. approves the kubelet CSRs of exactly these nodes and waits for `Ready`
+   (`--timeout`, default 3600 s),
+5. sets infra labels/taints and writes the new `count` back to
+   `cluster.yaml` (backup `cluster.yaml.bak`) so a rebuild reproduces the
+   topology,
+6. detaches and deletes the ISO.
 
 Spare addresses must already be listed in the group's `ips`.
+
+### Interrupted runs
+
+A new node can take long to join when image downloads are slow. You can stop
+`node add` (Ctrl+C, closed terminal, `--timeout`) once the VMs exist: the
+installation goes on in the VM, only the CSR approval and the steps after it
+are missing. Finish it later with
+
+```bash
+okd-pve node add --resume
+```
+
+It creates VMs that are still missing, approves the CSRs, waits for `Ready`
+and runs steps 5 and 6. Running `node add --role ...` again instead would add
+*more* nodes, so `node add` refuses as long as an earlier run is unfinished.
 
 ## Removing nodes
 

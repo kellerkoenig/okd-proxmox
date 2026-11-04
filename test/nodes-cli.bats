@@ -71,3 +71,89 @@ setup() {
 	assert_failure 2
 	assert_output --partial "nope is not a node of this cluster"
 }
+
+# _interrupted_add [names...]: state of a node add that was stopped after its
+# VMs were created (inventory and ISO registered, count not yet written).
+_interrupted_add() {
+	local work=${CLUSTER}/.state/node-add/add-1 n
+	mkdir -p "${work}"
+	: >"${work}/node.x86_64.iso"
+	echo '{"master":[0,1,2],"worker":[0,1,2,3]}' >"${CLUSTER}/.state/inventory.json"
+	jq -cn --arg p "${work}/node.x86_64.iso" '{"add-1": {path: $p, file_name: "okd-pve-small-add-1-202611031605.iso", hosts: ["pve1"]}}' \
+		>"${CLUSTER}/.state/isos.json"
+	echo '{}' >"${CLUSTER}/.state/node-isos.json"
+	for n in "$@"; do
+		jq -c --arg n "${n}" '.[$n] = "add-1"' "${CLUSTER}/.state/node-isos.json" >"${CLUSTER}/.state/n.json"
+		mv "${CLUSTER}/.state/n.json" "${CLUSTER}/.state/node-isos.json"
+	done
+}
+
+# _cluster_oc: oc for a cluster where every node is Ready and no CSR is pending.
+_cluster_oc() {
+	mkdir -p "${BATS_TEST_TMPDIR}/bin"
+	cat >"${BATS_TEST_TMPDIR}/bin/oc" <<'OC'
+#!/usr/bin/env bash
+echo "oc $*" >>"${MOCK_LOG}"
+case "$*" in
+"version --client"*) echo '{"releaseClientVersion":"4.21.0-okd-scos.11"}' ;;
+"get csr -o json") echo '{"items": []}' ;;
+*Ready*) echo True ;;
+"get node "*" -o json") echo '{"metadata": {"labels": {}}, "spec": {}}' ;;
+esac
+exit 0
+OC
+	chmod +x "${BATS_TEST_TMPDIR}/bin/oc"
+	export PATH="${BATS_TEST_TMPDIR}/bin:${PATH}"
+}
+
+@test "node add refuses while an earlier node add is unfinished" {
+	_interrupted_add small-worker-3
+	run "${OKD}" --dir "${CLUSTER}" --dry-run node add --role worker --count 1
+	assert_failure 2
+	assert_output --partial "An earlier node add did not finish: small-worker-3"
+	assert_output --partial "okd-pve node add --resume"
+}
+
+@test "node add --resume with nothing to resume" {
+	run "${OKD}" --dir "${CLUSTER}" node add --resume
+	assert_success
+	assert_output --partial "No unfinished node add"
+}
+
+@test "node add --resume takes no --role" {
+	run "${OKD}" --dir "${CLUSTER}" node add --resume --role worker
+	assert_failure 2
+	assert_output --partial "takes no --role"
+}
+
+@test "node add --resume finishes an interrupted run" {
+	_interrupted_add small-worker-3
+	_cluster_oc
+	run "${OKD}" --dir "${CLUSTER}" node add --resume
+	assert_success
+	assert_output --partial "Resuming node add add-1: small-worker-3"
+	assert_output --partial "Nodes Ready: small-worker-3"
+	assert_output --partial "node_groups.worker.count = 4"
+	assert_output --partial "Added small-worker-3"
+	assert_equal "$(yq '.node_groups[] | select(.name == "worker") | .count' "${CLUSTER}/cluster.yaml")" 4
+	assert_equal "$(cat "${CLUSTER}/.state/isos.json")" '{}'
+	assert_equal "$(cat "${CLUSTER}/.state/node-isos.json")" '{}'
+	[[ ! -e ${CLUSTER}/.state/node-add/add-1 ]]
+	# the last apply no longer has the ISO
+	last=$(find "${MOCK_LOG%/*}" -name 'apply-*.json' | sort -V | tail -n 1)
+	assert_equal "$(jq -c '.isos' "${last}")" '{}'
+
+	# a second run has nothing left to do
+	run "${OKD}" --dir "${CLUSTER}" node add --resume
+	assert_success
+	assert_output --partial "No unfinished node add"
+}
+
+@test "node add --resume removes what a run that stopped early left behind" {
+	mkdir -p "${CLUSTER}/.state/node-add/add-2"
+	_cluster_oc
+	run "${OKD}" --dir "${CLUSTER}" node add --resume
+	assert_success
+	[[ ! -e ${CLUSTER}/.state/node-add/add-2 ]]
+	assert_equal "$(sha256sum "${CLUSTER}/cluster.yaml")" "${ORIG}"
+}

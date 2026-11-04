@@ -235,6 +235,7 @@ deployment automation.
 | `verify [--wait] [--timeout S]` | Nodes, MachineConfigPools, ClusterOperators, CSRs, VIPs, console, etcd, time sync, infra placement, storage |
 | `destroy` | VMs, disks, ISOs, state. Asks for the cluster name unless `--yes`. Keeps the configuration and logs. |
 | `node add --role worker\|infra --count N [--group G]` | Node ISO via `oc adm node-image create`, new VMs (existing ones untouched), CSR approval, labels/taints |
+| `node add --resume` | Finishes a `node add` that was interrupted (Ctrl+C, timeout): CSR approval, labels/taints, `count`, ISO cleanup |
 | `node remove <name> [--drain-timeout 10m]` | cordon → drain → delete node → destroy only this VM. Refuses control-plane nodes without `--force-control-plane`. |
 | `node list` / `node reconcile` | Inventory with VMID/host/IP/MAC/status / re-apply infra labels and taints |
 | `storage install` | Deploy the configured storage backend |
