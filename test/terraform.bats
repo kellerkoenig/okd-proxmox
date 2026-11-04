@@ -50,6 +50,7 @@ setup() {
 	assert_equal "$(jq -r '.pool_id' "${f}")" okd-small
 	assert_equal "$(jq -r '.efi_storage' "${f}")" local-lvm
 	assert_equal "$(jq -c '.ha' "${f}")" '{"enabled":false,"max_restart":1,"max_relocate":1}'
+	assert_equal "$(jq -r '.guest_agent' "${f}")" true
 	run grep -c "${TEST_TOKEN_SECRET}" "${f}"
 	assert_output 0
 }
@@ -62,6 +63,14 @@ setup() {
 	tf_write_vars
 	assert_equal "$(jq -r '.iso_storage_shared' "${TOFU_DIR}/cluster.auto.json")" true
 	assert_equal "$(jq -r '.vlan_id' "${TOFU_DIR}/cluster.auto.json")" 120
+}
+
+@test "the guest agent can be switched off" {
+	yq_set '.proxmox.guest_agent = false'
+	load_cluster
+	mkdir -p "${TOFU_DIR}"
+	tf_write_vars
+	assert_equal "$(jq -r '.guest_agent' "${TOFU_DIR}/cluster.auto.json")" false
 }
 
 @test "targeted destroy address" {

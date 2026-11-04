@@ -47,6 +47,10 @@ proxmox:
   # Proxmox tags on the VMs. Off by default: when tags are set at creation,
   # Proxmox checks VM.Config.Options on /vms/<vmid> and ignores pool ACLs.
   tags: false
+  # QEMU guest agent: Proxmox shows the IPs, shuts nodes down cleanly and
+  # freezes the file systems for snapshot backups. SCOS ships and starts the
+  # agent; existing VMs pick the change up after a power cycle in Proxmox.
+  guest_agent: true
   # Proxmox HA: every VM becomes an HA resource (state started), so the HA
   # manager restarts it on another node when its node fails. Needs shared
   # VM storage, a quorate Proxmox cluster after a node failure (two nodes

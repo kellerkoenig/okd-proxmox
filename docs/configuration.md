@@ -92,6 +92,7 @@ Maps are merged key by key; lists replace the default list.
 | `ha.enabled` | `false` | Register every VM as Proxmox HA resource (state `started`): the HA manager restarts it on another node when its node fails. Needs shared VM storage, quorum after a node failure (two-node clusters need a QDevice) and `Sys.Audit` + `Sys.Console` on `/` (see [proxmox-permissions.md](proxmox-permissions.md)). |
 | `ha.max_restart`, `ha.max_relocate` | `1`, `1` | Restart attempts on the same node and relocations to another node before HA gives up |
 | `tags` | `false` | Proxmox tags `okd`, `okd-pve`, cluster name, roles. Needs `VM.Config.Options` on `/vms` (Proxmox ignores pool ACLs for tags at VM creation). |
+| `guest_agent` | `true` | QEMU guest agent: Proxmox shows the IPs, shuts the VMs down through the agent and freezes the file systems for snapshot backups. SCOS ships and starts the agent. On existing VMs the change is applied with the next OpenTofu run (`create`, `node add`, `node remove`) but takes effect only after a power cycle in Proxmox (Shutdown + Start; a reboot inside the VM is not enough); drain the node first. Set `false` for images without the agent: Proxmox shutdown and reboot would time out. |
 
 ### network
 

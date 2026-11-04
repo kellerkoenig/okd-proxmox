@@ -89,6 +89,7 @@ def validate($cluster; $inventory; $ic):
         "proxmox.mac_prefix is a multicast address; use a unicast prefix such as 02:00:00")
     + when(([$c.proxmox.bios] - ["ovmf", "seabios"] | length) > 0; "proxmox.bios must be ovmf or seabios")
     + when(($c.proxmox.ha.enabled | type) != "boolean"; "proxmox.ha.enabled must be true or false")
+    + when(($c.proxmox.guest_agent | type) != "boolean"; "proxmox.guest_agent must be true or false")
     + when(([$c.proxmox.ha.max_restart, $c.proxmox.ha.max_relocate] | map(type == "number" and . >= 0 and . == floor) | all) | not;
         "proxmox.ha.max_restart and max_relocate must be whole numbers >= 0")
     + when(([$c.proxmox.root_device_hint] - ["serial", "none"] | length) > 0;

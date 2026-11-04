@@ -67,9 +67,14 @@ resource "proxmox_virtual_environment_vm" "node" {
   # the ISO is still attached.
   boot_order = each.value.iso == "" ? ["scsi0"] : ["scsi0", "ide2"]
 
-  # SCOS ships no qemu-guest-agent; enabling it makes apply wait until timeout.
+  # SCOS starts qemu-guest-agent as soon as the agent port exists. The IPs are
+  # static and known, so the provider does not wait for the agent to report
+  # them (that would block every refresh while a node installs).
   agent {
-    enabled = false
+    enabled = var.guest_agent
+    wait_for_ip {
+      disabled = true
+    }
   }
 
   cpu {
