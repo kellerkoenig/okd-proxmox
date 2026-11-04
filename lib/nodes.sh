@@ -145,7 +145,7 @@ nodes_join_wait() {
 		((${#pending[@]})) || break
 		if ((SECONDS - start >= timeout)); then
 			die "${EXIT_ERROR}" "Nodes not Ready after ${timeout}s: ${pending[*]}" \
-				"Check the VM consoles (qm terminal <vmid>) and 'oc get csr'; re-run the command to continue."
+				"Check the VM consoles (qm terminal <vmid>) and 'oc get csr', then continue with 'okd-pve node add --resume'."
 		fi
 		if ((SECONDS - last >= 120)); then
 			log_info "Waiting for ${pending[*]} to join ($(elapsed "${start}"))"
@@ -225,19 +225,34 @@ _pick_group() {
 }
 
 cmd_node_add() {
-	local role='' count=1 group='' timeout=3600
+	local role='' count='' group='' timeout=3600 resume=0
 	while (($#)); do
 		case $1 in
 		--role) role=${2:-} && shift 2 ;;
 		--count) count=${2:-} && shift 2 ;;
 		--group) group=${2:-} && shift 2 ;;
 		--timeout) timeout=${2:-} && shift 2 ;;
-		*) die "${EXIT_CONFIG}" "node add: unknown argument $1" "okd-pve node add --role worker|infra --count N [--group NAME]" ;;
+		--resume) resume=1 && shift ;;
+		*) die "${EXIT_CONFIG}" "node add: unknown argument $1" "okd-pve node add --role worker|infra --count N [--group NAME] | --resume" ;;
 		esac
 	done
-	[[ ${role} == worker || ${role} == infra ]] || die "${EXIT_CONFIG}" "node add needs --role worker or --role infra."
-	[[ ${count} =~ ^[1-9][0-9]*$ ]] || die "${EXIT_CONFIG}" "--count must be a positive number."
+	if ((resume)); then
+		[[ -z ${role}${count}${group} ]] ||
+			die "${EXIT_CONFIG}" "node add --resume takes no --role, --count or --group." "It finishes the nodes of the interrupted run."
+	else
+		count=${count:-1}
+		[[ ${role} == worker || ${role} == infra ]] || die "${EXIT_CONFIG}" "node add needs --role worker or --role infra."
+		[[ ${count} =~ ^[1-9][0-9]*$ ]] || die "${EXIT_CONFIG}" "--count must be a positive number."
+	fi
 	state_step_done install || die "${EXIT_ERROR}" "The cluster is not installed yet." "Run 'okd-pve create' first."
+	if ((resume)); then
+		node_add_resume "${timeout}"
+		return 0
+	fi
+	local unfinished
+	unfinished=$(node_add_pending | cut -f2 | paste -sd' ')
+	[[ -z ${unfinished} ]] || die "${EXIT_CONFIG}" "An earlier node add did not finish: ${unfinished}." \
+		"Finish it first with 'okd-pve node add --resume'."
 
 	group=$(_pick_group "${role}" "${group}")
 	cluster_api_init
@@ -306,17 +321,81 @@ cmd_node_add() {
 	tf_apply
 
 	# shellcheck disable=SC2046
-	nodes_join_wait "${timeout}" $(paste -sd' ' - <<<"${names}")
+	node_add_finish "${iso_key}" "${timeout}" $(paste -sd' ' - <<<"${names}")
+}
+
+# node_add_pending: "<iso-key>\t<names>" for every node add whose ISO is still
+# registered, i.e. that stopped (Ctrl+C, timeout) before it finished. <names>
+# are the nodes still booting from that ISO, or the key when none is left.
+node_add_pending() {
+	tf_isos_json | jq -r --argjson n "$(tf_node_isos)" 'keys[] | select(startswith("add-")) as $k
+		| [$n | to_entries[] | select(.value == $k) | .key] as $names
+		| [$k, (if $names == [] then $k else $names | join(" ") end)] | @tsv'
+}
+
+# node_add_finish <iso-key> <timeout> <names...>: the part of node add after
+# the VMs were created. Every step is idempotent, so --resume repeats it. The
+# ISO goes last: as long as it is registered, the run counts as unfinished.
+node_add_finish() {
+	local key=$1 timeout=$2 names_json group count
+	shift 2
+	names_json=$(printf '%s\n' "$@" | jq -R . | jq -sc 'map(select(. != ""))')
+	if (($#)); then
+		nodes_join_wait "${timeout}" "$@"
+		nodes_reconcile_labels
+		for group in $(nodes_query --argjson names "${names_json}" '[.[] | select(.name as $n | $names | index($n)) | .group] | unique[]'); do
+			count=$(state_inventory_get | jq -r --arg g "${group}" '.[$g] | length')
+			[[ $(cfg ".node_groups[] | select(.name == \"${group}\") | .count // 0") == "${count}" ]] ||
+				config_set_count "${group}" "${count}"
+		done
+	fi
 
 	log_info "Detaching the node ISO"
-	tf_node_isos_set "$(tf_node_isos | jq -c --argjson names "$(jq -R . <<<"${names}" | jq -sc .)" 'with_entries(select(.key as $k | $names | index($k) | not))')"
-	tf_iso_unregister "${iso_key}"
+	tf_node_isos_set "$(tf_node_isos | jq -c --argjson names "${names_json}" 'with_entries(select(.key as $k | $names | index($k) | not))')"
+	tf_iso_unregister "${key}"
 	tf_apply
-	rm -rf "${work}"
+	rm -rf "${STATE_DIR}/node-add/${key}"
+	(($#)) && log_ok "Added $*"
+	return 0
+}
 
-	nodes_reconcile_labels
-	config_set_count "${group}" "$(jq -r --arg g "${group}" '.[$g] | length' <<<"${new_inv}")"
-	log_ok "Added $(paste -sd' ' - <<<"${names}")"
+# node_add_resume <timeout>: finish interrupted node adds: create VMs that are
+# still missing, approve CSRs, wait for Ready, labels, count, detach the ISO.
+# Work directories of runs that stopped before their ISO was registered are
+# removed (one more apply deletes an ISO left on Proxmox by a run that stopped
+# while it was detached).
+node_add_resume() {
+	local timeout=$1 key names dir
+	local -a pending=() stale=()
+	mapfile -t pending < <(node_add_pending)
+	for dir in "${STATE_DIR}"/node-add/add-*; do
+		[[ -d ${dir} ]] || continue
+		jq -e --arg k "${dir##*/}" 'has($k)' <<<"$(tf_isos_json)" >/dev/null || stale+=("${dir}")
+	done
+	if ((${#pending[@]} + ${#stale[@]} == 0)); then
+		log_ok "No unfinished node add."
+		return 0
+	fi
+	cluster_api_init
+	tools_ensure tofu
+	for key in "${pending[@]}"; do
+		names=${key#*$'\t'} key=${key%%$'\t'*}
+		[[ ${names} == "${key}" ]] && names=''
+		log_step "Resuming node add ${key}${names:+: ${names}}"
+		if dry_run_note "would create missing VMs, approve CSRs and wait for ${names:-no node}, then detach the ISO"; then
+			continue
+		fi
+		log_info "Creating missing VMs (existing VMs are not touched)"
+		tf_apply
+		# shellcheck disable=SC2086
+		node_add_finish "${key}" "${timeout}" ${names}
+	done
+	((${#stale[@]})) || return 0
+	dry_run_note "would remove the work directories of interrupted node adds: ${stale[*]##*/}" && return 0
+	log_info "Removing what interrupted node adds left behind"
+	tf_apply
+	rm -rf "${stale[@]}"
+	return 0
 }
 
 # Dry-run helpers: compute the plan with the new slots without persisting.

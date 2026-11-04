@@ -76,6 +76,7 @@ Commands:
   verify [--wait] [--timeout S]       Check cluster health
   destroy                             Delete VMs, disks, ISOs and state
   node add --role worker|infra --count N [--group G]
+  node add --resume                   Finish an interrupted node add
   node remove <node> [--drain-timeout 10m] [--force-control-plane]
   node list                           Nodes with VMID, host, IP, MAC and status
   node reconcile                      Re-apply infra labels and taints
@@ -238,7 +239,7 @@ cmd_create() {
 	((DRY_RUN)) || state_init
 	if ! state_inventory_matches_config; then
 		die "${EXIT_CONFIG}" "node_groups counts in cluster.yaml differ from the existing VMs." \
-			"Scale an installed cluster with 'okd-pve node add/remove'; restore the counts to continue create."
+			"Scale an installed cluster with 'okd-pve node add/remove' (after an interrupted node add: 'okd-pve node add --resume'); restore the counts to continue create."
 	fi
 
 	create_step 1 "Configuration"
