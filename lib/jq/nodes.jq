@@ -96,6 +96,7 @@ def nodes($cluster; $inventory):
          mac: mac_for($c.proxmox.mac_prefix; $vmid),
          ip: $ips[$idx],
          host: (if ($hosts | length) == 0 then null
+                elif $c.proxmox.spread == "balanced" then $hosts[($idx + $gi) % ($hosts | length)]
                 elif $c.proxmox.spread then $hosts[$idx % ($hosts | length)]
                 else $hosts[0] end),
          cpu: $g.cpu,

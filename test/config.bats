@@ -101,6 +101,14 @@ setup() {
 	assert_output --partial "must be the IP of a control-plane node"
 }
 
+@test "proxmox.spread must be true, false or balanced" {
+	yq_set '.proxmox.spread = "even"'
+	load_cluster
+	run config_validate
+	assert_failure 2
+	assert_output --partial "proxmox.spread must be true, false or balanced"
+}
+
 @test "proxmox.guest_agent must be a boolean" {
 	yq_set '.proxmox.guest_agent = "yes"'
 	load_cluster
