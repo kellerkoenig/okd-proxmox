@@ -425,8 +425,14 @@ cmd_destroy() {
 	proxmox_require
 	tools_ensure tofu
 	log_step "Destroying cluster ${CLUSTER_NAME}.${BASE_DOMAIN}"
+	# Everything in the state goes, whatever cluster.yaml says now: a
+	# configuration already changed for the next build (other node groups,
+	# spread) must not block the destroy.
+	TF_GUARD_SKIP=1
+	local state_names='[]'
 	if tf_has_state; then
-		log_info "VMs in state: $(jq -r '[.resources[]? | select(.type == "proxmox_virtual_environment_vm") | .instances[].index_key] | join(" ")' "${TOFU_DIR}/terraform.tfstate")"
+		state_names=$(jq -c '[.resources[]? | select(.type == "proxmox_virtual_environment_vm") | .instances[].index_key]' "${TOFU_DIR}/terraform.tfstate")
+		log_info "VMs in state: $(jq -r 'join(" ")' <<<"${state_names}")"
 	else
 		log_info "No OpenTofu state; nothing to delete on Proxmox from state"
 	fi
@@ -452,19 +458,22 @@ cmd_destroy() {
 		tf_node_isos() { echo '{}'; }
 		tf_destroy
 	fi
-	destroy_report_leftovers
+	destroy_report_leftovers "${state_names}"
 	rm -rf "${GENERATED_DIR}" "${AUTH_DIR}" "${TOFU_DIR}/terraform.tfstate" "${TOFU_DIR}/terraform.tfstate.backup" \
 		"${TOFU_DIR}/cluster.auto.json"
 	state_wipe
 	log_ok "Cluster ${CLUSTER_NAME} destroyed. Configuration files and logs were kept."
 }
 
-# destroy_report_leftovers: VMs of this cluster still in the pool.
+# destroy_report_leftovers [state-names-json]: VMs of this cluster still in
+# the pool.
 destroy_report_leftovers() {
-	local vms left
+	local vms left names
 	vms=$(pve_cluster_vms 2>/dev/null) || return 0
-	# Match by node name, or by the cluster tag when proxmox.tags is on.
-	left=$(jq -r --arg p "$(pool_name)" --arg c "${CLUSTER_NAME}" --argjson names "$(nodes_query -c '[.[].name]')" \
+	# Match by node name (configured now or in the state before the destroy),
+	# or by the cluster tag when proxmox.tags is on.
+	names=$(jq -cn --argjson a "$(nodes_query -c '[.[].name]')" --argjson b "${1:-[]}" '$a + $b | unique')
+	left=$(jq -r --arg p "$(pool_name)" --arg c "${CLUSTER_NAME}" --argjson names "${names}" \
 		'[.[] | select((.pool // "") == $p)
 		 | select((.name as $n | $names | index($n)) or ((.tags // "") | split(";") | index($c)))
 		 | "\(.name) (VMID \(.vmid) on \(.node))"] | join(", ")' <<<"${vms}")

@@ -164,3 +164,18 @@ applies() {
 	assert [ -f "${CLUSTER}/install-config.yaml" ]
 	assert [ -f "${CLUSTER}/proxmox.conf" ]
 }
+
+@test "destroy works after cluster.yaml was changed for the next build" {
+	create
+	assert_success
+	# a dedicated infra group before the workers moves their VMIDs
+	yq_set '.proxmox.spread = "balanced" | .node_groups |= [.[0], {"name": "infra", "roles": ["infra"], "taint_infra": true,
+		"count": 3, "cpu": 8, "memory_gib": 32, "disk_gib": 120, "ips": ["192.0.2.31-192.0.2.33"]}, .[1]]'
+	run main --dir "${CLUSTER}" --yes destroy
+	# setup turns errexit off; without it a failed assertion would not fail the test
+	set -e
+	assert_success
+	refute_output --partial "would recreate existing VMs"
+	assert_output --partial "VMs in state: small-master-0"
+	assert [ ! -e "${CLUSTER}/.state" ]
+}
