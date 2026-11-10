@@ -43,6 +43,8 @@ proxmox:
   tmp_dir: ""
   host_memory_reserve_gib: 8
   root_device_hint: serial
+  # Seconds for an ISO upload. The provider stops every upload after 20
+  # minutes anyway, so values above 1200 have no effect.
   upload_timeout: 3600
   # Proxmox tags on the VMs. Off by default: when tags are set at creation,
   # Proxmox checks VM.Config.Options on /vms/<vmid> and ignores pool ACLs.

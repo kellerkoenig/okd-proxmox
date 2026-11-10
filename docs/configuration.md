@@ -89,7 +89,7 @@ Maps are merged key by key; lists replace the default list.
 | `tmp_dir` | `""` | local buffer for uploads (provider `tmp_dir`); default `$TMPDIR` |
 | `host_memory_reserve_gib` | `8` | RAM per host kept free in the capacity check |
 | `root_device_hint` | `serial` | install SCOS on the disk with the boot serial; `none` disables the hint |
-| `upload_timeout` | `3600` | seconds |
+| `upload_timeout` | `3600` | seconds for an ISO upload. The provider cancels every upload after 20 minutes anyway (default create timeout of the Terraform SDK), so values above `1200` have no effect. The ~1 GiB agent ISO therefore needs about 7 Mbit/s from your workstation to Proxmox; see the README, Troubleshooting |
 | `ha.enabled` | `false` | Register every VM as Proxmox HA resource (state `started`): the HA manager restarts it on another node when its node fails. Needs shared VM storage, quorum after a node failure (two-node clusters need a QDevice) and `Sys.Audit` + `Sys.Console` on `/` (see [proxmox-permissions.md](proxmox-permissions.md)). |
 | `ha.max_restart`, `ha.max_relocate` | `1`, `1` | Restart attempts on the same node and relocations to another node before HA gives up |
 | `tags` | `false` | Proxmox tags `okd`, `okd-pve`, cluster name, roles. Needs `VM.Config.Options` on `/vms` (Proxmox ignores pool ACLs for tags at VM creation). |
