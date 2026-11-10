@@ -57,8 +57,8 @@ okd-pve destroy
    ISO.
 6. Builds the agent ISO with `openshift-install agent create image`.
 7. Uploads the ISO and creates the VMs with OpenTofu: deterministic VMIDs and
-   MACs, disk serials, control plane spread over Proxmox hosts, no guest
-   agent, serial console, all VMs in one resource pool.
+   MACs, disk serials, control plane spread over Proxmox hosts, QEMU guest
+   agent (switchable), serial console, all VMs in one resource pool.
 8. Follows the installation (`wait-for bootstrap-complete` and
    `wait-for install-complete`) with readable progress output.
 9. Detaches the ISO, labels and taints infra nodes, and verifies the cluster.
@@ -274,7 +274,7 @@ instead of failing.
 
 | Symptom | Likely cause / next step |
 |---|---|
-| `tofu apply` hangs at VM creation | The guest agent is enabled somewhere else; `okd-pve` sets `agent = false` because SCOS has no qemu-guest-agent. |
+| Proxmox Shutdown/Reboot of a node VM times out | The guest agent does not answer: the VM was not power-cycled since `proxmox.guest_agent` was enabled (Shutdown + Start in Proxmox), or the image has no agent (`guest_agent: false`). |
 | Upload fails with "no space left" | The ~1 GiB ISO is buffered locally during upload. Set `proxmox.tmp_dir` to a larger directory. |
 | VM does not boot, black console | CPU type: SCOS based on CentOS Stream 10 needs `x86-64-v3` or `host`. Check with `qm terminal <vmid>` (serial console). |
 | Bootstrap stuck, hosts "insufficient" | `okd-pve logs --installer`; usually DNS, NTP or a disk/RAM below the minimum. The rendezvous node console shows the validation messages. |
