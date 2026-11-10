@@ -20,7 +20,7 @@ install:
 proxmox:
   # Target node(s). Control-plane VMs are spread round-robin across them.
   nodes: [pve1, pve2, pve3]
-  spread: true                    # false: put every VM on the first node
+  spread: true                    # balanced: shift each group by one node; false: all on the first
   vm_storage: local-lvm           # boot disks (content type: images)
   iso_storage: local              # agent ISO (content type: iso)
   efi_storage: ""                 # EFI vars disks, default: vm_storage

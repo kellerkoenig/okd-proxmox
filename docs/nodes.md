@@ -69,7 +69,7 @@ Everything is derived deterministically, so rebuilds give identical VMs:
 | MAC | `proxmox.mac_prefix` followed by the VMID (e.g. `02:00:00` + 4100 → `02:00:00:00:10:04`) |
 | IP | `node_groups[].ips[index]` (ranges allowed) |
 | disk serials | `okd<vmid>d0` (boot), `okd<vmid>d1...` (data disks) |
-| Proxmox host | round-robin over `proxmox.nodes` (or the group's `proxmox_nodes`), `spread: false` puts everything on the first |
+| Proxmox host | round-robin over `proxmox.nodes` (or the group's `proxmox_nodes`); `spread: balanced` starts every group one node further, `spread: false` puts everything on the first |
 
 `okd-pve node list` shows all of it next to the live status.
 

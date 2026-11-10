@@ -87,6 +87,7 @@ def validate($cluster; $inventory; $ic):
            and ($c.proxmox.mac_prefix | test("^[0-9A-Fa-f]{2}"))
            and (($c.proxmox.mac_prefix[0:2] | hexval) % 2 == 1);
         "proxmox.mac_prefix is a multicast address; use a unicast prefix such as 02:00:00")
+    + when(([$c.proxmox.spread] - [true, false, "balanced"] | length) > 0; "proxmox.spread must be true, false or balanced")
     + when(([$c.proxmox.bios] - ["ovmf", "seabios"] | length) > 0; "proxmox.bios must be ovmf or seabios")
     + when(($c.proxmox.ha.enabled | type) != "boolean"; "proxmox.ha.enabled must be true or false")
     + when(($c.proxmox.guest_agent | type) != "boolean"; "proxmox.guest_agent must be true or false")

@@ -72,7 +72,7 @@ Maps are merged key by key; lists replace the default list.
 | Key | Default | Description |
 |---|---|---|
 | `nodes` | – | Proxmox nodes for the VMs |
-| `spread` | `true` | round-robin by node index over the nodes (control plane on different hosts); `false`: all on the first |
+| `spread` | `true` | `true`: round-robin by node index over the nodes, in every group from the first node (control plane on different hosts). `balanced`: like `true`, but every group starts one node further (group position in `node_groups`), so the VMs spread evenly over the hosts: with 2 hosts and 3 groups of 3, 5:4 instead of 6:3. `false`: all on the first. Set it before `create`; changing it later would move existing VMs, which `okd-pve` refuses |
 | `vm_storage` | `local-lvm` | boot disks (content `images`) |
 | `iso_storage` | `local` | agent/node ISOs (content `iso`); uploaded once if `shared`, else to every host used |
 | `efi_storage` | `""` | EFI vars disks; default `vm_storage` |

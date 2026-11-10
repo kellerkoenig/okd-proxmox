@@ -78,6 +78,16 @@ node() {
 	assert_equal "$(nodes_query -c '[.[] | select(.group == "worker") | .host] | unique')" '["pve3"]'
 }
 
+@test "spread: balanced shifts every node group by its position" {
+	yq_set '.proxmox.nodes = ["pve1", "pve2"]'
+	load_cluster
+	assert_equal "$(nodes_query -c '[.[] | select(.group == "worker") | .host]')" '["pve1","pve2","pve1"]'
+	yq_set '.proxmox.spread = "balanced"'
+	load_cluster
+	assert_equal "$(nodes_query -c '[.[] | select(.group == "master") | .host]')" '["pve1","pve2","pve1"]'
+	assert_equal "$(nodes_query -c '[.[] | select(.group == "worker") | .host]')" '["pve2","pve1","pve2"]'
+}
+
 @test "inventory slots with gaps keep VMIDs, MACs and IPs of the other nodes" {
 	state_init
 	state_inventory_set '{"master":[0,1,2],"worker":[0,2]}'

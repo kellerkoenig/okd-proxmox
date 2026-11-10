@@ -146,7 +146,7 @@ tf_guard_existing() {
 	local l
 	while IFS= read -r l; do log_error "${l}"; done <<<"${changed}"
 	die "${EXIT_CONFIG}" "This configuration change would recreate existing VMs." \
-		"Revert it. New node groups go to the end of node_groups (or get an explicit vmid_offset)."
+		"Revert it. New node groups go to the end of node_groups (or get an explicit vmid_offset); proxmox.spread only applies to new clusters."
 }
 
 tf_write_vars() {
