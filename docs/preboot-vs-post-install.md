@@ -75,6 +75,7 @@ isolated networks and produce the typical
 | label or taint nodes | Post-Install (`okd-pve` does it for infra) | nodes may not set role labels themselves |
 | secrets for webhooks, OAuth, ... | Post-Install hook, values from the environment | never in a repository |
 | ContainerRuntimeConfig, ImageDigestMirrorSet | Pre-Boot | rendered into MachineConfigs |
+| pull images through a local cache | `registry_mirrors` in cluster.yaml (Pre-Boot); `okd-pve mirrors apply` for a running cluster | see [registry-mirrors.md](registry-mirrors.md) |
 
 When you are unsure: if `oc get machineconfig` would show a new entry after
 applying it, it belongs to Pre-Boot.

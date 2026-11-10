@@ -3,6 +3,7 @@ proxmox.conf
 proxmox-csi.conf
 ceph-csi.conf
 pull-secret.json
+mirror-auth.json
 auth/
 bin/
 logs/

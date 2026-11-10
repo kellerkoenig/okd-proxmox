@@ -53,8 +53,8 @@ okd-pve destroy
    MACs, root disk by serial) into a fresh `.generated/` directory. Your
    source files are never touched or consumed.
 5. Renders the **Pre-Boot** manifests (chrony, kubelet garbage collection
-   for master *and* worker, kernel arguments, CA trust, infra pool) into the
-   ISO.
+   for master *and* worker, kernel arguments, CA trust, infra pool,
+   optional registry mirrors) into the ISO.
 6. Builds the agent ISO with `openshift-install agent create image`.
 7. Uploads the ISO and creates the VMs with OpenTofu: deterministic VMIDs and
    MACs, disk serials, control plane spread over Proxmox hosts, QEMU guest
@@ -232,13 +232,14 @@ deployment automation.
 | `init <cluster>` | Create `cluster.yaml`, `install-config.yaml`, `proxmox.conf` (mode 600), `preboot/`, `.gitignore` |
 | `preflight` | All checks, `PASS`/`WARN`/`FAIL` with a hint each, capacity table. Changes nothing. |
 | `create [--skip-preflight]` | Full cluster creation, resumable |
-| `verify [--wait] [--timeout S]` | Nodes, MachineConfigPools, ClusterOperators, CSRs, VIPs, console, etcd, time sync, infra placement, storage |
+| `verify [--wait] [--timeout S]` | Nodes, MachineConfigPools, ClusterOperators, CSRs, VIPs, console, etcd, time sync, infra placement, registry mirrors, storage |
 | `destroy` | VMs, disks, ISOs, state. Asks for the cluster name unless `--yes`. Keeps the configuration and logs. |
 | `node add --role worker\|infra --count N [--group G]` | Node ISO via `oc adm node-image create`, new VMs (existing ones untouched), CSR approval, labels/taints |
 | `node add --resume` | Finishes a `node add` that was interrupted (Ctrl+C, timeout): CSR approval, labels/taints, `count`, ISO cleanup |
 | `node remove <name> [--drain-timeout 10m]` | cordon → drain → delete node → destroy only this VM. Refuses control-plane nodes without `--force-control-plane`. |
 | `node list` / `node reconcile` | Inventory with VMID/host/IP/MAC/status / re-apply infra labels and taints |
 | `storage install` | Deploy the configured storage backend |
+| `mirrors apply` | Apply `registry_mirrors` (pull-through cache) to a running cluster: mirror sets, pull secret ([docs/registry-mirrors.md](docs/registry-mirrors.md)) |
 | `hooks list` / `hooks run [name \| --from name]` | Show hooks with last result / run all, one, or from one on |
 | `kubeconfig [--export]`, `logs [--installer] [-f]`, `tui`, `version` | |
 

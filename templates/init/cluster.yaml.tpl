@@ -122,6 +122,16 @@ storage:
   # lso: {node_groups: [worker], odf: false}
   # nfs: {server: 192.0.2.200, path: /export/okd}
 
+# Registry mirrors (pull-through caches), optional; see docs/registry-mirrors.md.
+# registry_mirrors:
+#   fallback: false                 # true: pull from the source if the mirror fails
+#   username: svc-okd               # one login for all mirrors (an entry can set its own)
+#   password: ""                    # or export OKD_PVE_MIRROR_PASSWORD (keeps it out of this file)
+#   # auth_file: mirror-auth.json   # alternative: podman login --authfile mirror-auth.json <host>
+#   registries:
+#     - {source: quay.io, mirror: quay-cache.example.com}
+#     - {source: registry.redhat.io, mirror: redhat-cache.example.com}
+
 monitoring:
   storage_class: ""               # StorageClass for Prometheus/Alertmanager PVCs
 

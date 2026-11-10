@@ -147,6 +147,24 @@ storage:
     image: registry.k8s.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
     archive_on_delete: true
 
+# Registry mirrors: pull-through caches (Artifactory/Nexus remote repositories,
+# Harbor proxy projects). Empty list = pull directly from the sources. See
+# docs/registry-mirrors.md.
+registry_mirrors:
+  # false: the nodes pull only from the mirror (NeverContactSource), images
+  # the mirror cannot deliver fail. true: fall back to the source. Can be
+  # set per entry as well.
+  fallback: false
+  # Credentials for the mirrors, merged into the pull secret; empty for
+  # anonymous mirrors. username/password apply to every mirror (an entry can
+  # set its own); $OKD_PVE_MIRROR_PASSWORD overrides password. auth_file: an
+  # auth.json from 'podman login --authfile' instead or in addition.
+  username: ""
+  password: ""
+  auth_file: ""
+  # - {source: quay.io, mirror: quay-cache.example.com}
+  registries: []
+
 monitoring:
   storage_class: ""
 

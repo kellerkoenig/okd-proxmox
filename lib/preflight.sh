@@ -61,6 +61,10 @@ preflight_run() {
 	fi
 	log_step "Preflight: network, DNS and time"
 	pf_network
+	if mirrors_enabled; then
+		log_step "Preflight: registry mirrors"
+		pf_mirrors
+	fi
 	printf '\n'
 	local summary="Preflight: ${PF_PASS} passed, ${PF_WARN} warnings, ${PF_FAIL} failed"
 	if ((PF_FAIL)); then

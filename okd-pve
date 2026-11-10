@@ -36,6 +36,8 @@ source "${OKD_PVE_ROOT}/lib/state.sh"
 source "${OKD_PVE_ROOT}/lib/tools.sh"
 # shellcheck source=lib/proxmox.sh
 source "${OKD_PVE_ROOT}/lib/proxmox.sh"
+# shellcheck source=lib/mirrors.sh
+source "${OKD_PVE_ROOT}/lib/mirrors.sh"
 # shellcheck source=lib/manifests.sh
 source "${OKD_PVE_ROOT}/lib/manifests.sh"
 # shellcheck source=lib/preflight.sh
@@ -81,6 +83,7 @@ Commands:
   node list                           Nodes with VMID, host, IP, MAC and status
   node reconcile                      Re-apply infra labels and taints
   storage install                     Deploy the configured storage backend (CSI)
+  mirrors apply                       Apply registry_mirrors to a running cluster
   hooks list                          Show Post-Install hooks and last results
   hooks run [name | --from name]      Run hooks (all, one, or from one on)
   kubeconfig [--export]               Print the kubeconfig path
@@ -594,7 +597,7 @@ main() {
 	local sub=${1:-}
 	case ${cmd} in
 	preflight | create | verify | destroy | kubeconfig | logs) ;;
-	node | storage | hooks) [[ -n ${sub} ]] || die "${EXIT_CONFIG}" "${cmd} needs a subcommand." "okd-pve help" ;;
+	node | storage | hooks | mirrors) [[ -n ${sub} ]] || die "${EXIT_CONFIG}" "${cmd} needs a subcommand." "okd-pve help" ;;
 	*) usage >&2 && die "${EXIT_CONFIG}" "Unknown command: ${cmd}" ;;
 	esac
 	cluster_context_load "${cmd}${sub:+-${sub}}"
@@ -621,6 +624,13 @@ main() {
 		case ${sub} in
 		install) cmd_storage_install "$@" ;;
 		*) die "${EXIT_CONFIG}" "Unknown storage subcommand: ${sub}" "okd-pve storage install" ;;
+		esac
+		;;
+	mirrors)
+		shift
+		case ${sub} in
+		apply) cmd_mirrors_apply "$@" ;;
+		*) die "${EXIT_CONFIG}" "Unknown mirrors subcommand: ${sub}" "okd-pve mirrors apply" ;;
 		esac
 		;;
 	hooks)
