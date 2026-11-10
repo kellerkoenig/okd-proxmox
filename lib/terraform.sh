@@ -135,6 +135,7 @@ tf_node_isos_set() {
 # because a node group was inserted before others or vmid_start changed).
 tf_guard_existing() {
 	local old=${TOFU_DIR}/cluster.auto.json changed
+	((${TF_GUARD_SKIP:-0})) && return 0
 	[[ -f ${old} ]] && tf_has_state || return 0
 	changed=$(jq -r --slurpfile new "$1" '
 		.nodes as $o | $new[0].nodes as $n
