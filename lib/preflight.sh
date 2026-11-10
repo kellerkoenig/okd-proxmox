@@ -250,9 +250,13 @@ pf_local() {
 
 pf_proxmox() {
 	PF_PVE_OK=0
-	local ver
-	if ! ver=$(pve_version) || [[ -z ${ver} ]]; then
-		pf FAIL "Proxmox API ${PROXMOX_VE_ENDPOINT} not usable: ${PVE_API_ERROR}" \
+	local ver='' vf=${OKD_PVE_TMP}/pve-version.json
+	# Not in a command substitution: PVE_API_ERROR must survive for the message.
+	if pve_api /version >"${vf}"; then
+		ver=$(jq -r '.version // empty' "${vf}")
+	fi
+	if [[ -z ${ver} ]]; then
+		pf FAIL "Proxmox API ${PROXMOX_VE_ENDPOINT} not usable: ${PVE_API_ERROR:-no version in the answer}" \
 			"Check PROXMOX_VE_ENDPOINT, the token (user@realm!id=secret), PROXMOX_VE_INSECURE for self-signed certs, and the firewall."
 		return
 	fi
