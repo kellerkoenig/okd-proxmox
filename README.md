@@ -277,6 +277,7 @@ instead of failing.
 |---|---|
 | Proxmox Shutdown/Reboot of a node VM times out | The guest agent does not answer: the VM was not power-cycled since `proxmox.guest_agent` was enabled (Shutdown + Start in Proxmox), or the image has no agent (`guest_agent: false`). |
 | Upload fails with "no space left" | The ~1 GiB ISO is buffered locally during upload. Set `proxmox.tmp_dir` to a larger directory. |
+| ISO upload fails with `context deadline exceeded` after about 20 minutes | The connection from your workstation to Proxmox is too slow (VPN, home upload). The provider cancels every upload after 20 minutes, whatever `proxmox.upload_timeout` says; the ~1 GiB ISO needs about 7 Mbit/s. Run `okd-pve` from a host close to Proxmox (office, jump host). Running `create` again continues with the upload; the ISO is not rebuilt. |
 | VM does not boot, black console | CPU type: SCOS based on CentOS Stream 10 needs `x86-64-v3` or `host`. Check with `qm terminal <vmid>` (serial console). |
 | Bootstrap stuck, hosts "insufficient" | `okd-pve logs --installer`; usually DNS, NTP or a disk/RAM below the minimum. The rendezvous node console shows the validation messages. |
 | "openshift-install stopped waiting … after its fixed timeout" | The installation is usually still running, slowed down by image downloads (proxy, registry). Start `okd-pve create` again: it skips ISO and VMs and keeps waiting. If it times out again without progress, check the rendezvous node and the proxy throughput. |
