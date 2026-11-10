@@ -39,6 +39,7 @@ render_install_config() {
 		.sshKey = strenv(KEY)
 	' "${INSTALL_CONFIG_FILE}" >"${out}"
 	chmod 600 "${out}"
+	mirrors_render_install_config "${out}"
 }
 
 # render_agent_config <out-file>: agent-config.yaml generated from the node

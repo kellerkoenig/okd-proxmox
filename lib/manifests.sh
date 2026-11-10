@@ -178,6 +178,10 @@ manifests_render() {
 		done
 	fi
 
+	if mirrors_enabled; then
+		mirrors_itms_yaml >"${out}/${MIRRORS_ITMS_FILE}" || return 1
+	fi
+
 	_manifests_user "${out}" || return 1
 	_manifests_validate "${out}"
 }

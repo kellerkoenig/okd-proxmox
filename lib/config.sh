@@ -209,7 +209,10 @@ config_validate() {
 	mapfile -t errors < <(jq -r '.errors[]' <<<"${result}")
 	mapfile -t warnings < <(jq -r '.warnings[]' <<<"${result}")
 	# install-config checks need a valid node model, so they run second.
-	((${#errors[@]})) || mapfile -t errors < <(install_config_errors)
+	((${#errors[@]})) || mapfile -t errors < <(
+		install_config_errors
+		mirrors_config_errors
+	)
 	if ((! quiet)); then
 		local w
 		for w in "${warnings[@]+"${warnings[@]}"}"; do log_warn "${w}"; done
@@ -310,8 +313,13 @@ register_proxmox_secrets() {
 # ---------------------------------------------------------------------------
 
 # pull_secret_value: install-config > $OKD_PVE_PULL_SECRET_FILE >
-# install.pull_secret_file > <cluster>/pull-secret.json > OKD placeholder.
+# install.pull_secret_file > <cluster>/pull-secret.json > OKD placeholder,
+# plus the credentials of registry_mirrors.auth_file.
 pull_secret_value() {
+	_pull_secret_base | mirrors_merge_auth
+}
+
+_pull_secret_base() {
 	local v f
 	v=$(ic '.pullSecret')
 	if [[ -n ${v} ]]; then
@@ -352,6 +360,7 @@ register_pull_secret() {
 	while IFS= read -r a; do
 		redact_register "${a}"
 	done < <(pull_secret_value | jq -r '.auths[]?.auth // empty' 2>/dev/null)
+	mirrors_register_secrets
 }
 
 ssh_key_value() {

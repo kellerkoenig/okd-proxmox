@@ -16,7 +16,7 @@ TEST_TOKEN_SECRET='11111111-2222-3333-4444-555555555555'
 load_libs() {
 	set +u
 	local l
-	for l in common versions config state tools proxmox manifests preflight terraform installer oclib catalog nodes hooks verify storage; do
+	for l in common versions config state tools proxmox mirrors manifests preflight terraform installer oclib catalog nodes hooks verify storage; do
 		# shellcheck disable=SC1090
 		source "${OKD_PVE_ROOT}/lib/${l}.sh"
 	done

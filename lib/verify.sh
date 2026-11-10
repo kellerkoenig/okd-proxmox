@@ -46,6 +46,7 @@ verify_once() {
 		vf_time_sync "${nodes_json_k8s}"
 	fi
 	vf_infra "${nodes_json_k8s}"
+	vf_mirrors
 	if ((no_storage)) && [[ $(cfg '.storage.backend') != none ]]; then
 		vf SKIP "StorageClass check (storage is installed in the next step)"
 	else
@@ -186,6 +187,27 @@ vf_infra() {
 		vf WARN "Ingress router pods not on infra nodes: ${off}" "Enable and run hook 30-ingress-controller (okd-pve hooks run 30-ingress-controller)."
 	else
 		vf PASS "Ingress router pods run on infra nodes"
+	fi
+}
+
+# vf_mirrors: every registry_mirrors entry is in an ImageDigestMirrorSet and
+# an ImageTagMirrorSet of the cluster.
+vf_mirrors() {
+	mirrors_enabled || return 0
+	local idms itms missing
+	if ! idms=$(oc get imagedigestmirrorset -o json --request-timeout=20s 2>/dev/null) ||
+		! itms=$(oc get imagetagmirrorset -o json --request-timeout=20s 2>/dev/null); then
+		vf WARN "Could not read the ImageDigestMirrorSets/ImageTagMirrorSets" "oc get idms,itms"
+		return 0
+	fi
+	missing=$(jq -rn --argjson w "$(mirrors_json)" --argjson d "${idms}" --argjson t "${itms}" '
+		def has($l; $m): any($l[]; .source == $m.source and ((.mirrors // []) | index($m.mirror)) != null);
+		[$d.items[]?.spec.imageDigestMirrors[]?] as $dl | [$t.items[]?.spec.imageTagMirrors[]?] as $tl
+		| [$w[] | select((has($dl; .) and has($tl; .)) | not) | .source] | join(", ")')
+	if [[ -n ${missing} ]]; then
+		vf WARN "Registry mirrors from cluster.yaml missing in the cluster: ${missing}" "Run 'okd-pve mirrors apply'."
+	else
+		vf PASS "Registry mirrors configured in the cluster ($(mirrors_json | jq length) source(s))"
 	fi
 }
 

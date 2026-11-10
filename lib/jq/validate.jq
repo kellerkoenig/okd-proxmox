@@ -59,6 +59,35 @@ def group_warnings($c):
   + when(($g | is_combined_infra) and ($g.memory_gib // 0) < $c.infra.combined_min_memory_gib;
       "node_groups.\($g.name) combines worker and infra with only \($g.memory_gib) GiB RAM (recommended >= \($c.infra.combined_min_memory_gib) GiB). Prometheus and the ingress routers share memory with applications, the OOM killer may hit monitoring.");
 
+# registry host with optional port and path; a source may start with "*.".
+def registry_ref: type == "string" and test("^(\\*\\.)?[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:[0-9]+)?(/[a-z0-9._/-]*[a-z0-9])?$");
+def mirror_ref: type == "string" and test("^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:[0-9]+)?(/[a-z0-9._/-]*[a-z0-9])?$");
+
+def mirrors_errors($c; $ic):
+  ($c.registry_mirrors // {}) as $m
+  | ($m.registries // []) as $r
+  | when(($m.fallback | type) != "boolean"; "registry_mirrors.fallback must be true or false")
+  + when(($m.auth_file | type) != "string"; "registry_mirrors.auth_file must be a file path")
+  + [("username", "password") as $k | select(($m[$k] | type) != "string")
+     | "registry_mirrors.\($k) must be a string (\"\" = none)"]
+  + if ($r | type) != "array" then ["registry_mirrors.registries must be a list of {source, mirror}"]
+    else
+      [$r[] | select(type != "object") | "registry_mirrors.registries: every entry needs source and mirror"]
+      + [$r[] | objects | select(.source | registry_ref | not)
+         | "registry_mirrors.registries: source \(.source | tojson) must be a registry host with optional port and path, without https:// (e.g. quay.io or quay.io/okd)"]
+      + [$r[] | objects | select(.mirror | mirror_ref | not)
+         | "registry_mirrors.registries: mirror \(.mirror | tojson) of \(.source) must be a host with optional port and path, without https:// (e.g. quay-cache.example.com)"]
+      + [$r[] | objects | select(.fallback != null and (.fallback | type) != "boolean")
+         | "registry_mirrors.registries: fallback of \(.source) must be true or false"]
+      + [$r[] | objects | . as $e | ("username", "password") as $k
+         | select($e[$k] != null and ($e[$k] | type) != "string")
+         | "registry_mirrors.registries: \($k) of \($e.source) must be a string"]
+      + [$r | map(objects | .source) | group_by(.)[] | select(length > 1)
+         | "registry_mirrors.registries: source \(.[0]) is listed more than once"]
+      + [$r[] | objects | .source as $s | select(any(($ic.imageDigestSources // [])[]; .source == $s))
+         | "registry_mirrors.registries: source \($s) is also in imageDigestSources of install-config.yaml; configure it in one place"]
+    end;
+
 def validate($cluster; $inventory; $ic):
   . as $c
   | ($c.node_groups // []) as $groups
@@ -116,6 +145,7 @@ def validate($cluster; $inventory; $ic):
     + when(([$c.storage.backend] - ["none", "proxmox-csi", "ceph-external", "lso", "nfs"] | length) > 0;
         "storage.backend must be one of none, proxmox-csi, ceph-external, lso, nfs")
     + ([$groups[] | group_errors($c)] | add // [])
+    + mirrors_errors($c; $ic)
     ) as $basic
   | if ($basic | length) > 0 then {errors: $basic, warnings: []}
     else
