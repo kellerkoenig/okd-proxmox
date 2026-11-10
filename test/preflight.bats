@@ -51,7 +51,7 @@ setup() {
 @test "unreachable API fails with a hint and without leaking the token" {
 	export MOCK_PVE_FAIL=1
 	run pf_proxmox
-	assert_output --partial "[FAIL] Proxmox API https://pve.example.com:8006/ not usable"
+	assert_output --partial "[FAIL] Proxmox API https://pve.example.com:8006/ not usable: curl: (7) Failed to connect to pve.example.com port 8006"
 	refute_output --partial "${TEST_TOKEN_SECRET}"
 }
 
