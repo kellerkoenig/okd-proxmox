@@ -23,6 +23,10 @@ _okd_pve_root() {
 }
 OKD_PVE_ROOT=$(_okd_pve_root)
 export OKD_PVE_ROOT
+# oc (kubectl >= 1.33) reads ~/.kube/kuberc and prints a warning before its
+# output when the file cannot be read. okd-pve needs no user preferences
+# (aliases, default flags), and they could change what oc returns.
+export KUBERC=off
 
 # shellcheck source=lib/common.sh
 source "${OKD_PVE_ROOT}/lib/common.sh"
