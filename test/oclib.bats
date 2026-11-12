@@ -5,6 +5,8 @@
 # oc helpers (lib/oclib.sh) and catalog profiles (lib/catalog.sh) with a
 # mocked oc.
 
+bats_require_minimum_version 1.5.0
+
 setup() {
 	load test_helper
 	OCLIB_POLL_INTERVAL=0
@@ -146,4 +148,21 @@ JSON
 	}
 	run cluster_operators_not_ready
 	assert_output $'degraded\nprogressing\nunavailable'
+}
+
+@test "apply_idempotent drops only the last-applied-configuration warning" {
+	oc() {
+		cat >/dev/null
+		echo "secret/alertmanager-main configured"
+		echo "Warning: resource secrets/alertmanager-main is missing the kubectl.kubernetes.io/last-applied-configuration annotation which is required by oc apply." >&2
+		echo "Warning: something else" >&2
+		return "${OC_RC:-0}"
+	}
+	run --separate-stderr apply_idempotent - <<<"kind: Secret"
+	assert_success
+	assert_output "secret/alertmanager-main configured"
+	assert_equal "${stderr}" "Warning: something else"
+	OC_RC=1 run apply_idempotent - <<<"kind: Secret"
+	assert_failure 1
+	refute_output --partial "last-applied-configuration"
 }

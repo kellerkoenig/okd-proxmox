@@ -205,10 +205,17 @@ EOF
 
 # apply_idempotent [file|dir|-]: always `oc apply`, never `oc create`, so
 # hooks can run again. Reads stdin when no argument (or "-") is given.
+#
+# Objects an operator created (alertmanager-main, certmanagers/cluster) have
+# no last-applied-configuration annotation; oc adds it on the first apply and
+# warns about it. That one warning is dropped, everything else passes.
 apply_idempotent() {
-	local src=${1:--}
+	local src=${1:--} err rc=0
 	shift || true
-	oc apply -f "${src}" "$@"
+	{ err=$(oc apply -f "${src}" "$@" 2>&1 1>&3 3>&-); } 3>&1 || rc=$?
+	err=$(grep -v 'last-applied-configuration' <<<"${err}" || true)
+	[[ -z ${err} ]] || printf '%s\n' "${err}" >&2
+	return "${rc}"
 }
 
 # patch_merge <resource> <json-merge-patch> [oc-args...]: patch only when
