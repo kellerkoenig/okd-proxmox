@@ -109,6 +109,31 @@ setup() {
 	assert_output --partial "proxmox.spread must be true, false or balanced"
 }
 
+@test "proxmox.tmp_dir and cache_dir become TMPDIR and XDG_CACHE_HOME" {
+	CACHE=${BATS_TEST_TMPDIR}/cache yq_set '.proxmox.tmp_dir = ".tmp" | .proxmox.cache_dir = strenv(CACHE)'
+	# a temporary directory okd-pve created itself moves into tmp_dir
+	OKD_PVE_TMP=$(mktemp -d "${BATS_TEST_TMPDIR}/okd-pve.XXXXXX")
+	local old=${OKD_PVE_TMP}
+	echo kept >"${OKD_PVE_TMP}/early"
+	load_cluster
+	assert_equal "${TMPDIR}" "${CLUSTER}/.tmp"
+	assert_equal "${XDG_CACHE_HOME}" "${BATS_TEST_TMPDIR}/cache"
+	assert [ -d "${BATS_TEST_TMPDIR}/cache" ]
+	assert_equal "${OKD_PVE_TMP%/okd-pve.*}" "${CLUSTER}/.tmp"
+	assert_equal "$(cat "${OKD_PVE_TMP}/early")" kept
+	assert [ ! -e "${old}" ]
+	assert [ -f "${CONFIG_JSON}" ]
+	assert_equal "${CONFIG_JSON%/config.json}" "${OKD_PVE_TMP}"
+}
+
+@test "proxmox.tmp_dir and cache_dir must be paths" {
+	yq_set '.proxmox.cache_dir = 5'
+	load_cluster
+	run config_validate
+	assert_failure 2
+	assert_output --partial "proxmox.cache_dir must be a directory path"
+}
+
 @test "proxmox.guest_agent must be a boolean" {
 	yq_set '.proxmox.guest_agent = "yes"'
 	load_cluster

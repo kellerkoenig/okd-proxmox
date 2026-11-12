@@ -118,6 +118,8 @@ def validate($cluster; $inventory; $ic):
         "proxmox.mac_prefix is a multicast address; use a unicast prefix such as 02:00:00")
     + when(([$c.proxmox.spread] - [true, false, "balanced"] | length) > 0; "proxmox.spread must be true, false or balanced")
     + when(([$c.proxmox.bios] - ["ovmf", "seabios"] | length) > 0; "proxmox.bios must be ovmf or seabios")
+    + [("tmp_dir", "cache_dir") as $k | select(($c.proxmox[$k] | type) != "string")
+       | "proxmox.\($k) must be a directory path (\"\" = default)"]
     + when(($c.proxmox.ha.enabled | type) != "boolean"; "proxmox.ha.enabled must be true or false")
     + when(($c.proxmox.guest_agent | type) != "boolean"; "proxmox.guest_agent must be true or false")
     + when(([$c.proxmox.ha.max_restart, $c.proxmox.ha.max_relocate] | map(type == "number" and . >= 0 and . == floor) | all) | not;

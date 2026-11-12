@@ -86,7 +86,8 @@ Maps are merged key by key; lists replace the default list.
 | `cpu_type` | `host` | QEMU CPU model; SCOS 10 needs `x86-64-v3` or `host`. With HA or live migration between hosts with different CPUs use a named model such as `x86-64-v3`. |
 | `bios` | `ovmf` | `ovmf` (UEFI, no pre-enrolled keys) or `seabios` |
 | `machine` | `q35` | QEMU machine type |
-| `tmp_dir` | `""` | local buffer for uploads (provider `tmp_dir`); default `$TMPDIR` |
+| `tmp_dir` | `""` | local temporary directory, used as `TMPDIR` by okd-pve and every tool it starts: the ~1 GiB ISO upload buffer (also passed to the provider as `tmp_dir`), tool downloads, openshift-install. Needs ~2 GiB. Relative paths are relative to the cluster directory, e.g. `.tmp`. Default `$TMPDIR` or `/tmp` |
+| `cache_dir` | `""` | local cache directory, used as `XDG_CACHE_HOME`: openshift-install keeps the ~1 GiB base ISO there (`agent/image_cache`), OpenTofu its providers (`okd-pve/tofu-plugins`). Needs ~2 GiB. Relative like `tmp_dir`, e.g. `.cache`. Default `$XDG_CACHE_HOME` or `~/.cache` |
 | `host_memory_reserve_gib` | `8` | RAM per host kept free in the capacity check |
 | `root_device_hint` | `serial` | install SCOS on the disk with the boot serial; `none` disables the hint |
 | `upload_timeout` | `3600` | seconds for an ISO upload. The provider cancels every upload after 20 minutes anyway (default create timeout of the Terraform SDK), so values above `1200` have no effect. The ~1 GiB agent ISO therefore needs about 7 Mbit/s from your workstation to Proxmox; see the README, Troubleshooting |
@@ -239,4 +240,5 @@ See [hooks.md](hooks.md).
 | `OKD_PVE_TOFU_VERSION`, `OKD_PVE_BUTANE_VERSION`, `OKD_PVE_PROXMOX_PROVIDER_VERSION` | other pinned tool versions |
 | `OKD_PVE_STATUS_INTERVAL` | seconds between status lines while waiting for bootstrap/installation, default `120`, `0` = off |
 | `OKD_PVE_WAIT_RETRIES` | how often `create` waits again when openshift-install times out but the cluster still makes progress (more nodes Ready or operators available), default `3`, `0` = never |
+| `TMPDIR`, `XDG_CACHE_HOME` | temporary and cache directory when `proxmox.tmp_dir` / `proxmox.cache_dir` are empty; those settings win |
 | `NO_COLOR` | disable colors |

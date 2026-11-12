@@ -10,4 +10,6 @@ logs/
 .generated/
 .state/
 tofu/
+.tmp/
+.cache/
 *.bak

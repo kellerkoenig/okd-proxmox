@@ -37,7 +37,10 @@ proxmox:
   mac_prefix: "02:00:00"
   cpu_type: host                  # SCOS 10 needs x86-64-v3 or host
   bios: ovmf                      # ovmf (UEFI) or seabios
-  tmp_dir: ""                     # local buffer for ISO uploads (~1 GiB), default $TMPDIR
+  # Local work directories, each needs ~2 GiB. Relative to the cluster
+  # directory, e.g. .tmp and .cache when /tmp or the home directory is small.
+  tmp_dir: ""                     # TMPDIR: ISO upload buffer, downloads; default $TMPDIR or /tmp
+  cache_dir: ""                   # XDG_CACHE_HOME: base ISO, OpenTofu providers; default ~/.cache
   host_memory_reserve_gib: 8      # RAM kept free per host in the capacity check
 
 network:
