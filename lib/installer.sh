@@ -31,10 +31,13 @@ render_install_config() {
 	key=$(ssh_keys_all | head -n 1)
 	[[ -n ${key} ]] || die "${EXIT_CONFIG}" "No SSH public key found." \
 		"Set sshKey in install-config.yaml or install.ssh_public_key_file in cluster.yaml."
+	# Set compute[0].replicas by its full path: older yq (4.45) drops an
+	# assignment inside "(.compute // [...]) | .[0].replicas = ...".
 	PS=${ps} KEY=${key} MASTERS=${masters} WORKERS=${workers} yq '
 		.controlPlane.name = (.controlPlane.name // "master") |
 		.controlPlane.replicas = env(MASTERS) |
-		.compute = ((.compute // [{"name": "worker"}]) | .[0].replicas = env(WORKERS)) |
+		.compute = (.compute // [{"name": "worker"}]) |
+		.compute[0].replicas = env(WORKERS) |
 		.pullSecret = strenv(PS) |
 		.sshKey = strenv(KEY)
 	' "${INSTALL_CONFIG_FILE}" >"${out}"

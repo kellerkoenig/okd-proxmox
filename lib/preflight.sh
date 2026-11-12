@@ -185,7 +185,14 @@ pf_local() {
 	else
 		pf FAIL "bash ${BASH_VERSION} is too old" "Install bash 4.4 or newer (macOS: brew install bash)."
 	fi
-	pf PASS "jq $(jq --version 2>&1 | sed 's/^jq-//'), yq $(yq --version 2>&1 | awk '{ print $NF }')"
+	local yqv
+	yqv=$(yq --version 2>&1 | awk '{ print $NF }')
+	if version_ge "${yqv#v}" "${YQ_MIN_VERSION}"; then
+		pf PASS "jq $(jq --version 2>&1 | sed 's/^jq-//'), yq ${yqv}"
+	else
+		pf WARN "yq ${yqv} is older than ${YQ_MIN_VERSION}, the oldest version okd-pve is tested with" \
+			"Install a newer mikefarah/yq: yq versions differ in how they evaluate expressions (4.45 is tested)."
+	fi
 	local c
 	for c in curl awk sed tar; do
 		have_cmd "${c}" && continue
