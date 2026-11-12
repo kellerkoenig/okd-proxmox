@@ -47,6 +47,7 @@ verify_once() {
 	fi
 	vf_infra "${nodes_json_k8s}"
 	vf_mirrors
+	vf_debug_shell
 	if ((no_storage)) && [[ $(cfg '.storage.backend') != none ]]; then
 		vf SKIP "StorageClass check (storage is installed in the next step)"
 	else
@@ -209,6 +210,14 @@ vf_mirrors() {
 	else
 		vf PASS "Registry mirrors configured in the cluster ($(mirrors_json | jq length) source(s))"
 	fi
+}
+
+# vf_debug_shell: install.debug_shell is meant for one debugging session; a
+# forgotten true puts a root shell without password into every new ISO.
+vf_debug_shell() {
+	[[ $(cfg '.install.debug_shell') == true ]] || return 0
+	vf WARN "install.debug_shell is on: new ISOs (node add) give a root shell without password on tty9" \
+		"Set install.debug_shell: false in cluster.yaml once you are done debugging."
 }
 
 vf_storage() {

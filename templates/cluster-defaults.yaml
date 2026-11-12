@@ -23,6 +23,10 @@ install:
   # and it stays in the live ISO with its disk already written, then approve
   # its CSRs (see README, Troubleshooting).
   recover_stuck_hosts: true
+  # Debugging only: the agent ISO (and node add ISOs) start a root shell
+  # without password on tty9, reachable from the Proxmox console, while a
+  # node runs from the ISO. Installed nodes are not affected.
+  debug_shell: false
 
 proxmox:
   nodes: []

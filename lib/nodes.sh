@@ -308,6 +308,7 @@ cmd_node_add() {
 	local iso
 	iso=$(find "${work}" -maxdepth 1 -name 'node.*.iso' | head -n1)
 	[[ -n ${iso} ]] || die "${EXIT_ERROR}" "oc adm node-image create produced no ISO in ${work}."
+	installer_iso_debug_shell "${iso}"
 
 	state_inventory_set "${new_inv}"
 	local hosts

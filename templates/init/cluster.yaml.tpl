@@ -16,6 +16,7 @@ install:
   # secret the OKD placeholder is used (fine unless you need registry.redhat.io).
   pull_secret_file: ""            # e.g. pull-secret.json (relative to this directory)
   ssh_public_key_file: ""         # default: ~/.ssh/id_ed25519.pub, id_ecdsa.pub, id_rsa.pub
+  debug_shell: false              # debugging: root shell on tty9 of the live ISO (Proxmox console)
 
 proxmox:
   # Target node(s). Control-plane VMs are spread round-robin across them.

@@ -134,6 +134,14 @@ setup() {
 	assert_output --partial "proxmox.cache_dir must be a directory path"
 }
 
+@test "install.debug_shell must be a boolean" {
+	yq_set '.install.debug_shell = "yes"'
+	load_cluster
+	run config_validate
+	assert_failure 2
+	assert_output --partial "install.debug_shell must be true or false"
+}
+
 @test "proxmox.guest_agent must be a boolean" {
 	yq_set '.proxmox.guest_agent = "yes"'
 	load_cluster
