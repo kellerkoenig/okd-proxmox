@@ -81,6 +81,8 @@ installer_inputs_hash() {
 	local dir=$1
 	{
 		cfg '.okd.version'
+		# Only when on: existing clusters keep their hash.
+		[[ $(cfg '.install.debug_shell') != true ]] || echo install.debug_shell
 		find "${dir}" -type f | LC_ALL=C sort | while IFS= read -r f; do
 			printf '%s\n' "${f#"${dir}"/}"
 			cat "${f}"
@@ -102,8 +104,51 @@ installer_create_image() {
 			"See the messages above and ${GENERATED_DIR}/.openshift_install.log. Fix the cause and re-run create."
 	[[ -f ${GENERATED_DIR}/${AGENT_ISO_NAME} ]] ||
 		die "${EXIT_ERROR}" "openshift-install did not produce ${AGENT_ISO_NAME}." "See ${GENERATED_DIR}/.openshift_install.log."
+	installer_iso_debug_shell "${GENERATED_DIR}/${AGENT_ISO_NAME}"
 	installer_copy_auth
 	log_ok "Agent ISO built in $(elapsed "${start}"): $(human_gib "$(wc -c <"${GENERATED_DIR}/${AGENT_ISO_NAME}")")"
+}
+
+# installer_iso_debug_shell <iso>: with install.debug_shell, the live ISO
+# starts a root shell without password on tty9 (systemd debug-shell.service),
+# reachable from the Proxmox console. For debugging an installation that
+# hangs on a node without SSH, e.g. bootkube on the rendezvous node.
+installer_iso_debug_shell() {
+	[[ $(cfg '.install.debug_shell') == true ]] || return 0
+	iso_append_karg "$1" systemd.debug_shell
+	log_warn "install.debug_shell: every node has a root shell without password on tty9 while it runs from this ISO"
+	log_hint "Proxmox console: Ctrl+Alt+F9 (noVNC side panel: toggle Ctrl and Alt, then F9; or on the host: qm sendkey <vmid> ctrl-alt-f9). Set install.debug_shell: false again after debugging."
+}
+
+# iso_append_karg <iso> <karg>: append a kernel argument to a CoreOS live
+# ISO in place, as "coreos-installer iso kargs modify --append" does. The
+# live kernel command line sits in fixed-size embed areas (EFI grub.cfg,
+# isolinux.cfg): the arguments, a newline, '#' padding, then the marker
+# "# COREOS_KARG_EMBED_AREA". The new argument overwrites the newline and the
+# start of the padding, so no file in the ISO changes its size.
+iso_append_karg() {
+	local iso=$1 karg=$2 marker='# COREOS_KARG_EMBED_AREA' hit off match n=0
+	if LC_ALL=C grep -qaF -- " ${karg}" "${iso}"; then
+		log_debug "${iso##*/} already has ${karg}"
+		return 0
+	fi
+	# Line mode: the padding starts a line. With -z, GNU grep 3.11 reports
+	# wrong byte offsets in a large binary file.
+	while IFS= read -r hit; do
+		off=${hit%%:*}
+		match=${hit#*:}
+		# padding must hold " <karg>\n" and keep one '#'
+		((${#match} - ${#marker} > ${#karg} + 2)) ||
+			die "${EXIT_ERROR}" "The kernel argument area in ${iso##*/} is too small for ${karg}."
+		[[ $(dd if="${iso}" bs=1 skip=$((off - 1)) count=1 2>/dev/null | od -An -tx1 | tr -d ' \n') == 0a ]] ||
+			die "${EXIT_ERROR}" "Unexpected kernel argument area in ${iso##*/} at byte ${off}."
+		printf ' %s\n' "${karg}" | dd of="${iso}" bs=1 seek=$((off - 1)) conv=notrunc 2>/dev/null ||
+			die "${EXIT_ERROR}" "Cannot write ${karg} into ${iso##*/}."
+		n=$((n + 1))
+	done < <(LC_ALL=C grep -oba -- "^#\{16,\}${marker}" "${iso}")
+	((n > 0)) || die "${EXIT_ERROR}" "${iso##*/} has no kernel argument area; cannot add ${karg}." \
+		"Set install.debug_shell: false."
+	log_debug "${karg} appended to ${n} kernel argument area(s) of ${iso##*/}"
 }
 
 # installer_iso_age_hours: age of the built agent ISO in full hours.

@@ -409,3 +409,67 @@ _csrs() {
 	assert_success
 	assert [ ! -e "${OC_LOG}" ]
 }
+
+# fake_live_iso <file>: binary data with two karg embed areas like a CoreOS
+# live ISO (EFI grub.cfg, isolinux.cfg); a hole makes the file sparse.
+fake_live_iso() {
+	local f=$1 pad
+	pad=$(printf '%*s' 200 '' | tr ' ' '#')
+	{
+		head -c 4096 /dev/urandom
+		printf '\tlinux /images/pxeboot/vmlinuz rw  coreos.liveiso=x ignition.firstboot\n%s# COREOS_KARG_EMBED_AREA\n' "${pad}"
+		head -c 4096 /dev/zero
+		printf '  append initrd=/images/pxeboot/initrd.img rw  coreos.liveiso=x ignition.firstboot\n%s# COREOS_KARG_EMBED_AREA\n' "${pad}"
+	} >"${f}"
+	truncate -s +1M "${f}"
+	head -c 4096 /dev/urandom >>"${f}"
+}
+
+@test "iso_append_karg writes the argument into every embed area without changing the size" {
+	local iso=${BATS_TEST_TMPDIR}/live.iso size
+	fake_live_iso "${iso}"
+	size=$(wc -c <"${iso}")
+	run iso_append_karg "${iso}" systemd.debug_shell
+	assert_success
+	assert_equal "$(wc -c <"${iso}")" "${size}"
+	run grep -ac 'ignition.firstboot systemd.debug_shell$' "${iso}"
+	assert_output 2
+	# the padding shrinks by the argument and the marker stays in place
+	run grep -ac "^$(printf '%*s' 180 '' | tr ' ' '#')# COREOS_KARG_EMBED_AREA$" "${iso}"
+	assert_output 2
+	# a second run changes nothing
+	local sum
+	sum=$(sha256sum "${iso}")
+	run iso_append_karg "${iso}" systemd.debug_shell
+	assert_success
+	assert_equal "$(sha256sum "${iso}")" "${sum}"
+}
+
+@test "iso_append_karg refuses a file without embed area" {
+	head -c 8192 /dev/urandom >"${BATS_TEST_TMPDIR}/plain.iso"
+	run iso_append_karg "${BATS_TEST_TMPDIR}/plain.iso" systemd.debug_shell
+	assert_failure
+	assert_output --partial "has no kernel argument area"
+}
+
+@test "install.debug_shell: off by default, changes the inputs hash only when on" {
+	local iso=${BATS_TEST_TMPDIR}/live.iso h1 h2
+	fake_live_iso "${iso}"
+	mkdir -p "${BATS_TEST_TMPDIR}/stage"
+	echo x >"${BATS_TEST_TMPDIR}/stage/f"
+	h1=$(installer_inputs_hash "${BATS_TEST_TMPDIR}/stage")
+	run installer_iso_debug_shell "${iso}"
+	assert_success
+	refute_output
+	run grep -ac systemd.debug_shell "${iso}"
+	assert_output 0
+	yq_set '.install.debug_shell = true'
+	load_cluster
+	h2=$(installer_inputs_hash "${BATS_TEST_TMPDIR}/stage")
+	assert [ "${h1}" != "${h2}" ]
+	run installer_iso_debug_shell "${iso}"
+	assert_success
+	assert_output --partial "root shell without password on tty9"
+	run grep -ac systemd.debug_shell "${iso}"
+	assert_output 2
+}
