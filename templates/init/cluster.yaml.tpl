@@ -40,7 +40,7 @@ proxmox:
   bios: ovmf                      # ovmf (UEFI) or seabios
   # Local work directories, each needs ~2 GiB. Relative to the cluster
   # directory, e.g. .tmp and .cache when /tmp or the home directory is small.
-  tmp_dir: ""                     # TMPDIR: ISO upload buffer, downloads; default $TMPDIR or /tmp
+  tmp_dir: ""                     # TMPDIR: tool downloads, openshift-install; default $TMPDIR or /tmp
   cache_dir: ""                   # XDG_CACHE_HOME: base ISO, OpenTofu providers; default ~/.cache
   host_memory_reserve_gib: 8      # RAM kept free per host in the capacity check
 

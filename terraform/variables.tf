@@ -26,12 +26,6 @@ variable "iso_storage" {
   type        = string
 }
 
-variable "iso_storage_shared" {
-  description = "True when iso_storage is shared between nodes (upload once)."
-  type        = bool
-  default     = false
-}
-
 variable "bridge" {
   description = "Linux bridge or SDN VNet for the node NICs."
   type        = string
@@ -88,14 +82,8 @@ variable "ha" {
   default = { enabled = false, max_restart = 1, max_relocate = 1 }
 }
 
-variable "upload_timeout" {
-  description = "Timeout in seconds for ISO uploads."
-  type        = number
-  default     = 3600
-}
-
 variable "isos" {
-  description = "ISO images to upload, keyed by a short name (agent, add-<n>)."
+  description = "ISO images okd-pve uploaded, keyed by a short name (agent, add-<n>); path and hosts are used by okd-pve."
   type = map(object({
     path      = string
     file_name = string

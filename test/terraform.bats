@@ -20,17 +20,82 @@ setup() {
 	run cat "${TOFU_DIR}/main.tf"
 	assert_output --partial "source = \"${OKD_PVE_ROOT}/terraform\""
 	assert_output --partial 'source  = "bpg/proxmox"'
-	assert_output --partial "tmp_dir = null"
 	refute_output --partial "${TEST_TOKEN_SECRET}"
 	refute_output --partial "api_token"
+	# okd-pve uploads the ISOs itself; the provider gets no upload settings
+	refute_output --partial "tmp_dir"
+	refute_output --partial "upload_timeout"
 }
 
-@test "provider tmp_dir comes from proxmox.tmp_dir" {
-	yq_set '.proxmox.tmp_dir = "/var/tmp/okd-upload"'
-	load_cluster
-	tf_write_root
-	run grep 'tmp_dir' "${TOFU_DIR}/main.tf"
-	assert_output --partial 'tmp_dir = "/var/tmp/okd-upload"'
+# _iso_stubs [shared]: fake Proxmox ISO calls; PVE_ISOS lists "<host> <name>"
+# of the files on the storage, ISO_LOG the calls.
+_iso_stubs() {
+	export ISO_LOG=${BATS_TEST_TMPDIR}/iso.log PVE_ISOS=${BATS_TEST_TMPDIR}/pve-isos SHARED=${1:-false}
+	: >"${ISO_LOG}"
+	touch "${PVE_ISOS}"
+	tf_iso_storage_shared() { echo "${SHARED}"; }
+	pve_iso_size() { grep -q "^$1 $3\$" "${PVE_ISOS}" && wc -c <"${BATS_TEST_TMPDIR}/agent.iso" | tr -d ' '; }
+	pve_iso_upload() {
+		echo "upload $1 $2 $4 timeout=$5" >>"${ISO_LOG}"
+		echo "$1 $4" >>"${PVE_ISOS}"
+	}
+	pve_iso_delete() {
+		echo "delete $1 $2 $3" >>"${ISO_LOG}"
+		[[ -z ${FAIL_DELETE:-} ]] || return 1
+		sed -i "\|^$1 $3\$|d" "${PVE_ISOS}"
+	}
+	echo iso >"${BATS_TEST_TMPDIR}/agent.iso"
+	state_init
+}
+
+@test "tf_isos_upload uploads every ISO once per host, skips one already there" {
+	_iso_stubs false
+	tf_iso_register agent "${BATS_TEST_TMPDIR}/agent.iso" '["pve1","pve2","pve1"]'
+	local name
+	name=$(jq -r '.agent.file_name' "${STATE_DIR}/isos.json")
+	echo "pve2 ${name}" >>"${PVE_ISOS}"
+	run tf_isos_upload
+	assert_success
+	assert_equal "$(cat "${ISO_LOG}")" "upload pve1 local ${name} timeout=3600"
+	assert_output --partial "${name} is already on local (pve2)"
+	# nothing left to upload on the next run
+	: >"${ISO_LOG}"
+	tf_isos_upload >/dev/null
+	assert_equal "$(cat "${ISO_LOG}")" ""
+}
+
+@test "tf_isos_upload uploads once to shared ISO storage" {
+	_iso_stubs true
+	tf_iso_register agent "${BATS_TEST_TMPDIR}/agent.iso" '["pve2","pve1"]'
+	tf_isos_upload >/dev/null
+	run grep -c '^upload pve2 ' "${ISO_LOG}"
+	assert_output 1
+	run grep -c '^upload' "${ISO_LOG}"
+	assert_output 1
+}
+
+@test "an unregistered ISO is deleted after the apply, a failed delete is kept for the next run" {
+	_iso_stubs false
+	tf_iso_register agent "${BATS_TEST_TMPDIR}/agent.iso" '["pve1","pve2"]'
+	tf_isos_upload >/dev/null
+	tf_iso_unregister agent
+	assert_equal "$(cat "${STATE_DIR}/isos.json")" '{}'
+	assert_equal "$(jq -r 'keys[]' "${STATE_DIR}/isos-delete.json")" agent
+	FAIL_DELETE=1 run tf_isos_cleanup
+	assert_output --partial "Could not delete"
+	assert_equal "$(jq -r 'keys[]' "${STATE_DIR}/isos-delete.json")" agent
+	tf_isos_cleanup >/dev/null
+	assert_equal "$(jq -c . "${STATE_DIR}/isos-delete.json")" '{}'
+	assert_equal "$(grep -c . "${PVE_ISOS}")" 0
+}
+
+@test "tf_isos_cleanup --all deletes the registered ISOs too (destroy)" {
+	_iso_stubs false
+	tf_iso_register agent "${BATS_TEST_TMPDIR}/agent.iso" '["pve1"]'
+	tf_isos_upload >/dev/null
+	tf_isos_cleanup --all >/dev/null
+	assert_equal "$(grep -c '^delete pve1 local ' "${ISO_LOG}")" 1
+	assert_equal "$(cat "${STATE_DIR}/isos.json")" '{}'
 }
 
 @test "variables: nodes keyed by name, ISO per node, no secrets" {
@@ -46,7 +111,7 @@ setup() {
 	assert_equal "$(jq -r '.nodes["small-master-1"].iso' "${f}")" ""
 	assert_equal "$(jq -r '.nodes["small-worker-0"].mac' "${f}")" 02:00:41:00:10:18
 	assert_regex "$(jq -r '.isos.agent.file_name' "${f}")" '^okd-pve-small-agent-[0-9]{12}\.iso$'
-	assert_equal "$(jq -r '.iso_storage_shared' "${f}")" false
+	assert_equal "$(jq -r 'has("iso_storage_shared") or has("upload_timeout")' "${f}")" false
 	assert_equal "$(jq -r '.pool_id' "${f}")" okd-small
 	assert_equal "$(jq -r '.efi_storage' "${f}")" local-lvm
 	assert_equal "$(jq -c '.ha' "${f}")" '{"enabled":false,"max_restart":1,"max_relocate":1}'
@@ -59,9 +124,9 @@ setup() {
 	make_cluster large
 	write_proxmox_conf
 	load_cluster
+	assert_equal "$(tf_iso_storage_shared)" true
 	mkdir -p "${TOFU_DIR}"
 	tf_write_vars
-	assert_equal "$(jq -r '.iso_storage_shared' "${TOFU_DIR}/cluster.auto.json")" true
 	assert_equal "$(jq -r '.vlan_id' "${TOFU_DIR}/cluster.auto.json")" 120
 }
 

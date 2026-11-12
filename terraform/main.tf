@@ -7,39 +7,12 @@
 # --args` are needed: an API token without root@pam and without SSH access to
 # the Proxmox nodes is enough.
 
-locals {
-  # One upload per ISO and target node, or a single upload when the ISO
-  # storage is shared between nodes.
-  iso_uploads = merge([
-    for key, iso in var.isos : {
-      for host in(var.iso_storage_shared ? [iso.hosts[0]] : distinct(iso.hosts)) :
-      "${key}@${host}" => {
-        key       = key
-        host      = host
-        path      = iso.path
-        file_name = iso.file_name
-      }
-    }
-  ]...)
-
-  iso_upload_key = {
-    for name, n in var.nodes :
-    name => n.iso == "" ? "" : "${n.iso}@${var.iso_storage_shared ? var.isos[n.iso].hosts[0] : n.host}"
-  }
-}
-
-resource "proxmox_virtual_environment_file" "iso" {
-  for_each = local.iso_uploads
-
-  content_type   = "iso"
-  datastore_id   = var.iso_storage
-  node_name      = each.value.host
-  timeout_upload = var.upload_timeout
-
-  source_file {
-    path      = each.value.path
-    file_name = each.value.file_name
-  }
+# ISOs are uploaded by okd-pve before every apply (the provider's upload ends
+# after 20 minutes, whatever timeout_upload says); VMs refer to them by file
+# id. States of okd-pve <= 0.1.5 hold the uploads as resources: forget them
+# without deleting the files, okd-pve deletes them once they are detached.
+removed {
+  from = proxmox_virtual_environment_file.iso
 }
 
 resource "proxmox_virtual_environment_vm" "node" {
@@ -131,7 +104,7 @@ resource "proxmox_virtual_environment_vm" "node" {
 
   cdrom {
     interface = "ide2"
-    file_id   = each.value.iso == "" ? "none" : proxmox_virtual_environment_file.iso[local.iso_upload_key[each.key]].id
+    file_id   = each.value.iso == "" ? "none" : "${var.iso_storage}:iso/${var.isos[each.value.iso].file_name}"
   }
 
   network_device {

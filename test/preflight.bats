@@ -207,3 +207,21 @@ YQ
 	run pf_local
 	assert_output --regexp "\[PASS\] jq [0-9.]+, yq v4\.[0-9]+"
 }
+
+@test "pve_iso_upload posts the ISO, waits for the task and keeps the token off the command line" {
+	echo iso >"${BATS_TEST_TMPDIR}/agent.iso"
+	echo '"UPID:pve1:0001:upload"' >"${FIX}/nodes_pve1_storage_local_upload.json"
+	echo '{"status": "stopped", "exitstatus": "OK"}' >"${FIX}/nodes_pve1_tasks_UPID%3Apve1%3A0001%3Aupload_status.json"
+	OKD_PVE_TASK_POLL=0 run pve_iso_upload pve1 local "${BATS_TEST_TMPDIR}/agent.iso" okd-pve-small-agent-1.iso 60
+	assert_success
+	run grep -c '/nodes/pve1/storage/local/upload' "${MOCK_LOG}"
+	assert_output 1
+	run grep -c '/nodes/pve1/tasks/UPID%3Apve1%3A0001%3Aupload/status' "${MOCK_LOG}"
+	assert_output 1
+	run grep -c "${TEST_TOKEN_SECRET}" "${MOCK_LOG}"
+	assert_output 0
+	# a failed task fails the upload
+	echo '{"status": "stopped", "exitstatus": "checksum mismatch"}' >"${FIX}/nodes_pve1_tasks_UPID%3Apve1%3A0001%3Aupload_status.json"
+	OKD_PVE_TASK_POLL=0 run pve_iso_upload pve1 local "${BATS_TEST_TMPDIR}/agent.iso" okd-pve-small-agent-1.iso 60
+	assert_failure
+}

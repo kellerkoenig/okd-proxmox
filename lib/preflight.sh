@@ -238,9 +238,9 @@ pf_local() {
 	local tmp=${TMPDIR:-/tmp}
 	free=$(free_bytes "${tmp}")
 	if ((free >= 2 * 1024 * 1024 * 1024)); then
-		pf PASS "Upload buffer ${tmp}: $(human_gib "${free}") free"
+		pf PASS "Temporary directory ${tmp}: $(human_gib "${free}") free"
 	else
-		pf FAIL "Upload buffer ${tmp}: only $(human_gib "${free}") free; the ~1 GiB agent ISO is buffered there during upload" \
+		pf FAIL "Temporary directory ${tmp}: only $(human_gib "${free}") free; tool downloads and openshift-install need about 2 GiB there" \
 			"Set proxmox.tmp_dir in cluster.yaml to a directory with >= 2 GiB, for example .tmp in the cluster directory."
 	fi
 	local cache=${XDG_CACHE_HOME:-${HOME}/.cache}
