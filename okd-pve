@@ -365,13 +365,20 @@ cmd_create() {
 		state_step_mark iso-detached
 	fi
 
-	create_step 11 "Infra labels and taints"
+	create_step 11 "Infra labels, taints and registry mirror policy"
 	if ((DRY_RUN)); then
 		dry_run_note "would label/taint infra nodes: $(nodes_query '[.[] | select(.infra) | .name] | join(" ")')"
+		mirrors_enabled && dry_run_note "would set the mirrorSourcePolicy on the mirror sets and wait for the MachineConfigPools (as 'okd-pve mirrors apply')"
 	else
 		cluster_api_init
 		nodes_reconcile_labels
 		state_step_mark labels
+		# The Pre-Boot mirror sets have no mirrorSourcePolicy (lib/mirrors.sh).
+		if mirrors_enabled && ! state_step_done mirror-policy; then
+			log_info "Registry mirrors: setting the mirrorSourcePolicy from cluster.yaml (no reboot; the MCO may drain the nodes one at a time)"
+			mirrors_cluster_sync
+			state_step_mark mirror-policy
+		fi
 	fi
 
 	create_step 12 "Verifying the cluster"

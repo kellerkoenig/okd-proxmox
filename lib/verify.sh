@@ -192,10 +192,11 @@ vf_infra() {
 }
 
 # vf_mirrors: every registry_mirrors entry is in an ImageDigestMirrorSet and
-# an ImageTagMirrorSet of the cluster.
+# an ImageTagMirrorSet of the cluster, with NeverContactSource where
+# cluster.yaml has no fallback (create sets it only after the installation).
 vf_mirrors() {
 	mirrors_enabled || return 0
-	local idms itms missing
+	local idms itms missing open
 	if ! idms=$(oc get imagedigestmirrorset -o json --request-timeout=20s 2>/dev/null) ||
 		! itms=$(oc get imagetagmirrorset -o json --request-timeout=20s 2>/dev/null); then
 		vf WARN "Could not read the ImageDigestMirrorSets/ImageTagMirrorSets" "oc get idms,itms"
@@ -205,8 +206,16 @@ vf_mirrors() {
 		def has($l; $m): any($l[]; .source == $m.source and ((.mirrors // []) | index($m.mirror)) != null);
 		[$d.items[]?.spec.imageDigestMirrors[]?] as $dl | [$t.items[]?.spec.imageTagMirrors[]?] as $tl
 		| [$w[] | select((has($dl; .) and has($tl; .)) | not) | .source] | join(", ")')
+	open=$(jq -rn --argjson w "$(mirrors_json)" --argjson d "${idms}" --argjson t "${itms}" '
+		[$d.items[]?.spec.imageDigestMirrors[]?, $t.items[]?.spec.imageTagMirrors[]?] as $l
+		| [$w[] | select(.policy == "NeverContactSource") | . as $m
+			| select(any($l[]; .source == $m.source and (.mirrorSourcePolicy // "") != "NeverContactSource")) | .source]
+		| unique | join(", ")')
 	if [[ -n ${missing} ]]; then
 		vf WARN "Registry mirrors from cluster.yaml missing in the cluster: ${missing}" "Run 'okd-pve mirrors apply'."
+	elif [[ -n ${open} ]]; then
+		vf WARN "The cluster may still pull from the source, not only from the mirror (no NeverContactSource): ${open}" \
+			"Run 'okd-pve mirrors apply' (create does it after the installation)."
 	else
 		vf PASS "Registry mirrors configured in the cluster ($(mirrors_json | jq length) source(s))"
 	fi

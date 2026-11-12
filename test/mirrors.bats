@@ -37,11 +37,16 @@ _auth_file() {
 	assert_failure
 }
 
-@test "install-config gets imageDigestSources, no fallback by default" {
+@test "install-config gets imageDigestSources without policy; the policy is for mirrors apply" {
 	_mirrors
 	load_cluster
 	render_install_config "${IC}"
+	# Pre-Boot without sourcePolicy: the agent installer drops it from the
+	# ImageDigestMirrorSet, and the ImageTagMirrorSet must match
 	assert_equal "$(yq -o json -I0 '.imageDigestSources' "${IC}")" \
+		'[{"source":"quay.io","mirrors":["quay-cache.example.com"]},{"source":"registry.redhat.io","mirrors":["cache.example.com:5000/redhat"]},{"source":"quay.io/okd/scos-release","mirrors":["quay-cache.example.com/okd/scos-release"]},{"source":"quay.io/okd/scos-content","mirrors":["quay-cache.example.com/okd/scos-content"]}]'
+	# no fallback by default
+	assert_equal "$(mirrors_digest_sources)" \
 		'[{"source":"quay.io","mirrors":["quay-cache.example.com"],"sourcePolicy":"AllowContactingSource"},{"source":"registry.redhat.io","mirrors":["cache.example.com:5000/redhat"],"sourcePolicy":"NeverContactSource"},{"source":"quay.io/okd/scos-release","mirrors":["quay-cache.example.com/okd/scos-release"],"sourcePolicy":"AllowContactingSource"},{"source":"quay.io/okd/scos-content","mirrors":["quay-cache.example.com/okd/scos-content"],"sourcePolicy":"AllowContactingSource"}]'
 }
 
@@ -53,7 +58,9 @@ _auth_file() {
 	load_cluster
 	render_install_config "${IC}"
 	assert_equal "$(yq -o json -I0 '[.imageDigestSources[] | select(.source == "quay.io/okd/scos-release")]' "${IC}")" \
-		'[{"source":"quay.io/okd/scos-release","mirrors":["cache.example.com:5000/okd/scos-release"],"sourcePolicy":"AllowContactingSource"}]'
+		'[{"source":"quay.io/okd/scos-release","mirrors":["cache.example.com:5000/okd/scos-release"]}]'
+	assert_equal "$(mirrors_digest_sources | jq -c '[.[] | select(.source == "quay.io/okd/scos-release") | .sourcePolicy]')" \
+		'["AllowContactingSource"]'
 	# a repository with its own entry is not added again
 	assert_equal "$(yq '[.imageDigestSources[] | select(.source == "quay.io/okd/scos-content")] | length' "${IC}")" 1
 	# no mirror for quay.io: nothing added
@@ -67,9 +74,8 @@ _auth_file() {
 	_mirrors true
 	yq_set '.registry_mirrors.registries[0].fallback = false'
 	load_cluster
-	render_install_config "${IC}"
 	# the release repositories inherit the policy of the quay.io entry
-	assert_equal "$(yq -r '.imageDigestSources[] | .sourcePolicy' "${IC}" | paste -sd' ')" \
+	assert_equal "$(mirrors_digest_sources | jq -r '.[].sourcePolicy' | paste -sd' ')" \
 		"NeverContactSource AllowContactingSource NeverContactSource NeverContactSource"
 }
 
@@ -215,7 +221,7 @@ _auth_file() {
 	assert_output --partial "source quay.io is also in imageDigestSources of install-config.yaml"
 }
 
-@test "Pre-Boot: an ImageTagMirrorSet for images pulled by tag" {
+@test "Pre-Boot: an ImageTagMirrorSet for images pulled by tag, without policy" {
 	command -v butane >/dev/null || skip "butane not installed"
 	BUTANE=$(command -v butane)
 	_mirrors
@@ -224,7 +230,9 @@ _auth_file() {
 	local f=${BATS_TEST_TMPDIR}/out/${MIRRORS_ITMS_FILE}
 	assert_equal "$(yq -r '.kind + " " + .metadata.name' "${f}")" "ImageTagMirrorSet image-tag-mirror"
 	assert_equal "$(yq -o json -I0 '.spec.imageTagMirrors[1]' "${f}")" \
-		'{"source":"registry.redhat.io","mirrors":["cache.example.com:5000/redhat"],"mirrorSourcePolicy":"NeverContactSource"}'
+		'{"source":"registry.redhat.io","mirrors":["cache.example.com:5000/redhat"]}'
+	# mirrors apply (and create after the installation) sets the policy
+	assert_equal "$(mirrors_itms_yaml | yq -o json -I0 '.spec.imageTagMirrors[1].mirrorSourcePolicy')" '"NeverContactSource"'
 }
 
 @test "Pre-Boot: no ImageTagMirrorSet without mirrors" {
@@ -283,10 +291,21 @@ case "$*" in
 	f=${LIVE}/$2
 	[[ -f ${f} ]] && yq -o json "${f}"
 	;;
+"get imagedigestmirrorset -o json"* | "get imagetagmirrorset -o json"*)
+	f=${LIVE}/$2
+	if [[ -f ${f} ]]; then yq -o json "${f}" | jq '{items: [.]}'; else echo '{"items": []}'; fi
+	;;
 "apply -f -")
-	doc=$(cat)
-	kind=$(yq -r '.kind | downcase' <<<"${doc}")
-	printf '%s\n' "${doc}" >"${LIVE}/${kind}"
+	docs=$(cat)
+	n=$(yq ea '[.] | length' <<<"${docs}")
+	kinds=''
+	for ((i = 0; i < n; i++)); do
+		doc=$(yq "select(documentIndex == ${i})" <<<"${docs}")
+		kind=$(yq -r '.kind | downcase' <<<"${doc}")
+		printf '%s\n' "${doc}" >"${LIVE}/${kind}"
+		kinds+=" ${kind}"
+	done
+	echo "applied${kinds}" >>"${MOCK_LOG}"
 	;;
 "get secret pull-secret -n openshift-config -o json")
 	jq -n --arg d "$(base64 -w0 "${LIVE}/pull-secret")" '{data: {".dockerconfigjson": $d}}'
@@ -359,4 +378,55 @@ CURL
 	assert_success
 	assert_output --partial "imagetagmirrorset/image-tag-mirror deleted"
 	assert_output --partial "imagedigestmirrorset/image-digest-mirror deleted"
+}
+
+@test "mirrors apply sets the policy on the Pre-Boot mirror sets in one oc apply" {
+	command -v butane >/dev/null || skip "butane not installed"
+	BUTANE=$(command -v butane)
+	_mirrors
+	_fake_cluster
+	load_cluster
+	# the state after the installation: both sets without policy
+	mirrors_itms_yaml --no-policy >"${LIVE}/imagetagmirrorset"
+	mirrors_digest_sources --no-policy | jq '{apiVersion: "config.openshift.io/v1", kind: "ImageDigestMirrorSet",
+		metadata: {name: "image-digest-mirror"}, spec: {imageDigestMirrors: [.[] | {source, mirrors}]}}' | yq -P >"${LIVE}/imagedigestmirrorset"
+	run vf_mirrors
+	assert_output --partial "may still pull from the source, not only from the mirror (no NeverContactSource): registry.redhat.io"
+	: >"${MOCK_LOG}"
+	run "${OKD_PVE_ROOT}/okd-pve" --dir "${CLUSTER}" --no-color mirrors apply
+	assert_success
+	run grep -c '^applied imagedigestmirrorset imagetagmirrorset$' "${MOCK_LOG}"
+	assert_output 1
+	run grep -c '^applied' "${MOCK_LOG}"
+	assert_output 1
+	assert_equal "$(yq -r '.spec.imageTagMirrors[1].mirrorSourcePolicy' "${LIVE}/imagetagmirrorset")" NeverContactSource
+	assert_equal "$(yq -r '.spec.imageDigestMirrors[1].mirrorSourcePolicy' "${LIVE}/imagedigestmirrorset")" NeverContactSource
+	run vf_mirrors
+	assert_output --partial "Registry mirrors configured in the cluster"
+}
+
+@test "Pre-Boot: a mirrorSourcePolicy that differs for the same source is refused" {
+	command -v butane >/dev/null || skip "butane not installed"
+	BUTANE=$(command -v butane)
+	_mirrors
+	mkdir -p "${CLUSTER}/preboot"
+	cat >"${CLUSTER}/preboot/my-itms.yaml" <<'YAML'
+apiVersion: config.openshift.io/v1
+kind: ImageTagMirrorSet
+metadata:
+  name: my-tags
+spec:
+  imageTagMirrors:
+    - source: quay.io
+      mirrors: [other-cache.example.com]
+      mirrorSourcePolicy: NeverContactSource
+YAML
+	load_cluster
+	run manifests_render "${BATS_TEST_TMPDIR}/out"
+	assert_failure
+	assert_output --partial "quay.io: different mirrorSourcePolicy (99-okd-pve-image-tag-mirror.yaml: none, imageDigestSources: none, my-itms.yaml: NeverContactSource)"
+	# without the policy it is fine
+	yq -i 'del(.spec.imageTagMirrors[0].mirrorSourcePolicy)' "${CLUSTER}/preboot/my-itms.yaml"
+	run manifests_render "${BATS_TEST_TMPDIR}/out2"
+	assert_success
 }

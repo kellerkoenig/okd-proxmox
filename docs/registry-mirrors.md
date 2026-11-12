@@ -44,9 +44,21 @@ registry_mirrors:
 | `username`, `password` | `""` | one login for every mirror; an entry can set its own `username`/`password`. `$OKD_PVE_MIRROR_PASSWORD` overrides `password` (not an entry's own). Empty for anonymous mirrors |
 | `auth_file` | `""` | alternatively or in addition: auth.json (`podman login --authfile`) with credentials per mirror host |
 
-Without fallback the mirror must deliver every image of that source,
-including the release images during installation. Run `okd-pve preflight`
-first: it checks every mirror host from your workstation.
+Without fallback the mirror must deliver every image of that source. Run
+`okd-pve preflight` first: it checks every mirror host from your
+workstation.
+
+**During the installation the nodes may still contact the source.** The
+agent installer drops the policy when it creates the cluster's
+ImageDigestMirrorSet, and the MCO refuses different policies for the same
+source in the ImageDigestMirrorSet and the ImageTagMirrorSet ("conflicting
+mirrorSourcePolicy"): the bootstrap machine-config-controller crashes, the
+Machine Config Server never starts and the other masters wait forever for
+`https://<api-vip>:22623/config/master`. So okd-pve installs both sets
+without policy (mirror first, then the source), and `create` sets
+`NeverContactSource` on both after the installation (step 11). As long as
+the mirror delivers, every image comes from the mirror anyway; the source
+is only contacted when the mirror fails.
 
 ### Credentials
 
@@ -98,12 +110,13 @@ ignores the bundle when no proxy is configured.
 
 ## What okd-pve does
 
-On `create`, everything is Pre-Boot, so no node reboots for it later:
+On `create`, the mirrors are Pre-Boot, so no node reboots for them later:
 
 | Where | What |
 |---|---|
-| generated `install-config.yaml` | `imageDigestSources` with `sourcePolicy`. The agent installer puts them into the live ISO and creates the ImageDigestMirrorSet `image-digest-mirror`, used for images pulled by digest (release payload). Entries you already have in `install-config.yaml` are kept. When a mirror covers `quay.io` (or `quay.io/okd`), okd-pve adds exact entries for `quay.io/okd/scos-release` and `quay.io/okd/scos-content` with the same mirror and policy: `openshift-install` only recognizes a release mirror whose source names the release repository exactly (otherwise it warns "should have at least one source field matching the releaseImage"). |
-| extra manifest | ImageTagMirrorSet `image-tag-mirror`, used for images pulled by tag (catalogs, hook and storage images) |
+| generated `install-config.yaml` | `imageDigestSources` without `sourcePolicy` (see above). The agent installer puts them into the live ISO and creates the ImageDigestMirrorSet `image-digest-mirror`, used for images pulled by digest (release payload). Entries you already have in `install-config.yaml` are kept. When a mirror covers `quay.io` (or `quay.io/okd`), okd-pve adds exact entries for `quay.io/okd/scos-release` and `quay.io/okd/scos-content` with the same mirror: `openshift-install` only recognizes a release mirror whose source names the release repository exactly (otherwise it warns "should have at least one source field matching the releaseImage"). |
+| extra manifest | ImageTagMirrorSet `image-tag-mirror` without policy, used for images pulled by tag (catalogs, hook and storage images) |
+| after the installation (step 11) | the `mirrorSourcePolicy` from `fallback` on both sets, in one `oc apply`, like `okd-pve mirrors apply`; then `create` waits for the MachineConfigPools (no reboot; the MCO may drain the nodes one at a time) |
 | `proxy.noProxy` | mirror hosts that `noProxy` does not cover yet are appended, when a proxy is set |
 | `pullSecret` | the mirror credentials (`username`/`password`, `auth_file`) |
 
@@ -113,7 +126,8 @@ cluster's mirror configuration into the node ISO.
 `preflight` checks every mirror host for an answer on `/v2/`, for
 credentials if it asks for them, and whether it accepts them. A problem
 with a mirror without fallback is a `FAIL`, with fallback a `WARN`.
-`verify` warns when the cluster lacks a configured mirror.
+`verify` warns when the cluster lacks a configured mirror, or when a mirror
+without fallback has no `NeverContactSource` in the cluster.
 
 ## Running clusters
 
@@ -125,8 +139,10 @@ okd-pve mirrors apply
 The command first runs the preflight checks for the mirrors, then:
 
 - adds the mirror credentials to `openshift-config/pull-secret`,
-- creates or updates `image-digest-mirror` and `image-tag-mirror`, or
-  deletes them when `registries` is empty,
+- creates or updates `image-digest-mirror` and `image-tag-mirror` with
+  the policy from `fallback` (both in one `oc apply`, so the MCO never
+  sees different policies for the same source), or deletes them when
+  `registries` is empty,
 - waits for the MachineConfigPools. The MCO writes `registries.conf` and
   the pull secret on every node and reloads CRI-O; it never reboots. Digest
   mirrors and the pull secret need no drain. New tag mirrors (and removed

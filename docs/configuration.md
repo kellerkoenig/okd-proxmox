@@ -198,7 +198,7 @@ projects). Details in [registry-mirrors.md](registry-mirrors.md).
 | Key | Default | Description |
 |---|---|---|
 | `registries` | `[]` | `{source, mirror, fallback, username, password}` per source registry (only `source` and `mirror` required), e.g. `{source: quay.io, mirror: quay-cache.example.com}`; empty = no mirrors |
-| `fallback` | `false` | default for entries without their own `fallback`. `false`: pull only from the mirror (`NeverContactSource`); `true`: fall back to the source |
+| `fallback` | `false` | default for entries without their own `fallback`. `false`: pull only from the mirror (`NeverContactSource`); `true`: fall back to the source. `create` sets the policy only after the installation; during it the nodes may fall back to the source (see [registry-mirrors.md](registry-mirrors.md)) |
 | `username`, `password` | `""` | login for every mirror, merged into the pull secret; an entry in `registries` can set its own. `$OKD_PVE_MIRROR_PASSWORD` overrides `password`. The password is masked in all output |
 | `auth_file` | `""` | auth.json (`podman login --authfile`) with credentials per mirror host, merged into the pull secret; `username`/`password` win for the same mirror |
 
