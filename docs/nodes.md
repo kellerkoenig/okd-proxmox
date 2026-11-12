@@ -57,6 +57,16 @@ roles. Both layouts are supported:
   `OKD_PVE_INFRA_TAINT_*`).
 - Dedicated infra nodes keep the `node-role.kubernetes.io/worker` label
   they joined with; `oc get nodes` shows `infra,worker`.
+- **DaemonSets on tainted infra nodes.** The taint comes after the
+  installation, when DaemonSet pods already run on these nodes. A
+  `NoSchedule` taint leaves them running, and Prometheus alerts
+  `KubeDaemonSetMisScheduled` / `KubeDaemonSetRolloutStuck` for every
+  DaemonSet that does not tolerate it. So after tainting (`create` step 11,
+  `node add`, `node reconcile`) okd-pve adds the infra toleration to the
+  DNS operator (`dns.operator/default`, so every node keeps a local DNS pod)
+  and deletes the pods of other DaemonSets that do not tolerate the taint,
+  for example `insights-runtime-extractor`; their DaemonSet does not start
+  them there again. `verify` warns about such pods.
 
 ## VMIDs, MACs, IPs, disks
 

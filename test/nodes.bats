@@ -169,3 +169,54 @@ node() {
 	assert_equal "$(csr_common_name "${req}")" system:node:small-master-0
 	assert_equal "$(csr_common_name "$(printf 'not a CSR' | base64 -w0)")" ""
 }
+
+# _infra_cluster_fakes: oc as a shell function with one tainted infra node
+# (small-worker-0), DNS and two other DaemonSets with pods on it.
+_infra_cluster_fakes() {
+	yq_set '(.node_groups[] | select(.name == "worker") | .taint_infra) = true'
+	load_cluster
+	export OC_CALLS=${BATS_TEST_TMPDIR}/oc-calls
+	: >"${OC_CALLS}"
+	oc() {
+		case "$*" in
+		"get dns.operator.openshift.io default -o json") echo '{"spec": {"nodePlacement": {}}}' ;;
+		"get daemonsets -A -o json")
+			jq -n '{items: [
+				{metadata: {namespace: "openshift-dns", name: "dns-default"}, spec: {template: {spec: {tolerations: [{key: "node-role.kubernetes.io/master", operator: "Exists"}]}}}},
+				{metadata: {namespace: "openshift-insights", name: "extractor"}, spec: {template: {spec: {}}}},
+				{metadata: {namespace: "openshift-network-operator", name: "iptables-alerter"}, spec: {template: {spec: {tolerations: [{operator: "Exists"}]}}}}]}'
+			;;
+		"get pods -A -o json")
+			jq -n 'def p($ns; $n; $ds; $node): {metadata: {namespace: $ns, name: $n, ownerReferences: [{kind: "DaemonSet", name: $ds}]}, spec: {nodeName: $node}};
+				{items: [p("openshift-dns"; "dns-1"; "dns-default"; "small-worker-0"), p("openshift-insights"; "extractor-1"; "extractor"; "small-worker-0"),
+					p("openshift-insights"; "extractor-2"; "extractor"; "small-worker-1"), p("openshift-network-operator"; "alerter-1"; "iptables-alerter"; "small-worker-0"),
+					{metadata: {namespace: "openshift-ingress", name: "router-1"}, spec: {nodeName: "small-worker-0"}}]}'
+			;;
+		"get nodes -o json")
+			jq -n '{items: [{metadata: {name: "small-worker-0"}, spec: {taints: [{key: "node-role.kubernetes.io/infra", value: "reserved", effect: "NoSchedule"}]}},
+				{metadata: {name: "small-worker-1"}, spec: {}}]}'
+			;;
+		*) echo "$*" >>"${OC_CALLS}" ;;
+		esac
+	}
+}
+
+@test "only DaemonSet pods that do not tolerate the infra taint count as misplaced" {
+	_infra_cluster_fakes
+	run infra_misplaced_ds_pods
+	assert_success
+	assert_output "openshift-dns dns-1
+openshift-insights extractor-1"
+}
+
+@test "after tainting, DNS gets the infra toleration and misplaced DaemonSet pods are deleted" {
+	_infra_cluster_fakes
+	run nodes_infra_daemonsets
+	assert_success
+	run cat "${OC_CALLS}"
+	assert_line --partial 'patch dns.operator.openshift.io default --type merge -p {"spec":{"nodePlacement":{"tolerations":[{"key":"node-role.kubernetes.io/infra","operator":"Equal","value":"reserved","effect":"NoSchedule"},{"key":"node-role.kubernetes.io/master","operator":"Exists"}]}}}'
+	assert_line "delete pod -n openshift-insights extractor-1 --wait=false"
+	# DNS pods follow the operator change and are not deleted
+	refute_line --partial "dns-1"
+	refute_line --partial "alerter-1"
+}
