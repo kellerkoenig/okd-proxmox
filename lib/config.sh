@@ -98,6 +98,7 @@ config_load() {
 	[[ -f ${INSTALL_CONFIG_FILE} ]] || die "${EXIT_CONFIG}" "Missing ${INSTALL_CONFIG_FILE}." \
 		"Run 'okd-pve init <name>' to create a commented template."
 
+	local_dirs_apply
 	setup_tmp
 	CONFIG_JSON=${OKD_PVE_TMP}/config.json
 	local err
@@ -405,4 +406,35 @@ resolve_path() {
 	[[ ${p} == "~/"* ]] && p=${HOME}/${p#"~/"}
 	[[ ${p} == /* ]] || p=${CLUSTER_DIR}/${p}
 	printf '%s' "${p}"
+}
+
+# local_dirs_apply: proxmox.tmp_dir and proxmox.cache_dir become TMPDIR and
+# XDG_CACHE_HOME for okd-pve and every tool it starts (openshift-install,
+# tofu and its provider). Read straight from cluster.yaml: the merged
+# configuration is written into the temporary directory, which therefore
+# moves here from the default location.
+local_dirs_apply() {
+	local tmp cache old
+	{
+		IFS= read -r tmp
+		IFS= read -r cache
+	} < <(yq -r '.proxmox.tmp_dir // "", .proxmox.cache_dir // ""' "${CONFIG_FILE}" 2>/dev/null) || true
+	if [[ -n ${cache} ]]; then
+		cache=$(resolve_path "${cache}")
+		mkdir -p "${cache}" || die "${EXIT_CONFIG}" "Cannot create proxmox.cache_dir ${cache}." \
+			"Set proxmox.cache_dir in cluster.yaml to a writable directory."
+		export XDG_CACHE_HOME=${cache}
+	fi
+	[[ -n ${tmp} ]] || return 0
+	tmp=$(resolve_path "${tmp}")
+	mkdir -p "${tmp}" || die "${EXIT_CONFIG}" "Cannot create proxmox.tmp_dir ${tmp}." \
+		"Set proxmox.tmp_dir in cluster.yaml to a writable directory."
+	export TMPDIR=${tmp}
+	# Only a directory okd-pve created itself (see _run_cleanup) is moved.
+	old=${OKD_PVE_TMP:-}
+	[[ -n ${old} && -d ${old} && ${old} == */okd-pve.* && ${old%/*} != "${tmp%/}" ]] || return 0
+	OKD_PVE_TMP=''
+	setup_tmp
+	cp -a "${old}/." "${OKD_PVE_TMP}/"
+	rm -rf "${old}"
 }

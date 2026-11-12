@@ -40,7 +40,13 @@ proxmox:
   cpu_type: host
   bios: ovmf
   machine: q35
+  # Local directories on the machine that runs okd-pve. Relative paths are
+  # relative to the cluster directory. tmp_dir becomes TMPDIR (ISO upload
+  # buffer, downloads, openshift-install), cache_dir XDG_CACHE_HOME
+  # (openshift-install base ISO, OpenTofu providers). "" = $TMPDIR or /tmp,
+  # $XDG_CACHE_HOME or ~/.cache.
   tmp_dir: ""
+  cache_dir: ""
   host_memory_reserve_gib: 8
   root_device_hint: serial
   # Seconds for an ISO upload. The provider stops every upload after 20

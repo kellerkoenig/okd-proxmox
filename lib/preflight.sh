@@ -233,21 +233,21 @@ pf_local() {
 		pf FAIL "Cluster directory: only $(human_gib "${free}") free, need 5 GiB (agent ISO ~1 GiB, tools, logs)" \
 			"Free up space or use --dir on a larger filesystem."
 	fi
-	local tmp=${TMPDIR:-/tmp} tmp_cfg
-	tmp_cfg=$(cfg '.proxmox.tmp_dir')
-	[[ -n ${tmp_cfg} ]] && tmp=${tmp_cfg}
+	# proxmox.tmp_dir and cache_dir are already in TMPDIR and XDG_CACHE_HOME
+	# (local_dirs_apply).
+	local tmp=${TMPDIR:-/tmp}
 	free=$(free_bytes "${tmp}")
 	if ((free >= 2 * 1024 * 1024 * 1024)); then
 		pf PASS "Upload buffer ${tmp}: $(human_gib "${free}") free"
 	else
 		pf FAIL "Upload buffer ${tmp}: only $(human_gib "${free}") free; the ~1 GiB agent ISO is buffered there during upload" \
-			"Set proxmox.tmp_dir in cluster.yaml (passed to the provider as tmp_dir) to a directory with >= 2 GiB."
+			"Set proxmox.tmp_dir in cluster.yaml to a directory with >= 2 GiB, for example .tmp in the cluster directory."
 	fi
 	local cache=${XDG_CACHE_HOME:-${HOME}/.cache}
 	free=$(free_bytes "${cache}")
 	if ((free < 2 * 1024 * 1024 * 1024)); then
 		pf WARN "${cache}: only $(human_gib "${free}") free; openshift-install caches the ~1 GiB base ISO there" \
-			"Free up space or set XDG_CACHE_HOME."
+			"Set proxmox.cache_dir in cluster.yaml to a directory with >= 2 GiB, for example .cache in the cluster directory."
 	fi
 }
 
