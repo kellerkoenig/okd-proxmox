@@ -473,3 +473,56 @@ fake_live_iso() {
 	run grep -ac systemd.debug_shell "${iso}"
 	assert_output 2
 }
+
+# _agent_fakes: a fake curl for the agent service and the Machine Config
+# Server; it logs its arguments so the test can check the token is not there.
+_agent_fakes() {
+	mkdir -p "${GENERATED_DIR}" "${BATS_TEST_TMPDIR}/bin"
+	echo '{"*gencrypto.AuthConfig": {"UserAuthToken": "secret-agent-token"}}' >"${GENERATED_DIR}/.openshift_install_state.json"
+	export CURL_ARGS=${BATS_TEST_TMPDIR}/curl-args MCS_CODE=${MCS_CODE:-000}
+	cat >"${BATS_TEST_TMPDIR}/bin/curl" <<'CURL'
+#!/usr/bin/env bash
+echo "$*" >>"${CURL_ARGS}"
+[[ " $* " == *" -K - "* ]] && cat >/dev/null
+case "$*" in
+*:22623/healthz*) printf '%s' "${MCS_CODE}" ;;
+*/v2/clusters/c1*)
+	cat <<'JSON'
+{"status": "installing-pending-user-action", "hosts": [
+ {"requested_hostname": "small-master-0", "status": "installing-in-progress", "progress": {"current_stage": "Waiting for control plane"}},
+ {"requested_hostname": "small-master-1", "status": "installing-pending-user-action", "status_info": "Host timed out when pulling the configuration files.", "progress": {"current_stage": "Rebooting"}},
+ {"requested_hostname": "small-worker-0", "status": "installing-in-progress", "progress": {"current_stage": "Waiting for control plane"}}]}
+JSON
+	;;
+*/v2/clusters*) echo '[{"id": "c1"}]' ;;
+esac
+CURL
+	chmod +x "${BATS_TEST_TMPDIR}/bin/curl"
+	export PATH=${BATS_TEST_TMPDIR}/bin:${PATH}
+}
+
+@test "installer_agent_status shows the agent's host stages and hosts that need attention" {
+	_agent_fakes
+	run installer_agent_status
+	assert_success
+	assert_line "agent: installing-pending-user-action · 1 Rebooting, 2 Waiting for control plane"
+	assert_line "agent: small-master-1 installing-pending-user-action: Host timed out when pulling the configuration files."
+	refute grep -q secret-agent-token "${CURL_ARGS}"
+}
+
+@test "installer_mcs_check reports a Machine Config Server that does not answer while masters are missing" {
+	_agent_fakes
+	local nodes='{"items": [{"metadata": {"name": "small-master-0", "labels": {"node-role.kubernetes.io/master": ""}},
+		"status": {"conditions": [{"type": "Ready", "status": "True"}]}}]}'
+	run installer_mcs_check "${nodes}"
+	refute_output
+	run installer_mcs_check "${nodes}"
+	refute_output
+	run installer_mcs_check "${nodes}"
+	assert_output --partial "Machine Config Server https://192.0.2.5:22623 does not answer (1 of 3 masters Ready)"
+	# an answer resets the count
+	MCS_CODE=200 run installer_mcs_check "${nodes}"
+	refute_output
+	run installer_mcs_check "${nodes}"
+	refute_output
+}

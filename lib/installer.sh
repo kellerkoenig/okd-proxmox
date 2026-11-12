@@ -230,6 +230,7 @@ installer_status_line() {
 		[[ -n ${cv} ]] && parts+=("${cv:0:110}")
 		printf '%(%H:%M)T %s\n' -1 "$(join_by ' · ' "${parts[@]}")"
 		installer_status_details "${cos:-}"
+		installer_bootstrap_diag "${nodes}"
 		return 0
 	else
 		total=0
@@ -240,6 +241,69 @@ installer_status_line() {
 		parts+=("API not reachable yet" "${up}/${total} nodes answer ping")
 	fi
 	printf '%(%H:%M)T %s\n' -1 "$(join_by ' · ' "${parts[@]}")"
+	installer_bootstrap_diag
+}
+
+# installer_bootstrap_diag [nodes-json]: extra status lines until the
+# bootstrap is done: the agent service's view of the hosts, and a missing
+# Machine Config Server (see installer_mcs_check).
+installer_bootstrap_diag() {
+	state_step_done bootstrap 2>/dev/null && return 0
+	installer_agent_status
+	[[ -n ${1:-} ]] && installer_mcs_check "$1"
+	return 0
+}
+
+# installer_agent_status: what the agent service on the rendezvous node
+# reports while it runs (until that node boots from its disk): one summary
+# line ("agent: installing · 2 Rebooting, 7 Waiting for control plane") and
+# one line per host in error or pending-user-action, with the reason. The
+# token reaches curl on stdin, never as an argument.
+installer_agent_status() {
+	local ip f=${GENERATED_DIR}/.openshift_install_state.json token id json base
+	ip=$(cfg '.network.rendezvous_ip')
+	[[ -n ${ip} && -f ${f} ]] || return 0
+	token=$(jq -r '."*gencrypto.AuthConfig".UserAuthToken // empty' "${f}" 2>/dev/null) || return 0
+	[[ -n ${token} ]] || return 0
+	redact_register "${token}"
+	base=http://${ip}:8090/api/assisted-install/v2
+	id=$(printf 'header = "Authorization: %s"\n' "${token}" |
+		curl -s --noproxy '*' -m 10 -K - "${base}/clusters" 2>/dev/null | jq -r '.[0].id // empty' 2>/dev/null) || return 0
+	[[ -n ${id} ]] || return 0
+	json=$(printf 'header = "Authorization: %s"\n' "${token}" |
+		curl -s --noproxy '*' -m 10 -K - "${base}/clusters/${id}" 2>/dev/null) || return 0
+	jq -r '(.hosts // []) as $h
+		| "agent: \(.status) · " + ([$h[] | .progress.current_stage // .status] | group_by(.) | map("\(length) \(.[0])") | join(", ")),
+		  ($h[] | select(.status | test("error|pending-user-action"))
+			| "agent: \(.requested_hostname // .id) \(.status): \(.status_info // "" | gsub("\\s+"; " ") | .[0:140])")' <<<"${json}" 2>/dev/null
+}
+
+# installer_mcs_check <nodes-json>: while masters are missing, they fetch
+# their configuration from the Machine Config Server on the API VIP (port
+# 22623). Three checks in a row without an answer while the API is up mean
+# it did not start, typically because the bootstrap machine-config-controller
+# crashes; the masters then wait forever.
+installer_mcs_check() {
+	local nodes=$1 vip ready want code n=0 f=${OKD_PVE_TMP}/mcs-down
+	vip=$(ic '.platform.baremetal.apiVIPs[0]')
+	[[ -n ${vip} ]] || return 0
+	want=$(nodes_query '[.[] | select(.agent_role == "master")] | length')
+	ready=$(jq -r '[.items[] | select(.metadata.labels["node-role.kubernetes.io/master"] != null)
+		| select(any(.status.conditions[]?; .type == "Ready" and .status == "True"))] | length' <<<"${nodes}" 2>/dev/null) || return 0
+	((ready < want)) || {
+		rm -f "${f}"
+		return 0
+	}
+	code=$(curl -sk --noproxy '*' -m 5 -o /dev/null -w '%{http_code}' "https://${vip}:22623/healthz" 2>/dev/null) || true
+	if [[ ${code} == 200 ]]; then
+		rm -f "${f}"
+		return 0
+	fi
+	n=$(($(cat "${f}" 2>/dev/null || echo 0) + 1))
+	echo "${n}" >"${f}"
+	((n >= 3)) || return 0
+	printf 'Machine Config Server https://%s:22623 does not answer (%s of %s masters Ready): the other masters cannot get their configuration. See README, Troubleshooting (install.debug_shell).\n' \
+		"${vip}" "${ready}" "${want}"
 }
 
 # installer_status_details <clusteroperators-json>: why the cluster is not
@@ -447,6 +511,14 @@ installer_wait_failed() {
 	log_hint "The installation is most likely still running: slow image downloads (proxy, registry) can take longer than openshift-install waits."
 	log_hint "Next step: start 'okd-pve create' again. It skips the ISO and the VMs and keeps waiting where it stopped."
 	log_hint "If it times out again without progress: ${hint}"
+	local line
+	while IFS= read -r line; do
+		[[ -n ${line} ]] && log_warn "${line}"
+	done < <(
+		installer_agent_status | grep -E 'error:|pending-user-action:'
+		[[ $(cat "${OKD_PVE_TMP}/mcs-down" 2>/dev/null || echo 0) -ge 3 ]] &&
+			echo "The Machine Config Server on the API VIP (port 22623) did not answer; see README, Troubleshooting."
+	)
 	[[ -n ${LOG_FILE} && -f ${LOG_FILE} ]] && log_hint "Full log: ${LOG_FILE}"
 	exit "${EXIT_ERROR}"
 }
@@ -474,6 +546,11 @@ installer_wait() {
 		((rc != 0 && rc < 128 && attempt <= retries)) || break
 		after=$(installer_progress)
 		[[ -n ${after} && ${after} != "${before}" ]] || break
+		# Hosts the agent gave up on do not recover by waiting longer.
+		if installer_agent_status | grep -qE 'error:|pending-user-action:'; then
+			log_warn "The agent service reports hosts that need attention; not waiting again."
+			break
+		fi
 		log_warn "openshift-install stopped waiting, but the cluster is still progressing (${before:-API not reachable} -> ${after}); waiting again (${attempt}/${retries})"
 		((++attempt))
 	done
