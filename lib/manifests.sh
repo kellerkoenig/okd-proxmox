@@ -179,7 +179,9 @@ manifests_render() {
 	fi
 
 	if mirrors_enabled; then
-		mirrors_itms_yaml >"${out}/${MIRRORS_ITMS_FILE}" || return 1
+		# Without policy, like the agent installer's ImageDigestMirrorSet
+		# (lib/mirrors.sh); create sets it after the installation.
+		mirrors_itms_yaml --no-policy >"${out}/${MIRRORS_ITMS_FILE}" || return 1
 	fi
 
 	_manifests_user "${out}" || return 1
@@ -229,5 +231,37 @@ _manifests_validate() {
 			rc=1
 		fi
 	done
+	_manifests_mirror_policies "$1" || rc=1
 	return "${rc}"
+}
+
+# _manifests_mirror_policies <out>: the MCO refuses different
+# mirrorSourcePolicy values for the same source across all
+# ImageDigestMirrorSets, ImageTagMirrorSets and ImageContentSourcePolicies;
+# on the bootstrap node its controller then crashes, the Machine Config
+# Server never starts and the installation hangs. The agent installer creates
+# its ImageDigestMirrorSet from imageDigestSources without policy, so those
+# entries count as "no policy".
+_manifests_mirror_policies() {
+	local out=$1 f entries ids
+	if mirrors_enabled; then
+		ids=$(mirrors_digest_sources --no-policy)
+	else
+		ids=$(jq -c '.imageDigestSources // []' "${INSTALL_CONFIG_JSON}")
+	fi
+	entries=$(jq -c '[.[] | {source, policy: "", from: "imageDigestSources"}]' <<<"${ids}")
+	for f in "${out}"/*; do
+		[[ -f ${f} ]] || continue
+		entries=$(yq ea -o json -I0 '[.]' "${f}" 2>/dev/null | jq -c --argjson e "${entries}" --arg f "${f##*/}" '
+			$e + [.[] | select(.kind == "ImageDigestMirrorSet" or .kind == "ImageTagMirrorSet" or .kind == "ImageContentSourcePolicy")
+				| (.spec.imageDigestMirrors // .spec.imageTagMirrors // .spec.repositoryDigestMirrors // [])[]
+				| {source, policy: (.mirrorSourcePolicy // ""), from: $f}]') || continue
+	done
+	local conflicts
+	conflicts=$(jq -r 'group_by(.source)[] | select(([.[].policy] | unique | length) > 1)
+		| "\(.[0].source): different mirrorSourcePolicy (" + ([.[] | "\(.from): \(if .policy == "" then "none" else .policy end)"] | unique | join(", "))
+		+ "). The MCO refuses this and the installation hangs; set the policy after the installation instead (okd-pve mirrors apply)."' <<<"${entries}")
+	[[ -z ${conflicts} ]] && return 0
+	printf '%s\n' "${conflicts}" >&2
+	return 1
 }

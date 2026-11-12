@@ -11,6 +11,12 @@
 #    pulled by digest), plus exact entries for the OKD release repositories;
 #  - an ImageTagMirrorSet "image-tag-mirror" as extra manifest (images
 #    pulled by tag: operator catalogs, hook and storage images);
+#  Both without mirrorSourcePolicy: the agent installer drops the policy
+#  when it creates the ImageDigestMirrorSet, and the MCO refuses different
+#  policies for the same source in the two sets ("conflicting
+#  mirrorSourcePolicy"), so the bootstrap machine-config-controller would
+#  crash and the masters would never get their Ignition config. create sets
+#  the policies on both sets after the installation (mirrors_cluster_sync);
 #  - the mirror hosts into proxy.noProxy when a proxy is set;
 #  - the mirror credentials (registry_mirrors username/password and
 #    auth_file) into the pull secret.
@@ -138,14 +144,20 @@ MIRRORS_RELEASE_REPOS=("${OKD_RELEASE_IMAGE_REPO}" quay.io/okd/scos-content)
 # an exact entry for every release repository a configured mirror covers
 # (e.g. quay.io -> quay-cache.example.com also gives quay.io/okd/scos-release
 # -> quay-cache.example.com/okd/scos-release).
+#
+# mirrors_digest_sources --no-policy: the same without sourcePolicy (Pre-Boot,
+# see the top of this file).
 mirrors_digest_sources() {
-	jq -c --argjson m "$(mirrors_json)" --argjson repos "$(printf '%s\n' "${MIRRORS_RELEASE_REPOS[@]}" | jq -R . | jq -sc .)" '
+	local strip=false
+	[[ ${1:-} == --no-policy ]] && strip=true
+	jq -c --argjson strip "${strip}" --argjson m "$(mirrors_json)" --argjson repos "$(printf '%s\n' "${MIRRORS_RELEASE_REPOS[@]}" | jq -R . | jq -sc .)" '
 		((.imageDigestSources // []) + [$m[] | {source, mirrors: [.mirror], sourcePolicy: .policy}]) as $ids
 		| $ids + [$repos[] as $repo
 			| select(all($ids[]; .source != $repo))
 			| [$m[] | select(.source as $s | $s == $repo or ($repo | startswith($s + "/")))]
 			| sort_by(.source | length) | last // empty
-			| . as $e | {source: $repo, mirrors: [$e.mirror + ($repo | ltrimstr($e.source))], sourcePolicy: $e.policy}]' "${INSTALL_CONFIG_JSON}"
+			| . as $e | {source: $repo, mirrors: [$e.mirror + ($repo | ltrimstr($e.source))], sourcePolicy: $e.policy}]
+		| if $strip then map(del(.sourcePolicy)) else . end' "${INSTALL_CONFIG_JSON}"
 }
 
 # mirrors_idms_yaml: the ImageDigestMirrorSet openshift-install creates from
@@ -160,13 +172,18 @@ mirrors_idms_yaml() {
 	}' | yq -P '.'
 }
 
-# mirrors_itms_yaml: ImageTagMirrorSet for images pulled by tag.
+# mirrors_itms_yaml [--no-policy]: ImageTagMirrorSet for images pulled by
+# tag; --no-policy for the Pre-Boot manifest (see the top of this file).
+# shellcheck disable=SC2120 # --no-policy is passed from lib/manifests.sh
 mirrors_itms_yaml() {
-	mirrors_json | jq --arg name "${MIRRORS_ITMS_NAME}" '{
+	local strip=false
+	[[ ${1:-} == --no-policy ]] && strip=true
+	mirrors_json | jq --argjson strip "${strip}" --arg name "${MIRRORS_ITMS_NAME}" '{
 		apiVersion: "config.openshift.io/v1",
 		kind: "ImageTagMirrorSet",
 		metadata: {name: $name, labels: {"app.kubernetes.io/managed-by": "okd-pve"}},
-		spec: {imageTagMirrors: [.[] | {source, mirrors: [.mirror], mirrorSourcePolicy: .policy}]}
+		spec: {imageTagMirrors: [.[] | {source, mirrors: [.mirror]}
+			+ (if $strip then {} else {mirrorSourcePolicy: .policy} end)]}
 	}' | yq -P '.'
 }
 
@@ -205,7 +222,7 @@ mirrors_no_proxy() {
 mirrors_render_install_config() {
 	local f=$1
 	mirrors_enabled || return 0
-	IDS=$(mirrors_digest_sources) yq -i '.imageDigestSources = (strenv(IDS) | from_json) | (.imageDigestSources | ...) style=""' "${f}"
+	IDS=$(mirrors_digest_sources --no-policy) yq -i '.imageDigestSources = (strenv(IDS) | from_json) | (.imageDigestSources | ...) style=""' "${f}"
 	if [[ -n $(ic '.proxy.httpProxy') || -n $(ic '.proxy.httpsProxy') ]]; then
 		NP=$(mirrors_no_proxy "$(ic '.proxy.noProxy')") yq -i '.proxy.noProxy = strenv(NP)' "${f}"
 	fi
@@ -319,6 +336,56 @@ _mirrors_live_spec() {
 	jq -cS '.spec' <<<"${out}"
 }
 
+# _mirrors_sync_sets <idms-yaml> <itms-yaml>: bring the ImageDigestMirrorSet
+# and the ImageTagMirrorSet okd-pve manages to the wanted state; returns 0
+# when it changed something. Changed sets go to the cluster in one oc apply:
+# the MCO refuses different policies for the same source in the two sets,
+# so a policy change must not reach it one set at a time.
+_mirrors_sync_sets() {
+	local -a kinds=(imagedigestmirrorset imagetagmirrorset) names=("${MIRRORS_IDMS_NAME}" "${MIRRORS_ITMS_NAME}")
+	local -a yamls=("$1" "$2") apply=()
+	local i live want changed=1
+	for i in 0 1; do
+		if [[ -z ${yamls[i]} ]]; then
+			_mirrors_sync "${kinds[i]}" "${names[i]}" "" && changed=0
+			continue
+		fi
+		live=$(_mirrors_live_spec "${kinds[i]}" "${names[i]}")
+		want=$(yq -o json -I0 '.spec' <<<"${yamls[i]}" | jq -cS .)
+		if [[ ${live} == "${want}" ]]; then
+			log_info "${kinds[i]}/${names[i]} is up to date"
+		else
+			apply+=("${i}")
+		fi
+	done
+	((${#apply[@]})) || return "${changed}"
+	local docs='' line
+	for i in "${apply[@]}"; do
+		if ((DRY_RUN)); then
+			dry_run_note "would apply ${kinds[i]}/${names[i]}:"
+			while IFS= read -r line; do printf '      %s\n' "${line}"; done <<<"${yamls[i]}"
+		fi
+		docs+="---"$'\n'"${yamls[i]}"$'\n'
+	done
+	if ! ((DRY_RUN)); then
+		_mirrors_oc_apply <<<"${docs}"
+		for i in "${apply[@]}"; do log_info "${kinds[i]}/${names[i]} applied"; done
+	fi
+	return 0
+}
+
+# _mirrors_oc_apply: oc apply -f - without the warning about the missing
+# last-applied-configuration annotation: the installer creates
+# image-digest-mirror without it, oc adds it on the first apply.
+_mirrors_oc_apply() {
+	local err
+	if ! err=$(oc apply -f - 2>&1 >/dev/null); then
+		die "${EXIT_ERROR}" "oc apply of the registry mirror sets failed: ${err}" "Check the API (okd-pve verify) and run 'okd-pve mirrors apply' again."
+	fi
+	err=$(grep -v 'last-applied-configuration' <<<"${err}" || true)
+	[[ -z ${err} ]] || log_warn "${err}"
+}
+
 # _mirrors_sync <kind> <name> <yaml>: create, update or (empty yaml) delete
 # one object; returns 0 when it changed something.
 _mirrors_sync() {
@@ -344,7 +411,7 @@ _mirrors_sync() {
 		local line
 		while IFS= read -r line; do printf '      %s\n' "${line}"; done <<<"${yaml}"
 	else
-		oc apply -f - <<<"${yaml}" >/dev/null
+		_mirrors_oc_apply <<<"${yaml}"
 		log_info "${kind}/${name} applied"
 	fi
 	return 0
@@ -407,12 +474,19 @@ cmd_mirrors_apply() {
 	fi
 
 	log_step "Registry mirrors: applying to the cluster"
+	mirrors_cluster_sync
+}
+
+# mirrors_cluster_sync: pull secret, ImageDigestMirrorSet and ImageTagMirrorSet
+# as configured, including the mirrorSourcePolicy the Pre-Boot manifests
+# leave out; then wait for the MachineConfigPools. Used by 'mirrors apply'
+# and at the end of create.
+mirrors_cluster_sync() {
 	local changed=0 idms='' itms=''
 	_mirrors_sync_pull_secret && changed=1
 	[[ $(mirrors_digest_sources) == '[]' ]] || idms=$(mirrors_idms_yaml)
 	mirrors_enabled && itms=$(mirrors_itms_yaml)
-	_mirrors_sync imagedigestmirrorset "${MIRRORS_IDMS_NAME}" "${idms}" && changed=1
-	_mirrors_sync imagetagmirrorset "${MIRRORS_ITMS_NAME}" "${itms}" && changed=1
+	_mirrors_sync_sets "${idms}" "${itms}" && changed=1
 	mirrors_enabled && _mirrors_check_proxy
 
 	if ((! changed)); then

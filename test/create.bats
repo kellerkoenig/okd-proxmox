@@ -181,3 +181,16 @@ applies() {
 	assert_output --partial "VMs in state: small-master-0"
 	assert [ ! -e "${CLUSTER}/.state" ]
 }
+
+@test "with registry mirrors, create sets the mirror policy once after the installation" {
+	yq_set '.registry_mirrors.registries = [{"source": "quay.io", "mirror": "quay-cache.example.com"}] | .storage.backend = "none"'
+	mirrors_cluster_sync() { echo "mirror policy stub"; }
+	create
+	assert_success
+	assert_output --partial "[11/14] Infra labels, taints and registry mirror policy"
+	assert_output --partial "mirror policy stub"
+	assert [ -f "${CLUSTER}/.state/steps/mirror-policy" ]
+	create
+	assert_success
+	refute_output --partial "mirror policy stub"
+}
