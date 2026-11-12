@@ -18,6 +18,9 @@ OKD_MIN_VERSION=4.17
 # renovate: datasource=github-releases depName=opentofu/opentofu
 TOFU_VERSION=${OKD_PVE_TOFU_VERSION:-1.13.2}
 TOFU_MIN_VERSION=1.8.0
+# Oldest yq the tests run with (CI job "bats (oldest supported yq)"); yq
+# changes expression semantics between releases.
+YQ_MIN_VERSION=4.45.0
 TOFU_URL_BASE=https://github.com/opentofu/opentofu/releases/download
 
 # Updating Butane needs new checksums below; Renovate only opens that pull

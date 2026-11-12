@@ -40,6 +40,21 @@ jobs:
       - name: bats
         run: make test
 
+  test-yq-oldest:
+    # The oldest yq okd-pve supports (preflight warns below it). yq changes
+    # expression semantics between releases: 4.45 silently dropped an
+    # assignment that 4.54 applies.
+    name: bats (oldest supported yq)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install tools
+        run: make tools YQ_VERSION=4.45.4
+      - name: bats
+        run: make test
+
   terraform:
     name: tofu validate + tflint
     runs-on: ubuntu-24.04

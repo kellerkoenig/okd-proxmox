@@ -183,3 +183,19 @@ setup() {
 	run pf_network
 	assert_output --partial "[FAIL] Addresses already answer: VIP 192.0.2.5 192.0.2.22"
 }
+
+@test "preflight warns about a yq older than the oldest tested version" {
+	local real
+	real=$(command -v yq)
+	mkdir -p "${BATS_TEST_TMPDIR}/bin"
+	cat >"${BATS_TEST_TMPDIR}/bin/yq" <<YQ
+#!/usr/bin/env bash
+[[ \$1 == --version ]] && { echo "yq (https://github.com/mikefarah/yq/) version v4.30.8"; exit 0; }
+exec "${real}" "\$@"
+YQ
+	chmod +x "${BATS_TEST_TMPDIR}/bin/yq"
+	PATH=${BATS_TEST_TMPDIR}/bin:${PATH} run pf_local
+	assert_output --partial "[WARN] yq v4.30.8 is older than ${YQ_MIN_VERSION}"
+	run pf_local
+	assert_output --regexp "\[PASS\] jq [0-9.]+, yq v4\.[0-9]+"
+}

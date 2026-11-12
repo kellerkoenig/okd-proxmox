@@ -97,7 +97,7 @@ Workstation (Linux; macOS works for most commands but is not tested):
 | Tool | Notes |
 |---|---|
 | bash ≥ 4.4, curl, awk, sed, tar | |
-| `jq`, `yq` (mikefarah v4) | required to read the configuration |
+| `jq`, `yq` (mikefarah v4, >= 4.45) | required to read the configuration; CI tests the oldest supported yq too |
 | `nmstatectl` | `openshift-install` validates static network configuration with it. `dnf install nmstate`; where no package exists (e.g. Ubuntu), `create` extracts it from the CentOS Stream 9 package with podman or docker |
 | `unzip` | only to download OpenTofu |
 | `whiptail` or `dialog` | only for `okd-pve tui` |
