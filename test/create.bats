@@ -13,7 +13,10 @@ setup() {
 	export NO_COLOR=1 OKD_PVE_STATUS_INTERVAL=1
 	# shellcheck source=../okd-pve
 	source "${OKD_PVE_ROOT}/okd-pve"
-	set +eu
+	# okd-pve turns on nounset; the bats helpers do not expect it. errexit
+	# stays on, otherwise a failed assertion before the last line of a test
+	# would go unnoticed.
+	set +u
 	make_cluster small
 	write_proxmox_conf
 	# Cluster-side steps are covered elsewhere; stub them here.
@@ -21,6 +24,7 @@ setup() {
 	cluster_api_init() { :; }
 	nodes_reconcile_labels() { echo "labels stub"; }
 	verify_once() { echo "verify stub"; }
+	cmd_storage_install() { echo "storage stub"; }
 	hooks_run() { echo "hooks stub"; }
 	tool_check() { printf '%s\t%s\n' "$(command -v "$1")" mock; }
 	ORIG_IC=$(sha256sum "${CLUSTER}/install-config.yaml")
@@ -149,7 +153,7 @@ applies() {
 	yq_set '(.node_groups[] | select(.name == "worker") | .count) = 4'
 	create
 	assert_failure 2
-	assert_output --partial "use 'okd-pve node add/remove'"
+	assert_output --partial "Scale an installed cluster with 'okd-pve node add/remove'"
 }
 
 @test "destroy removes state but keeps the configuration" {
@@ -172,8 +176,6 @@ applies() {
 	yq_set '.proxmox.spread = "balanced" | .node_groups |= [.[0], {"name": "infra", "roles": ["infra"], "taint_infra": true,
 		"count": 3, "cpu": 8, "memory_gib": 32, "disk_gib": 120, "ips": ["192.0.2.31-192.0.2.33"]}, .[1]]'
 	run main --dir "${CLUSTER}" --yes destroy
-	# setup turns errexit off; without it a failed assertion would not fail the test
-	set -e
 	assert_success
 	refute_output --partial "would recreate existing VMs"
 	assert_output --partial "VMs in state: small-master-0"
