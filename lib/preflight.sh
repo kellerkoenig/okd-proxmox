@@ -162,7 +162,7 @@ pf_preboot_render() {
 	local bu
 	if ! bu=$(tool_check butane); then
 		pf WARN "Pre-Boot manifests not test-rendered: butane is not installed yet" \
-			"create downloads butane; or install it now and re-run preflight."
+			"create offers to download butane into ${BIN_DIR} and renders them then. To test now, put butane there or into PATH and re-run preflight."
 		return
 	fi
 	BUTANE=${bu%%$'\t'*}
