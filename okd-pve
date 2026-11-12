@@ -472,6 +472,7 @@ cmd_destroy() {
 		tf_node_isos() { echo '{}'; }
 		tf_destroy
 	fi
+	tf_isos_cleanup --all
 	destroy_report_leftovers "${state_names}"
 	rm -rf "${GENERATED_DIR}" "${AUTH_DIR}" "${TOFU_DIR}/terraform.tfstate" "${TOFU_DIR}/terraform.tfstate.backup" \
 		"${TOFU_DIR}/cluster.auto.json"

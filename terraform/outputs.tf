@@ -13,6 +13,6 @@ output "nodes" {
 }
 
 output "isos" {
-  description = "Uploaded ISO volume IDs."
-  value       = { for k, f in proxmox_virtual_environment_file.iso : k => f.id }
+  description = "ISO volume IDs the VMs refer to (uploaded by okd-pve)."
+  value       = { for k, iso in var.isos : k => "${var.iso_storage}:iso/${iso.file_name}" }
 }

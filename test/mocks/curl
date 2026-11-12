@@ -42,6 +42,14 @@ f=${MOCK_PVE_FIXTURES}/$(sed 's|^/||; s|/|_|g' <<<"${path}").json
 if [[ -f ${f} ]]; then
 	jq -c '{data: .}' "${f}"
 	printf '\n200'
-else
-	printf '{"data":null,"message":"no such fixture %s"}\n404' "${path}"
+	exit 0
 fi
+# ISO uploads (lib/proxmox.sh) without a fixture: the upload and every task
+# succeed, the storage has no ISO yet, deletes succeed.
+case ${path} in
+/nodes/*/storage/*/upload) printf '{"data":"UPID:mock:upload"}\n200' ;;
+/nodes/*/tasks/*/status) printf '{"data":{"status":"stopped","exitstatus":"OK"}}\n200' ;;
+/nodes/*/storage/*/content) printf '{"data":[]}\n200' ;;
+/nodes/*/storage/*/content/*) printf '{"data":null}\n200' ;;
+*) printf '{"data":null,"message":"no such fixture %s"}\n404' "${path}" ;;
+esac
