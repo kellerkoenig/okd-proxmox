@@ -78,6 +78,79 @@ nodes_reconcile_labels() {
 	else
 		log_ok "Infra labels and taints are up to date"
 	fi
+	[[ $(nodes_query '[.[] | select(.taint_infra)] | length') -gt 0 ]] && nodes_infra_daemonsets
+	return 0
+}
+
+# infra_taint_tolerations: the tolerations for the configured infra taint.
+infra_taint_tolerations() {
+	jq -cn --arg k "$(cfg '.infra.taint_key')" --arg v "$(cfg '.infra.taint_value')" --argjson e "$(cfg_json '.infra.taint_effects')" \
+		'[$e[] | {key: $k, operator: "Equal", value: $v, effect: .}]'
+}
+
+# INFRA_DS_MISPLACED_JQ: "<namespace> <pod>" of DaemonSet pods on tainted
+# infra nodes whose DaemonSet does not tolerate the taint. Input:
+# {ds: <daemonsets>, pods: <pods>, nodes: <nodes>}; $key/$value the taint.
+INFRA_DS_MISPLACED_JQ='
+	def tolerates($t): any(.[]?;
+		((.effect // "") == "" or .effect == $t.effect)
+		and (if (.operator // "Equal") == "Exists" then ((.key // "") == "" or .key == $t.key)
+		     else .key == $t.key and (.value // "") == ($t.value // "") end));
+	(.nodes.items | map({key: .metadata.name, value: [.spec.taints[]? | select(.key == $key and (.value // "") == $value)]})
+		| map(select(.value | length > 0)) | from_entries) as $tainted
+	| (.ds.items | map({key: "\(.metadata.namespace)/\(.metadata.name)", value: (.spec.template.spec.tolerations // [])}) | from_entries) as $tol
+	| .pods.items[]
+	| select(.spec.nodeName as $n | $tainted[$n] != null)
+	| (.metadata.ownerReferences // [] | map(select(.kind == "DaemonSet"))[0].name) as $owner
+	| select($owner != null)
+	| ($tol["\(.metadata.namespace)/\($owner)"]) as $t
+	| select($t != null)
+	| select(. as $p | [$tainted[$p.spec.nodeName][] as $taint | $t | tolerates($taint)] | all | not)
+	| "\(.metadata.namespace) \(.metadata.name)"'
+
+# nodes_infra_daemonsets: DaemonSet pods that ran on the infra nodes before
+# they were tainted (create taints them after the installation). The DNS
+# pods get the infra toleration through the DNS operator, so every node
+# keeps a local DNS pod. Pods of other DaemonSets that do not tolerate the
+# taint are deleted; their DaemonSet does not start them there again (the
+# NoSchedule taint alone leaves them running, "misscheduled").
+nodes_infra_daemonsets() {
+	local tol dns want ns name
+	tol=$(infra_taint_tolerations)
+	dns=$(oc get dns.operator.openshift.io default -o json 2>/dev/null) || dns=''
+	if [[ -n ${dns} ]] && ! jq -e --argjson t "${tol}" \
+		'(.spec.nodePlacement.tolerations // []) as $have | all($t[]; . as $x | any($have[]; .key == $x.key and .effect == $x.effect))' <<<"${dns}" >/dev/null; then
+		want=$(jq -c --argjson t "${tol}" '
+			((.spec.nodePlacement.tolerations // [{key: "node-role.kubernetes.io/master", operator: "Exists"}]) + $t | unique)
+			| {spec: {nodePlacement: {tolerations: .}}}' <<<"${dns}")
+		if ! dry_run_note "would add the infra taint toleration to the DNS operator (dns.operator/default)"; then
+			oc patch dns.operator.openshift.io default --type merge -p "${want}" >/dev/null
+			log_info "DNS pods tolerate the infra taint (dns.operator/default nodePlacement)"
+		fi
+	fi
+	while IFS=' ' read -r ns name; do
+		[[ -n ${name} ]] || continue
+		# DNS follows the operator change above.
+		[[ ${ns} == openshift-dns ]] && continue
+		if ! dry_run_note "would delete ${ns}/${name} (DaemonSet pod on a tainted infra node)"; then
+			oc delete pod -n "${ns}" "${name}" --wait=false >/dev/null 2>&1 &&
+				log_info "Deleted ${ns}/${name}: DaemonSet pod on a tainted infra node, its DaemonSet does not tolerate the taint"
+		fi
+	done < <(infra_misplaced_ds_pods)
+}
+
+# infra_misplaced_ds_pods: "<namespace> <pod>" of DaemonSet pods on tainted
+# infra nodes whose DaemonSet does not tolerate the taint.
+infra_misplaced_ds_pods() {
+	# Files, not arguments: the pod list exceeds the size of one argument.
+	local ds=${OKD_PVE_TMP}/infra-ds.json pods=${OKD_PVE_TMP}/infra-pods.json nodes=${OKD_PVE_TMP}/infra-nodes.json
+	if oc get daemonsets -A -o json >"${ds}" 2>/dev/null && oc get pods -A -o json >"${pods}" 2>/dev/null &&
+		oc get nodes -o json >"${nodes}" 2>/dev/null; then
+		jq -rn --slurpfile ds "${ds}" --slurpfile pods "${pods}" --slurpfile nodes "${nodes}" \
+			--arg key "$(cfg '.infra.taint_key')" --arg value "$(cfg '.infra.taint_value')" \
+			'{ds: $ds[0], pods: $pods[0], nodes: $nodes[0]} | '"${INFRA_DS_MISPLACED_JQ}"
+	fi
+	rm -f "${ds}" "${pods}" "${nodes}"
 }
 
 # ---------------------------------------------------------------------------

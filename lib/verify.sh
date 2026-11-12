@@ -189,6 +189,12 @@ vf_infra() {
 	else
 		vf PASS "Ingress router pods run on infra nodes"
 	fi
+	local misplaced
+	misplaced=$(infra_misplaced_ds_pods | awk '{ printf "%s%s/%s", (NR > 1 ? " " : ""), $1, $2 }')
+	if [[ -n ${misplaced} ]]; then
+		vf WARN "DaemonSet pods on tainted infra nodes that their DaemonSet does not tolerate (alert KubeDaemonSetMisScheduled): ${misplaced}" \
+			"Run 'okd-pve node reconcile'."
+	fi
 }
 
 # vf_mirrors: every registry_mirrors entry is in an ImageDigestMirrorSet and
