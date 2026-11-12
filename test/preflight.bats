@@ -184,6 +184,14 @@ setup() {
 	assert_output --partial "[FAIL] Addresses already answer: VIP 192.0.2.5 192.0.2.22"
 }
 
+@test "without butane the Pre-Boot render test is skipped with a hint where create puts it" {
+	tool_check() { return 1; }
+	run pf_preboot_render
+	assert_success
+	assert_output --partial "[WARN] Pre-Boot manifests not test-rendered: butane is not installed yet"
+	assert_output --partial "create offers to download butane into ${CLUSTER}/bin"
+}
+
 @test "preflight warns about a yq older than the oldest tested version" {
 	local real
 	real=$(command -v yq)
