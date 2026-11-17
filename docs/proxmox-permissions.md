@@ -126,6 +126,26 @@ PROXMOX_CSI_TOKEN="kubernetes-csi@pve!csi=<secret>"
 
 `okd-pve storage install` refuses to run when both tokens are the same.
 
+Granting the role on `/` instead (as the
+[proxmox-csi-plugin documentation](https://github.com/sergelogvinov/proxmox-csi-plugin/blob/main/docs/install.md#create-csi-role-and-user-manual)
+does) works as well, but gives the driver these privileges on every VM and
+storage. The user's password is not needed; okd-pve only uses the token.
+
+With `storage.backend: proxmox-csi`, `okd-pve preflight` checks the token:
+it must be set, differ from the installer token, be accepted by the API and
+have `Datastore.Allocate Datastore.AllocateSpace Datastore.Audit` on the
+CSI storage and `VM.Audit VM.Config.Disk` on `/vms` or the cluster's pool.
+
+To write the file without the secret ending up in the shell history:
+
+```bash
+cd clusters/<name>
+read -rsp 'CSI token secret: ' s; echo
+install -m 600 /dev/null proxmox-csi.conf
+printf 'PROXMOX_CSI_TOKEN="%s=%s"\n' 'kubernetes-csi@pve!csi' "${s}" >proxmox-csi.conf
+unset s
+```
+
 ## Removing everything again
 
 ```bash

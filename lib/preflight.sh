@@ -29,6 +29,9 @@ PF_PRIVS_NODE=(Sys.Audit)
 PF_PRIVS_BRIDGE=(SDN.Use)
 # Proxmox checks the HA API (resources, rules) on "/" only.
 PF_PRIVS_HA=(Sys.Audit Sys.Console)
+# The separate token of the Proxmox CSI driver (storage.backend: proxmox-csi).
+PF_PRIVS_CSI_VMS=(VM.Audit VM.Config.Disk)
+PF_PRIVS_CSI_STORAGE=(Datastore.Allocate Datastore.AllocateSpace Datastore.Audit)
 
 pf() {
 	local status=$1 msg=$2 hint=${3:-}
@@ -308,6 +311,83 @@ pf_proxmox() {
 	pf_cpu_model "${hosts[@]}"
 	pf_ha "${hosts[@]}"
 	pf_macs
+	[[ $(cfg '.storage.backend') == proxmox-csi ]] && pf_proxmox_csi
+	return 0
+}
+
+# _pf_csi_api <token> <endpoint> <insecure> <function> [args...]: call a
+# pve_* function with the CSI token; prints "ERROR: <reason>" on failure.
+_pf_csi_api() {
+	local token=$1 endpoint=$2 insecure=$3
+	shift 3
+	# Assignments in front of a function call last for that call only.
+	PROXMOX_VE_API_TOKEN=${token} PROXMOX_VE_ENDPOINT=${endpoint} PROXMOX_VE_INSECURE=${insecure} "$@" || {
+		echo "ERROR: ${PVE_API_ERROR:-request failed}"
+		return 1
+	}
+}
+
+# pf_proxmox_csi: the CSI driver's own token (proxmox-csi.conf or the
+# environment, like storage install reads it) works and has the privileges
+# the driver needs: create disks on the storage, attach them to the VMs.
+pf_proxmox_csi() {
+	local f=${CLUSTER_DIR}/proxmox-csi.conf token endpoint insecure pstorage pool out path want p ok
+	local -a missing=()
+	if [[ -f ${f} ]] && (((8#$(file_mode "${f}") & 8#077) != 0)); then
+		pf FAIL "${f} is readable by group/others (mode $(file_mode "${f}"))" "chmod 600 ${f}"
+		return 0
+	fi
+	read -r token endpoint insecure < <(
+		# shellcheck disable=SC1090
+		[[ -f ${f} ]] && source "${f}"
+		printf '%s %s %s\n' "${PROXMOX_CSI_TOKEN:--}" "${PROXMOX_CSI_ENDPOINT:-${PROXMOX_VE_ENDPOINT:--}}" \
+			"${PROXMOX_CSI_INSECURE:-${PROXMOX_VE_INSECURE:-false}}"
+	)
+	if [[ ${token} == - ]]; then
+		pf FAIL "Proxmox CSI: PROXMOX_CSI_TOKEN is not set" \
+			"Put PROXMOX_CSI_TOKEN=\"user@realm!tokenid=secret\" into ${f} (mode 600); see docs/proxmox-permissions.md, section 4."
+		return 0
+	fi
+	redact_register "${token}" "${token#*=}"
+	if ! [[ ${token} =~ ^[^!@[:space:]]+@[^!@[:space:]]+![^=[:space:]]+=[^[:space:]]+$ ]]; then
+		pf FAIL "Proxmox CSI: PROXMOX_CSI_TOKEN has the wrong format" "Expected user@realm!tokenid=secret."
+		return 0
+	fi
+	local installer=${PROXMOX_VE_API_TOKEN:-}
+	if [[ ${token%%=*} == "${installer%%=*}" ]]; then
+		pf FAIL "Proxmox CSI: the CSI token is the installer token (${token%%=*})" \
+			"Create a separate token with the CSI role (docs/proxmox-permissions.md, section 4)."
+		return 0
+	fi
+	if ! out=$(_pf_csi_api "${token}" "${endpoint}" "${insecure}" pve_version); then
+		pf FAIL "Proxmox CSI: token ${token%%=*} not accepted: ${out#ERROR: }" \
+			"Check the token secret in ${f} and that the token exists (pveum user token list ${token%%!*})."
+		return 0
+	fi
+	pf PASS "Proxmox CSI: token ${token%%=*} accepted"
+	pstorage=$(cfg '.storage.proxmox_csi.storage')
+	pstorage=${pstorage:-$(cfg '.proxmox.vm_storage')}
+	pool=$(pool_name)
+	# Disks: on the storage. VMs: on /vms or the pool of the cluster VMs.
+	for path in "/storage/${pstorage}" "/vms|/pool/${pool}"; do
+		if [[ ${path} == /storage/* ]]; then want="${PF_PRIVS_CSI_STORAGE[*]}"; else want="${PF_PRIVS_CSI_VMS[*]}"; fi
+		ok=0 missing=()
+		for p in ${path//|/ }; do
+			out=$(_pf_csi_api "${token}" "${endpoint}" "${insecure}" pve_permissions "${p}") || continue
+			# shellcheck disable=SC2207
+			missing=($(comm -23 <(tr ' ' '\n' <<<"${want}" | sort) <(sort <<<"${out}")))
+			((${#missing[@]})) || {
+				ok=1
+				break
+			}
+		done
+		if ((ok)); then
+			pf PASS "Proxmox CSI: privileges on ${p}"
+		else
+			pf FAIL "Proxmox CSI: token ${token%%=*} lacks ${missing[*]:-${want}} on ${path//|/ or }" \
+				"Grant the CSI role (${want}) there, see docs/proxmox-permissions.md, section 4."
+		fi
+	done
 }
 
 pf_privileges() {

@@ -225,3 +225,43 @@ YQ
 	OKD_PVE_TASK_POLL=0 run pve_iso_upload pve1 local "${BATS_TEST_TMPDIR}/agent.iso" okd-pve-small-agent-1.iso 60
 	assert_failure
 }
+
+# _csi_conf <token> [mode]: proxmox-csi.conf with the CSI token
+_csi_conf() {
+	yq_set '.storage.backend = "proxmox-csi"'
+	load_cluster
+	printf 'PROXMOX_CSI_TOKEN="%s"\n' "$1" >"${CLUSTER}/proxmox-csi.conf"
+	chmod "${2:-600}" "${CLUSTER}/proxmox-csi.conf"
+}
+
+@test "proxmox-csi: preflight checks the CSI token and its privileges" {
+	_csi_conf 'kubernetes-csi@pve!csi=66666666-7777-8888-9999-000000000000'
+	run pf_proxmox_csi
+	assert_success
+	assert_output --partial "[PASS] Proxmox CSI: token kubernetes-csi@pve!csi accepted"
+	assert_output --partial "[PASS] Proxmox CSI: privileges on /storage/local-lvm"
+	assert_output --partial "[PASS] Proxmox CSI: privileges on /pool/okd-small"
+	refute_output --partial "66666666-7777"
+	# the token reaches curl only through its config on stdin
+	run grep -c 66666666-7777 "${MOCK_LOG}"
+	assert_output 0
+	jq 'del(."/storage/local-lvm"."Datastore.Allocate")' "${FIX}/permissions.json" >"${FIX}/p.json" && mv "${FIX}/p.json" "${FIX}/permissions.json"
+	run pf_proxmox_csi
+	assert_output --partial "[FAIL] Proxmox CSI: token kubernetes-csi@pve!csi lacks Datastore.Allocate on /storage/local-lvm"
+}
+
+@test "proxmox-csi: preflight refuses a missing, open or reused token" {
+	yq_set '.storage.backend = "proxmox-csi"'
+	load_cluster
+	run pf_proxmox_csi
+	assert_output --partial "[FAIL] Proxmox CSI: PROXMOX_CSI_TOKEN is not set"
+	_csi_conf 'kubernetes-csi@pve!csi=secret' 644
+	run pf_proxmox_csi
+	assert_output --partial "proxmox-csi.conf is readable by group/others (mode 644)"
+	_csi_conf "${TEST_TOKEN}"
+	run pf_proxmox_csi
+	assert_output --partial "[FAIL] Proxmox CSI: the CSI token is the installer token"
+	_csi_conf 'no-token'
+	run pf_proxmox_csi
+	assert_output --partial "[FAIL] Proxmox CSI: PROXMOX_CSI_TOKEN has the wrong format"
+}
