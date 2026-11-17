@@ -20,7 +20,8 @@ With tainted infra nodes, the node plugins of the CSI drivers (proxmox-csi,
 ceph-csi) get the infra toleration: a node without the node plugin cannot
 mount volumes, and the provisioner fails for pods there ("no topology key
 found for node"). The test pod tolerates the infra taint as well, so the
-test also covers the infra nodes.
+test also covers the infra nodes. When the test fails, `storage install`
+shows the warnings of the test PVC and pod.
 
 ## proxmox-csi
 
