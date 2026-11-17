@@ -34,7 +34,8 @@ storage:
 - Uses its **own token** (`PROXMOX_CSI_TOKEN` in
   `<cluster>/proxmox-csi.conf`, mode 600, or in the environment). Creating it
   is described in [proxmox-permissions.md](proxmox-permissions.md). The
-  installer token is refused.
+  installer token is refused. `okd-pve preflight` checks the token and its
+  privileges before anything is installed.
 - `okd-pve` labels every node with `topology.kubernetes.io/region` and
   `topology.kubernetes.io/zone=<Proxmox node>`. After migrating a VM to
   another host, run `okd-pve storage install` again to update the labels.
