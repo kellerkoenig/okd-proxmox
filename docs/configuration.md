@@ -185,9 +185,9 @@ See [storage.md](storage.md).
 | `default` | `false` | mark as default class |
 | `test` | `true` | verify with a test PVC |
 | `test_image` | `registry.access.redhat.com/ubi9/ubi-minimal:latest` | image of the test pod |
-| `proxmox_csi.{version,region,storage,fstype,cache,ssd}` | `v0.21.0`, cluster name, `vm_storage`, `xfs`, `none`, `true` | |
-| `ceph.{version,cluster_id,monitors,pool,user,fstype}` | `v3.18.1`, –, –, –, –, `xfs` | key in `ceph-csi.conf` |
-| `lso.{node_groups,volume_mode,fstype,odf}` | all with data disks, `Filesystem`, `xfs`, `false` | |
+| `proxmox_csi.{version,region,storage,fstype,cache,ssd}` | `v0.21.0`, cluster name, `vm_storage`, `ext4`, `none`, `true` | `fstype`: see [storage.md](storage.md#filesystem) |
+| `ceph.{version,cluster_id,monitors,pool,user,fstype}` | `v3.18.1`, –, –, –, –, `ext4` | key in `ceph-csi.conf` |
+| `lso.{node_groups,volume_mode,fstype,odf}` | all with data disks, `Filesystem`, `ext4`, `false` | |
 | `nfs.{server,path,image,archive_on_delete}` | –, –, `nfs-subdir-external-provisioner:v4.0.2`, `true` | |
 
 ### registry_mirrors
