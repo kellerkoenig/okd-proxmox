@@ -23,6 +23,29 @@ found for node"). The test pod tolerates the infra taint as well, so the
 test also covers the infra nodes. When the test fails, `storage install`
 shows the warnings of the test PVC and pod.
 
+## Filesystem
+
+`fstype` (proxmox-csi, ceph, lso) is the filesystem of new volumes; the
+default is `ext4`, like the default StorageClasses of vSphere CSI, AWS EBS
+and ODF RBD. Reasons:
+
+- A restored copy of an xfs volume cannot be mounted next to the original
+  on the same host (same filesystem UUID; xfs needs `-o nouuid`). ext4 has
+  no such restriction, which matters when you search a backup.
+- A recent `mkfs.xfs` enables features (`bigtime`, `inobtcount`) that older
+  kernels refuse to mount, for example on a rescue system.
+- `mkfs.xfs` (xfsprogs 5.19 and newer) refuses volumes below 300 MiB; small
+  PVCs, as some operators create them, then stay unformatted.
+- `fsck.ext4`, `tune2fs` and `resize2fs` are on every Linux system.
+
+`xfs` is a little faster with very large files and many parallel writers,
+and some databases recommend it (MongoDB). For such volumes add a second
+StorageClass with `csi.storage.k8s.io/fstype: xfs`.
+
+The parameters of a StorageClass cannot be changed. When `fstype` (or
+another parameter) changes, `okd-pve storage install` deletes the class and
+creates it again; volumes that already exist keep their filesystem.
+
 ## proxmox-csi
 
 [sergelogvinov/proxmox-csi-plugin](https://github.com/sergelogvinov/proxmox-csi-plugin)
@@ -35,7 +58,7 @@ storage:
   proxmox_csi:
     storage: local-lvm     # Proxmox storage for the volumes (default: proxmox.vm_storage)
     region: ""             # default: cluster name
-    fstype: xfs
+    fstype: ext4           # see "Filesystem" below
 ```
 
 - Uses its **own token** (`PROXMOX_CSI_TOKEN` in
@@ -93,7 +116,7 @@ storage:
   lso:
     node_groups: [worker]   # default: every worker group with data_disks
     volume_mode: Filesystem
-    fstype: xfs
+    fstype: ext4
     odf: false              # true: ODF on top (block mode, needs >= 3 disks on 3 nodes)
 ```
 

@@ -134,11 +134,13 @@ storage:
   default: false
   test: true
   test_image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+  # Filesystem of new volumes (proxmox-csi, ceph, lso): ext4 by default, see
+  # docs/storage.md ("Filesystem"). Existing volumes keep theirs.
   proxmox_csi:
     version: v0.21.0
     region: ""
     storage: ""
-    fstype: xfs
+    fstype: ext4
     cache: none
     ssd: true
   ceph:
@@ -147,11 +149,11 @@ storage:
     monitors: []
     pool: ""
     user: ""
-    fstype: xfs
+    fstype: ext4
   lso:
     node_groups: []
     volume_mode: Filesystem
-    fstype: xfs
+    fstype: ext4
     odf: false
   nfs:
     server: ""

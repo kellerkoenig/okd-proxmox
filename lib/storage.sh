@@ -29,9 +29,12 @@ storage_emit() {
 }
 
 storage_apply_queued() {
-	local f
+	local f sc
 	for f in "${STORAGE_MANIFESTS}"/*.yaml; do
 		[[ -f ${f} ]] || continue
+		while IFS= read -r sc; do
+			[[ -n ${sc} ]] && storage_sc_recreate_if_changed "${sc}"
+		done < <(yq -o json -I0 'select(.kind == "StorageClass")' "${f}")
 		if ((DRY_RUN)); then
 			yq -N '"      " + .kind + "/" + .metadata.name + (.metadata.namespace // "" | select(. != "") | " -n " + .)' "${f}" |
 				sed 's/^/    [dry-run] would apply /'
@@ -40,6 +43,26 @@ storage_apply_queued() {
 		fi
 	done
 	rm -f "${STORAGE_MANIFESTS}"/*.yaml
+}
+
+# storage_sc_recreate_if_changed <storageclass-json-or-yaml>: the provisioner,
+# parameters, reclaimPolicy and volumeBindingMode of a StorageClass cannot be
+# changed. When the live class differs in one of them (e.g. a new fstype),
+# delete it so the following apply creates it again. Existing volumes keep
+# what they were created with; the default flag is set again afterwards.
+storage_sc_recreate_if_changed() {
+	local want=$1 name live norm
+	norm='{provisioner, parameters: ((.parameters // {}) | map_values(tostring)),
+		reclaimPolicy: (.reclaimPolicy // "Delete"), volumeBindingMode: (.volumeBindingMode // "Immediate")}'
+	name=$(yq -r '.metadata.name' <<<"${want}")
+	live=$(oc get storageclass "${name}" -o json 2>/dev/null) || return 0
+	[[ -n ${live} ]] || return 0
+	[[ $(jq -cS "${norm}" <<<"${live}") != "$(yq -o json -I0 '.' <<<"${want}" | jq -cS "${norm}")" ]] || return 0
+	if dry_run_note "would delete and create StorageClass ${name} again (changed parameters)"; then
+		return 0
+	fi
+	oc delete storageclass "${name}" >/dev/null
+	log_info "StorageClass ${name}: parameters changed, deleted and created again (existing volumes keep their settings)"
 }
 
 infra_tolerations_flow() {
@@ -99,10 +122,13 @@ storage_finish() {
 		elif ((DRY_RUN)); then
 			dry_run_note "would create StorageClass ${sc}-retain (reclaimPolicy Retain)"
 		else
-			oc get storageclass "${sc}" -o json | jq --arg n "${sc}-retain" '
+			local twin
+			twin=$(oc get storageclass "${sc}" -o json | jq -c --arg n "${sc}-retain" '
 				{apiVersion, kind, metadata: {name: $n, labels: {"okd-pve/managed": "true"}},
 				 provisioner, parameters, allowVolumeExpansion, volumeBindingMode, mountOptions,
-				 reclaimPolicy: "Retain"} | with_entries(select(.value != null))' | oc apply -f - >/dev/null
+				 reclaimPolicy: "Retain"} | with_entries(select(.value != null))')
+			storage_sc_recreate_if_changed "${twin}"
+			oc apply -f - <<<"${twin}" >/dev/null
 			log_ok "StorageClass ${sc}-retain (reclaimPolicy Retain) for data that must survive PVC deletion"
 		fi
 	fi

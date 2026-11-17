@@ -84,3 +84,31 @@ _manifest() {
 	assert_output --partial "WARN PersistentVolumeClaim okd-pve-test: ProvisioningFailed: error generating accessibility requirements: no topology key found for node small-worker-0"
 	refute_output --partial "WaitForFirstConsumer"
 }
+
+@test "a StorageClass with changed parameters is deleted so it can be created again" {
+	export OC_CALLS=${BATS_TEST_TMPDIR}/oc-calls
+	: >"${OC_CALLS}"
+	oc() {
+		case "$*" in
+		"get storageclass okd-pve -o json")
+			echo '{"metadata": {"name": "okd-pve"}, "provisioner": "csi.proxmox.sinextra.dev", "reclaimPolicy": "Delete",
+				"volumeBindingMode": "WaitForFirstConsumer", "parameters": {"csi.storage.k8s.io/fstype": "xfs", "ssd": "true"}}'
+			;;
+		"get storageclass "*) return 1 ;;
+		*) echo "$*" >>"${OC_CALLS}" ;;
+		esac
+	}
+	local sc='{"kind": "StorageClass", "metadata": {"name": "okd-pve"}, "provisioner": "csi.proxmox.sinextra.dev",
+		"volumeBindingMode": "WaitForFirstConsumer", "parameters": {"csi.storage.k8s.io/fstype": "ext4", "ssd": true}}'
+	run storage_sc_recreate_if_changed "${sc}"
+	assert_output --partial "StorageClass okd-pve: parameters changed, deleted and created again"
+	assert_equal "$(cat "${OC_CALLS}")" "delete storageclass okd-pve"
+	# unchanged (ssd true vs "true" is the same): nothing happens
+	: >"${OC_CALLS}"
+	run storage_sc_recreate_if_changed "${sc//ext4/xfs}"
+	refute_output
+	assert_equal "$(cat "${OC_CALLS}")" ""
+	# a class that does not exist yet is left to the apply
+	run storage_sc_recreate_if_changed '{"kind": "StorageClass", "metadata": {"name": "new"}, "provisioner": "x"}'
+	refute_output
+}
