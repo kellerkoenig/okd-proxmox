@@ -71,3 +71,16 @@ _manifest() {
 		'[{"key":"node.kubernetes.io/disk-pressure","operator":"Exists","effect":"NoSchedule"},{"key":"node-role.kubernetes.io/infra","operator":"Equal","value":"reserved","effect":"NoSchedule"}]'
 	assert_equal "$(_manifest | yq -r 'select(.kind == "Deployment") | .spec.template.spec.tolerations')" null
 }
+
+@test "a failed storage test shows the warnings of the test PVC and pod" {
+	oc() {
+		[[ "$*" == "get events -n okd-pve-storage-test -o json" ]] || return 0
+		jq -n '{items: [
+			{type: "Normal", reason: "WaitForFirstConsumer", message: "waiting", involvedObject: {kind: "PersistentVolumeClaim", name: "okd-pve-test"}, lastTimestamp: "2026-11-13T08:00:00Z"},
+			{type: "Warning", reason: "ProvisioningFailed", message: "error generating accessibility requirements: no topology key found for node small-worker-0",
+			 involvedObject: {kind: "PersistentVolumeClaim", name: "okd-pve-test"}, lastTimestamp: "2026-11-13T08:01:00Z"}]}'
+	}
+	run storage_test_reasons okd-pve-storage-test
+	assert_output --partial "WARN PersistentVolumeClaim okd-pve-test: ProvisioningFailed: error generating accessibility requirements: no topology key found for node small-worker-0"
+	refute_output --partial "WaitForFirstConsumer"
+}

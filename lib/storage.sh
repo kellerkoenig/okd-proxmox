@@ -150,6 +150,7 @@ storage_test_pvc() {
 			[[ ${phase} == Succeeded ]] && break
 			if [[ ${phase} == Failed ]] || ((SECONDS - start > 300)); then
 				oc describe pvc,pod -n "${ns}" 2>&1 | redact_stream --log "${LOG_FILE}"
+				storage_test_reasons "${ns}"
 				rc=1
 				break
 			fi
@@ -158,6 +159,20 @@ storage_test_pvc() {
 	fi
 	oc delete namespace "${ns}" --ignore-not-found --wait=false >/dev/null 2>&1 || true
 	return "${rc}"
+}
+
+# storage_test_reasons <namespace>: the warnings of the test PVC and pod
+# (scheduling, provisioning, attaching), most recent last, so the cause shows
+# up on the terminal, e.g. "did not have enough free storage" when the CSI
+# controller cannot reach its storage API.
+storage_test_reasons() {
+	local line
+	while IFS= read -r line; do
+		[[ -n ${line} ]] && log_warn "${line}"
+	done < <(oc get events -n "$1" -o json 2>/dev/null | jq -r '
+		[.items[] | select(.type == "Warning")] | sort_by(.lastTimestamp // .eventTime // "")
+		| map("\(.involvedObject.kind) \(.involvedObject.name): \(.reason): \(.message | gsub("\\s+"; " ") | .[0:220])")
+		| unique | .[-4:][]' 2>/dev/null)
 }
 
 storage_ensure_namespace() {
