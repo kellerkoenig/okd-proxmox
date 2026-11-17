@@ -194,15 +194,20 @@ EOF
 }
 
 # storage_fetch_manifest <url> <namespace>: download an upstream manifest and
-# move namespaced objects (and binding subjects) into <namespace>.
+# move namespaced objects (and binding subjects) into <namespace>. With
+# tainted infra nodes, DaemonSets (the CSI node plugins) also tolerate the
+# infra taint: a node without the node plugin cannot mount volumes, and the
+# provisioner fails for pods there ("no topology key found for node").
 storage_fetch_manifest() {
-	local url=$1 ns=$2 tmp
+	local url=$1 ns=$2 tmp tol='[]'
 	tmp=$(mktemp "${OKD_PVE_TMP}/upstream.XXXXXX")
 	fetch "${url}" "${tmp}"
-	NS=${ns} yq '
+	[[ $(nodes_query '[.[] | select(.taint_infra)] | length') -gt 0 ]] && tol=$(infra_tolerations_flow)
+	NS=${ns} TOL=${tol} yq '
 		select(.kind != "Namespace")
 		| (select(.kind | test("^(ClusterRole|ClusterRoleBinding|CSIDriver|StorageClass)$") | not) | .metadata.namespace) = strenv(NS)
 		| (.subjects[]? | select(.kind == "ServiceAccount") | .namespace) = strenv(NS)
+		| (select(.kind == "DaemonSet") | .spec.template.spec.tolerations) |= ((. // []) + (strenv(TOL) | from_json))
 	' "${tmp}" | storage_emit
 }
 
