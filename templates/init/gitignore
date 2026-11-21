@@ -12,4 +12,5 @@ logs/
 tofu/
 .tmp/
 .cache/
+backups/
 *.bak

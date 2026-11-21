@@ -62,6 +62,8 @@ source "${OKD_PVE_ROOT}/lib/hooks.sh"
 source "${OKD_PVE_ROOT}/lib/verify.sh"
 # shellcheck source=lib/storage.sh
 source "${OKD_PVE_ROOT}/lib/storage.sh"
+# shellcheck source=lib/etcd.sh
+source "${OKD_PVE_ROOT}/lib/etcd.sh"
 # shellcheck source=lib/tui.sh
 source "${OKD_PVE_ROOT}/lib/tui.sh"
 
@@ -88,6 +90,12 @@ Commands:
   node reconcile                      Re-apply infra labels and taints
   storage install                     Deploy the configured storage backend (CSI)
   mirrors apply                       Apply registry_mirrors to a running cluster
+  etcd list                           etcd backups in the cluster and local copies (hook 56-etcd-backup)
+  etcd backup                         Take an etcd backup now
+  etcd fetch [name | --latest]        Copy a backup to <dir>/backups/etcd
+  etcd restore <name | --latest> [--recovery-host NODE] [--force]
+                                      Restore the cluster state from a backup (SSH to the control plane)
+  etcd restore --continue             Finish a restore after fixing a failed cluster-restore.sh
   hooks list                          Show Post-Install hooks and last results
   hooks run [name | --from name]      Run hooks (all, one, or from one on)
   kubeconfig [--export]               Print the kubeconfig path
@@ -621,7 +629,7 @@ main() {
 	local sub=${1:-}
 	case ${cmd} in
 	preflight | create | verify | destroy | kubeconfig | logs) ;;
-	node | storage | hooks | mirrors) [[ -n ${sub} ]] || die "${EXIT_CONFIG}" "${cmd} needs a subcommand." "okd-pve help" ;;
+	node | storage | hooks | mirrors | etcd) [[ -n ${sub} ]] || die "${EXIT_CONFIG}" "${cmd} needs a subcommand." "okd-pve help" ;;
 	*) usage >&2 && die "${EXIT_CONFIG}" "Unknown command: ${cmd}" ;;
 	esac
 	cluster_context_load "${cmd}${sub:+-${sub}}"
@@ -655,6 +663,17 @@ main() {
 		case ${sub} in
 		apply) cmd_mirrors_apply "$@" ;;
 		*) die "${EXIT_CONFIG}" "Unknown mirrors subcommand: ${sub}" "okd-pve mirrors apply" ;;
+		esac
+		;;
+	etcd)
+		shift
+		cluster_api_init
+		case ${sub} in
+		list) cmd_etcd_list "$@" ;;
+		backup) cmd_etcd_backup "$@" ;;
+		fetch) cmd_etcd_fetch "$@" ;;
+		restore) cmd_etcd_restore "$@" ;;
+		*) die "${EXIT_CONFIG}" "Unknown etcd subcommand: ${sub}" "okd-pve etcd list|backup|fetch|restore" ;;
 		esac
 		;;
 	hooks)

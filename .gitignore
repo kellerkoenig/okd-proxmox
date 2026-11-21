@@ -18,3 +18,4 @@ proxmox-csi.conf
 ceph-csi.conf
 pull-secret.json
 *.bak
+backups/

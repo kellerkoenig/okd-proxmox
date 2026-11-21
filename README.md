@@ -83,8 +83,9 @@ Please read this before you plan with it.
   `okd-pve node add` / `node remove`.
 - **No disconnected installation.** The cluster needs access to the image
   registries (quay.io, and registry.redhat.io when you use Red Hat catalogs).
-- **No cluster upgrades, no etcd backup/restore.** Use the regular OKD
-  mechanisms for that.
+- **No cluster upgrades.** Use the regular OKD mechanisms for that. etcd
+  backups and the restore are covered: hook `56-etcd-backup` and
+  `okd-pve etcd` ([docs/etcd-backup.md](docs/etcd-backup.md)).
 - One cluster per cluster directory. IPv4 only, one NIC per node.
 - OKD 4.17 or newer (scaling uses `oc adm node-image`, available from 4.17).
 - Single-node clusters use `platform: none` (the agent installer does not
@@ -241,6 +242,8 @@ deployment automation.
 | `storage install` | Deploy the configured storage backend |
 | `mirrors apply` | Apply `registry_mirrors` (pull-through cache) to a running cluster: mirror sets, pull secret ([docs/registry-mirrors.md](docs/registry-mirrors.md)) |
 | `hooks list` / `hooks run [name \| --from name]` | Show hooks with last result / run all, one, or from one on |
+| `etcd list` / `etcd backup` / `etcd fetch [name \| --latest]` | etcd backups of hook `56-etcd-backup`: list them, take one now, copy one to `<cluster>/backups/etcd` |
+| `etcd restore <name \| --latest> [--recovery-host NODE]` / `etcd restore --continue` | Restore the cluster state from a backup over SSH, following the documented procedure; `--continue` finishes a restore that stopped ([docs/etcd-backup.md](docs/etcd-backup.md)) |
 | `kubeconfig [--export]`, `logs [--installer] [-f]`, `tui`, `version` | |
 
 Global flags: `--dir`, `--config`, `--hooks-dir`, `--dry-run` (works for

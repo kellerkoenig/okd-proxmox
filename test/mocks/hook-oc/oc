@@ -38,6 +38,13 @@ case ${args} in
 *" get catalogsource "*) echo "READY" ;;
 *" get operatorhub cluster "*) echo '{"spec":{"sources":[{"name":"community-operators","disabled":true}]}}' ;;
 *" get deployment router-default "*) echo '{"spec":{"replicas":2},"status":{"updatedReplicas":2,"availableReplicas":2}}' ;;
+*" get storageclass -o json "*)
+	jq -n '{items: [{metadata: {name: "example-sc", annotations: {"storageclass.kubernetes.io/is-default-class": "true"}}},
+		{metadata: {name: "example-sc-retain"}}]}'
+	;;
+*" get proxy cluster "*) echo '{"status":{"httpProxy":"http://proxy.example.com:3128","noProxy":".example.com"}}' ;;
+*" get istag cli:latest "*) echo "quay.io/okd/scos-content@sha256:0000000000000000000000000000000000000000000000000000000000000000" ;;
+*" get job "*" jsonpath"*) echo "Complete True" ;;
 *" get "*" -o jsonpath"*) echo "" ;;
 *" get "*" -o json "*) echo '{"spec":{},"metadata":{"name":"x"}}' ;;
 *) ;;
