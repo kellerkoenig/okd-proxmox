@@ -94,3 +94,5 @@ hooks:
     CRO_CPU_PERCENT: "25"
     ETCD_BACKUP_TIMEZONE: Europe/Berlin
     ETCD_BACKUP_KEEP: "14"
+    GITOPS_REPO_URL: https://git.example.com/platform/clusters.git
+    GITOPS_CLUSTER_ADMIN: "true"

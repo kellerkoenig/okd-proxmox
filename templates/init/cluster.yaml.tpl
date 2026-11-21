@@ -147,8 +147,11 @@ hooks:
     - 30-ingress-controller
     - 40-monitoring
     # - 56-etcd-backup                # daily etcd backup on a PVC (needs storage.backend)
+    # - 60-gitops                     # Argo CD (GitOps operator), optional bootstrap repository
   skip: []
   env:
     OKD_PVE_CATALOG_PROFILE: okderators   # or: redhat (needs a Red Hat pull secret)
     INGRESS_REPLICAS: "2"
     # ETCD_BACKUP_TIMEZONE: Europe/Berlin # schedule "15 2 * * *" in this time zone
+    # GITOPS_REPO_URL: https://git.example.com/platform/clusters.git
+    # Credentials only from the environment: GITOPS_REPO_USERNAME/GITOPS_REPO_PASSWORD

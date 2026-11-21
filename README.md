@@ -221,6 +221,8 @@ See [docs/hooks.md](docs/hooks.md).
 
 `okd-pve` covers platform configuration and operator deployment. Application
 deployments stay with your deployment automation (Puppet, Argo CD, ...).
+Hook `60-gitops` hands over to Argo CD: it installs the GitOps operator and,
+optionally, one bootstrap Application pointing at your repository.
 The boundary is where an operator is installed and given its base
 configuration. The configuration *inside* it, such as concrete log
 forwarding targets, issuers or namespace policies, belongs to the
