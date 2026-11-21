@@ -146,3 +146,34 @@ SH
 	assert_failure 1
 	assert_output --partial "ETCD_BACKUP_KEEP must be a positive number"
 }
+
+@test "the GitOps hook without a repository installs Argo CD only" {
+	export OKD_PVE_CATALOG_PROFILE=redhat
+	run_hook 60-gitops.sh
+	assert_output --partial "No GITOPS_REPO_URL set"
+	run grep -c 'kind: Application$' "${MOCK_LOG}"
+	assert_output 0
+	run grep -o 'patch gitopsservice/cluster --type merge -p .*' "${MOCK_LOG}"
+	assert_output --partial '"runOnInfra":true'
+}
+
+@test "the GitOps hook bootstraps an Application and keeps the credentials out of the output" {
+	export OKD_PVE_CATALOG_PROFILE=redhat GITOPS_REPO_URL=https://git.example.com/platform/clusters.git
+	export GITOPS_REPO_USERNAME=deploy GITOPS_REPO_PASSWORD=s3cr3t-t0ken GITOPS_PRUNE=true
+	run_hook 60-gitops.sh
+	assert_success
+	refute_output --partial "s3cr3t-t0ken"
+	assert_output --partial "Application bootstrap: Synced"
+	run tr -d ' \n\t' <"${MOCK_LOG}"
+	assert_output --partial '"argocd.argoproj.io/secret-type":"repository"'
+	run cat "${MOCK_LOG}"
+	assert_output --partial "path: clusters/small"
+	assert_output --partial "prune: true"
+}
+
+@test "the GitOps hook needs a key file for ssh repositories" {
+	export GITOPS_REPO_URL=git@git.example.com:platform/clusters.git
+	run "${OKD_PVE_ROOT}/hooks/60-gitops.sh"
+	assert_failure 1
+	assert_output --partial "GITOPS_REPO_SSH_KEY_FILE is not set"
+}

@@ -131,12 +131,58 @@ versions; `@default` follows the catalog.
 | `54-operator-web-terminal` | Web Terminal + idle timeout |
 | `55-eventrouter` | event router (plain manifests, no operator exists) |
 | `56-etcd-backup` | daily etcd backup (CronJob on a control plane node, `cluster-backup.sh`) on a PVC, alerts for failed or missing backups; see [etcd-backup.md](etcd-backup.md) |
+| `60-gitops` | GitOps operator (Argo CD) on the infra nodes and, with `GITOPS_REPO_URL`, one bootstrap Application ("app of apps"); see [GitOps bootstrap](#gitops-bootstrap-60-gitops) |
 | `80-oauth-oidc.sh.example` | pattern: OIDC identity provider |
 | `81-inventory-serviceaccount.sh.example` | pattern: read-only service account + token for an inventory |
-| `82-gitops-bootstrap.sh.example` | pattern: GitOps operator + bootstrap Application |
 | `83-grafana-datasource-token.sh.example` | pattern: `cluster-monitoring-view` service account + long-lived token for an external Grafana (Thanos Querier data source) |
 
 Each hook documents its settings in its header.
+
+## GitOps bootstrap (60-gitops)
+
+`okd-pve` builds the platform; the applications come from Git. Hook
+`60-gitops` is the handover:
+
+1. installs the GitOps operator (key `GITOPS` of the catalog profile:
+   `openshift-gitops-operator` from `redhat-operators`, `gitops-operator`
+   from OKDerators) with its default Argo CD instance `openshift-gitops`,
+2. moves that instance to the infra nodes (GitopsService `runOnInfra`, with
+   tolerations for tainted infra nodes),
+3. with `GITOPS_REPO_URL`: a repository Secret and one Application
+   `bootstrap` that syncs `clusters/<cluster name>` of that repository.
+   Everything else (more Applications, ApplicationSets, projects, RBAC) lives
+   in the repository: the "app of apps" pattern.
+
+Without `GITOPS_REPO_URL` the hook only installs Argo CD; add the
+repository later and run `okd-pve hooks run 60-gitops` again.
+
+```yaml
+# cluster.yaml
+hooks:
+  builtin: [..., 60-gitops]
+  env:
+    OKD_PVE_CATALOG_PROFILE: redhat
+    GITOPS_REPO_URL: https://git.example.com/platform/clusters.git
+    GITOPS_REVISION: main              # default: HEAD, the default branch
+    GITOPS_CLUSTER_ADMIN: "true"       # Argo CD manages namespaces, CRDs, operators
+    GITOPS_REPO_CA_FILE: git-ca.pem    # CA of an internal Git server, relative to the cluster dir
+```
+
+```bash
+# credentials only from the environment (read-only deploy token or deploy key)
+export GITOPS_REPO_USERNAME=okd-deploy GITOPS_REPO_PASSWORD=$(pass show okd/git-deploy-token)
+okd-pve hooks run 60-gitops
+```
+
+For an ssh URL (`git@git.example.com:platform/clusters.git`) set
+`GITOPS_REPO_SSH_KEY_FILE` to the private deploy key and
+`GITOPS_REPO_KNOWN_HOSTS` to the output of `ssh-keyscan git.example.com`.
+`GITOPS_AUTO_SYNC=false` leaves syncing to you, `GITOPS_PRUNE=true` lets
+Argo CD delete what was removed from Git. All settings are in the header of
+[hooks/60-gitops.sh](../hooks/60-gitops.sh).
+
+An unreachable or empty repository is a warning (exit 2), not a failure:
+Argo CD keeps retrying, and the Application shows the reason.
 
 ## Building a private hooks directory
 

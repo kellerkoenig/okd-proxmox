@@ -45,6 +45,8 @@ case ${args} in
 *" get proxy cluster "*) echo '{"status":{"httpProxy":"http://proxy.example.com:3128","noProxy":".example.com"}}' ;;
 *" get istag cli:latest "*) echo "quay.io/okd/scos-content@sha256:0000000000000000000000000000000000000000000000000000000000000000" ;;
 *" get job "*" jsonpath"*) echo "Complete True" ;;
+*" get gitopsservices.pipelines.openshift.io "*" -o name "*) echo "gitopsservice.pipelines.openshift.io/cluster" ;;
+*" get application "*"sync.status"*) echo "Synced" ;;
 *" get "*" -o jsonpath"*) echo "" ;;
 *" get "*" -o json "*) echo '{"spec":{},"metadata":{"name":"x"}}' ;;
 *) ;;
