@@ -5,7 +5,8 @@
 # OKD_PVE_VERSION, build a source tarball with SHA256SUMS and build
 # provenance, and attach them to the GitHub release. An existing release
 # (with your own notes) only gets the assets; otherwise a draft release with
-# generated notes is created for you to edit and publish.
+# generated notes is created for you to edit and publish. The container
+# image goes to ghcr.io with its build provenance.
 name: Release
 
 on:
@@ -73,3 +74,84 @@ jobs:
             gh release create "${TAG}" --draft --verify-tag --generate-notes --title "okd-pve ${TAG#v}"
           fi
           gh release upload "${TAG}" dist/* --clobber
+
+  image:
+    name: container image
+    needs: release
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write # push to ghcr.io
+      id-token: write # sign the build provenance
+      attestations: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build and push
+        id: push
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.actor }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          image=ghcr.io/${REPO,,}
+          ver=${TAG#v}
+          docker build -f Containerfile --build-arg "OKD_PVE_VERSION=${ver}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" -t "${image}:${ver}" -t "${image}:latest" .
+          docker run --rm "${image}:${ver}" version
+          echo "${GH_TOKEN}" | docker login ghcr.io -u "${ACTOR}" --password-stdin
+          docker push "${image}:${ver}"
+          docker push "${image}:latest"
+          digest=$(docker inspect --format '{{index .RepoDigests 0}}' "${image}:${ver}")
+          echo "name=${image}" >>"${GITHUB_OUTPUT}"
+          echo "digest=${digest#*@}" >>"${GITHUB_OUTPUT}"
+
+      - name: Build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: ${{ steps.push.outputs.name }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      # Docker Hub as a second registry, for people who look for images
+      # there. Set the repository variables DOCKERHUB_IMAGE (e.g.
+      # kellerkoenig/okd-proxmox) and DOCKERHUB_USERNAME and the secret
+      # DOCKERHUB_TOKEN (access token with "Read & Write"); without
+      # DOCKERHUB_IMAGE this is skipped.
+      - name: Push to Docker Hub
+        if: ${{ vars.DOCKERHUB_IMAGE != '' }}
+        env:
+          HUB_IMAGE: ${{ vars.DOCKERHUB_IMAGE }}
+          HUB_USER: ${{ vars.DOCKERHUB_USERNAME }}
+          HUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          SRC: ${{ steps.push.outputs.name }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ver=${TAG#v}
+          hub=docker.io/${HUB_IMAGE}
+          docker tag "${SRC}:${ver}" "${hub}:${ver}"
+          docker tag "${SRC}:${ver}" "${hub}:latest"
+          echo "${HUB_TOKEN}" | docker login docker.io -u "${HUB_USER}" --password-stdin
+          docker push "${hub}:${ver}"
+          docker push "${hub}:latest"
+          pushed=$(docker inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "${hub}:${ver}" | grep "^${hub}@" | cut -d@ -f2)
+          if [[ ${pushed} != "${DIGEST}" ]]; then
+            echo "::error::Docker Hub digest ${pushed} differs from ghcr.io ${DIGEST}"
+            exit 1
+          fi
+
+      - name: Build provenance (Docker Hub)
+        if: ${{ vars.DOCKERHUB_IMAGE != '' }}
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-name: index.docker.io/${{ vars.DOCKERHUB_IMAGE }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      - name: Docker Hub skipped
+        if: ${{ vars.DOCKERHUB_IMAGE == '' }}
+        run: echo "::notice::Repository variable DOCKERHUB_IMAGE is not set; the image was pushed to ghcr.io only."
