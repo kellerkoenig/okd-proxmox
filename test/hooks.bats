@@ -164,3 +164,13 @@ hook() {
 		assert [ ! -x "${f}" ]
 	done
 }
+
+@test "hooks_collect succeeds without an external hooks directory (pipefail)" {
+	hook "${BUILTIN}" 30-c.sh 0
+	yq_set '.hooks.dir = ""'
+	load_cluster
+	run hooks_collect
+	assert_success
+	run hook_selected 30-c
+	assert_success
+}

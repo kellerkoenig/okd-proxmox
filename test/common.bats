@@ -86,7 +86,8 @@ setup() {
 	assert_output "a, b, c"
 	SECONDS=3725
 	run elapsed 0
-	assert_output "1h02m05s"
+	# SECONDS keeps counting: a second boundary may pass in between
+	assert_output --regexp '^1h02m0[56]s$'
 }
 
 @test "dry_run_note only acts in dry-run mode" {
