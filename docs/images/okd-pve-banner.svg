@@ -15,7 +15,7 @@
 <text x="60" y="166" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', monospace" font-size="76" font-weight="bold" fill="#e6e9ee" textLength="300" lengthAdjust="spacingAndGlyphs">okd<tspan fill="#8b95a3">-</tspan><tspan fill="#f0a25a">pve</tspan></text>
 <rect x="376" y="112" width="34" height="58" rx="3" fill="#e6e9ee" fill-opacity="0.85"/>
 <text x="64" y="210" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="23" fill="#e6e9ee">OKD clusters on Proxmox VE</text>
-<text x="64" y="240" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#8b95a3">reproducible <tspan fill="#5b6573">·</tspan> configured when the run ends <tspan fill="#5b6573">·</tspan> rebuilt in a few hours</text>
+<text x="64" y="240" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#8b95a3">reproducible <tspan fill="#5b6573">·</tspan> configured when the run ends <tspan fill="#5b6573">·</tspan> rebuilt in about an hour</text>
 <rect x="64" y="270" width="24" height="8" rx="4" fill="#6fb3ff"/>
 <rect x="94" y="270" width="24" height="8" rx="4" fill="#71b5f6"/>
 <rect x="124" y="270" width="24" height="8" rx="4" fill="#74b8ed"/>
