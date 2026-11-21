@@ -235,15 +235,20 @@ EOF
 }
 
 # storage_fetch_manifest <url> <namespace>: download an upstream manifest and
-# move namespaced objects (and binding subjects) into <namespace>. With
-# tainted infra nodes, DaemonSets (the CSI node plugins) also tolerate the
-# infra taint: a node without the node plugin cannot mount volumes, and the
-# provisioner fails for pods there ("no topology key found for node").
+# move namespaced objects (and binding subjects) into <namespace>.
+# DaemonSets (the CSI node plugins) also tolerate the control plane taint
+# and, with tainted infra nodes, the infra taint: a node without the node
+# plugin cannot mount volumes, and the provisioner fails for pods there ("no
+# topology key found for node"). Pods on control plane nodes with a volume:
+# the etcd backup (hook 56-etcd-backup).
+STORAGE_CONTROL_PLANE_TOLERATIONS='[{"key":"node-role.kubernetes.io/master","operator":"Exists","effect":"NoSchedule"},{"key":"node-role.kubernetes.io/control-plane","operator":"Exists","effect":"NoSchedule"}]'
 storage_fetch_manifest() {
-	local url=$1 ns=$2 tmp tol='[]'
+	local url=$1 ns=$2 tmp tol=${STORAGE_CONTROL_PLANE_TOLERATIONS}
 	tmp=$(mktemp "${OKD_PVE_TMP}/upstream.XXXXXX")
 	fetch "${url}" "${tmp}"
-	[[ $(nodes_query '[.[] | select(.taint_infra)] | length') -gt 0 ]] && tol=$(infra_tolerations_flow)
+	if [[ $(nodes_query '[.[] | select(.taint_infra)] | length') -gt 0 ]]; then
+		tol=$(jq -c --argjson infra "$(infra_tolerations_flow)" '. + $infra' <<<"${tol}")
+	fi
 	NS=${ns} TOL=${tol} yq '
 		select(.kind != "Namespace")
 		| (select(.kind | test("^(ClusterRole|ClusterRoleBinding|CSIDriver|StorageClass)$") | not) | .metadata.namespace) = strenv(NS)
@@ -546,5 +551,103 @@ EOF
 		run_logged oc -n "${ns}" rollout status deployment/nfs-subdir-provisioner --timeout=300s ||
 			die "${EXIT_ERROR}" "NFS provisioner did not become ready." \
 				"oc -n ${ns} describe pod; check that the nodes may mount ${server}:${path}."
+	fi
+}
+
+# ---------------------------------------------------------------------------
+# Proxmox CSI volumes on destroy
+# ---------------------------------------------------------------------------
+
+# Proxmox deletes only the disks a VM owns (vm-<vmid>-...) with the VM. CSI
+# volumes belong to the placeholder VMID 9999 (vm-9999-pvc-...) and would
+# stay on the storage after every destroy.
+
+# storage_csi_volumes_json: the Proxmox CSI volumes of the cluster, from its
+# PersistentVolumes: [{pv, claim, policy, zone, storage, disk}]. Prints
+# nothing when the API does not answer.
+storage_csi_volumes_json() {
+	local pvs
+	pvs=$(oc get pv -o json --request-timeout=20s 2>/dev/null) || return 1
+	jq -c '[.items[] | select(.spec.csi.driver == "csi.proxmox.sinextra.dev")
+		| (.spec.csi.volumeHandle | split("/")) as $h
+		| select(($h | length) == 4)
+		| {pv: .metadata.name, claim: "\(.spec.claimRef.namespace // "-")/\(.spec.claimRef.name // "-")",
+		   policy: .spec.persistentVolumeReclaimPolicy, zone: $h[1], storage: $h[2], disk: $h[3]}]' <<<"${pvs}"
+}
+
+# storage_csi_volumes_before_destroy: remember the volumes while the API
+# still answers (sets STORAGE_CSI_VOLUMES).
+STORAGE_CSI_VOLUMES=''
+storage_csi_volumes_before_destroy() {
+	STORAGE_CSI_VOLUMES=''
+	[[ $(cfg '.storage.backend') == proxmox-csi ]] || return 0
+	if [[ -f ${KUBECONFIG_FILE} ]] && tool_check oc >/dev/null 2>&1; then
+		cluster_api_init
+		STORAGE_CSI_VOLUMES=$(storage_csi_volumes_json) || STORAGE_CSI_VOLUMES=''
+	fi
+	if [[ -z ${STORAGE_CSI_VOLUMES} ]]; then
+		log_warn "The API does not answer: the Proxmox CSI volumes of this cluster cannot be determined and stay on the storage."
+		log_hint "After the destroy, check storage $(cfg '.storage.proxmox_csi.storage') for vm-9999-pvc-* disks of this cluster."
+		return 0
+	fi
+	log_info "Proxmox CSI volumes: $(jq -r 'map(select(.policy == "Delete")) | length' <<<"${STORAGE_CSI_VOLUMES}") to delete, $(jq -r 'map(select(.policy != "Delete")) | length' <<<"${STORAGE_CSI_VOLUMES}") with reclaimPolicy Retain"
+}
+
+# _storage_csi_volume_delete <node> <storage> <disk>: delete and wait for
+# the task (LVM deletes run as a task).
+_storage_csi_volume_delete() {
+	local upid
+	upid=$(pve_api "/nodes/$1/storage/$2/content/$(pve_urlencode "$2:$3")" -X DELETE) || return 1
+	upid=$(jq -r 'if type == "string" then . else empty end' <<<"${upid}")
+	[[ -z ${upid} ]] || pve_task_wait "$1" "${upid}" 300
+}
+
+# storage_csi_volumes_after_destroy [--delete-retained]: delete the volumes
+# remembered before (the VMs are gone, so they are detached), with the CSI
+# token, which may delete on the CSI storage. Retained volumes stay unless
+# --delete-retained.
+storage_csi_volumes_after_destroy() {
+	local all=0
+	[[ ${1:-} == --delete-retained ]] && all=1
+	[[ -n ${STORAGE_CSI_VOLUMES} && ${STORAGE_CSI_VOLUMES} != '[]' ]] || return 0
+	storage_load_secret_file "${CLUSTER_DIR}/proxmox-csi.conf"
+	local token=${PROXMOX_CSI_TOKEN:-} endpoint=${PROXMOX_CSI_ENDPOINT:-${PROXMOX_VE_ENDPOINT:-}}
+	local insecure=${PROXMOX_CSI_INSECURE:-${PROXMOX_VE_INSECURE:-false}} node0
+	[[ -n ${token} ]] && redact_register "${token}"
+	node0=$(cfg '.proxmox.nodes[0]')
+	local pv claim policy zone storage disk node failed=0 deleted=0 kept=()
+	# empty fields would collapse with a tab as IFS: the zone is "-" when empty
+	while IFS=$'\t' read -r pv claim policy zone storage disk; do
+		if [[ ${policy} != Delete ]] && ! ((all)); then
+			kept+=("${storage}:${disk} (${claim})")
+			continue
+		fi
+		if [[ -z ${token} ]]; then
+			kept+=("${storage}:${disk} (${claim})")
+			failed=1
+			continue
+		fi
+		# shared storage: the volume handle has no zone, any node will do
+		node=${zone}
+		[[ ${zone} != - ]] || node=${node0}
+		if PROXMOX_VE_API_TOKEN=${token} PROXMOX_VE_ENDPOINT=${endpoint} PROXMOX_VE_INSECURE=${insecure} \
+			_storage_csi_volume_delete "${node}" "${storage}" "${disk}"; then
+			deleted=$((deleted + 1))
+		else
+			log_warn "Could not delete ${storage}:${disk} (${claim}): ${PVE_API_ERROR:-}"
+			kept+=("${storage}:${disk} (${claim})")
+			failed=1
+		fi
+	done < <(jq -r '.[] | [.pv, .claim, .policy, (if .zone == "" then "-" else .zone end), .storage, .disk] | @tsv' <<<"${STORAGE_CSI_VOLUMES}")
+	((deleted == 0)) || log_ok "Deleted ${deleted} Proxmox CSI volume(s)"
+	if ((${#kept[@]})); then
+		log_warn "Proxmox CSI volumes kept: $(join_by ', ' "${kept[@]}")"
+		if [[ -z ${token} ]]; then
+			log_hint "No PROXMOX_CSI_TOKEN (proxmox-csi.conf): delete them in the Proxmox UI."
+		elif ((failed)); then
+			log_hint "Delete them in the Proxmox UI after checking."
+		else
+			log_hint "They have reclaimPolicy Retain and stay. Delete them in the Proxmox UI when no longer needed; next time 'okd-pve destroy --delete-retained-volumes' deletes them too."
+		fi
 	fi
 }

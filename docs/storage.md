@@ -16,10 +16,11 @@ same way:
 Point `monitoring.storage_class` at the class Prometheus and Alertmanager
 should use.
 
-With tainted infra nodes, the node plugins of the CSI drivers (proxmox-csi,
-ceph-csi) get the infra toleration: a node without the node plugin cannot
-mount volumes, and the provisioner fails for pods there ("no topology key
-found for node"). The test pod tolerates the infra taint as well, so the
+The node plugins of the CSI drivers (proxmox-csi, ceph-csi) tolerate the
+control plane taint and, with tainted infra nodes, the infra taint: a node
+without the node plugin cannot mount volumes, and the provisioner fails for
+pods there ("no topology key found for node"). On control plane nodes this
+serves the etcd backup ([etcd-backup.md](etcd-backup.md)). The test pod tolerates the infra taint as well, so the
 test also covers the infra nodes. When the test fails, `storage install`
 shows the warnings of the test PVC and pod.
 
@@ -71,6 +72,13 @@ storage:
   another host, run `okd-pve storage install` again to update the labels.
 - With local (non-shared) Proxmox storage a volume is bound to the host
   it was created on (`WaitForFirstConsumer`).
+- `okd-pve destroy` deletes the cluster's CSI volumes with the CSI token
+  (Proxmox deletes only the disks a VM owns; CSI disks belong to the
+  placeholder VMID 9999 and would stay). Volumes with `reclaimPolicy:
+  Retain` (class `<name>-retain`, the etcd backup) stay and are listed;
+  `destroy --delete-retained-volumes` deletes them too. The volumes are
+  read from the PersistentVolumes, so the API must still answer; otherwise
+  `destroy` warns and you check the storage for `vm-9999-pvc-*` disks.
 
 ## ceph-external
 
