@@ -138,7 +138,9 @@ jobs:
           echo "${HUB_TOKEN}" | docker login docker.io -u "${HUB_USER}" --password-stdin
           docker push "${hub}:${ver}"
           docker push "${hub}:latest"
-          pushed=$(docker inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "${hub}:${ver}" | grep "^${hub}@" | cut -d@ -f2)
+          # docker lists Docker Hub images without the docker.io/ prefix
+          pushed=$(docker inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "${hub}:${ver}" |
+            grep -E "^(docker\.io/)?${HUB_IMAGE}@" | head -n 1 | cut -d@ -f2)
           if [[ ${pushed} != "${DIGEST}" ]]; then
             echo "::error::Docker Hub digest ${pushed} differs from ghcr.io ${DIGEST}"
             exit 1
