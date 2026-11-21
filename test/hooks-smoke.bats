@@ -124,3 +124,25 @@ SH
 	run grep -o '"podResourceOverride":{"spec":{[^}]*}' <(jq -c . <(sed -n '/^{$/,/^}$/p' "${MOCK_LOG}") 2>/dev/null)
 	assert_output '"podResourceOverride":{"spec":{"memoryRequestToLimitPercent":25,"cpuRequestToLimitPercent":10}'
 }
+
+@test "the etcd backup hook uses the retain class, runs on control plane nodes and takes a first backup" {
+	export ETCD_BACKUP_TIMEZONE=Europe/Berlin ETCD_BACKUP_KEEP=5
+	run_hook 56-etcd-backup.sh
+	assert_output --partial "StorageClass example-sc-retain"
+	assert_output --partial "keeps 5"
+	# the JSON in the log without whitespace
+	run tr -d ' \n\t' <"${MOCK_LOG}"
+	assert_output --partial '"timeZone":"Europe/Berlin"'
+	assert_output --partial '"nodeSelector":{"node-role.kubernetes.io/control-plane":""}'
+	assert_output --partial '{"name":"HTTP_PROXY","value":"http://proxy.example.com:3128"}'
+	assert_output --partial '{"name":"KEEP","value":"5"}'
+	run grep -E 'create job etcd-backup-okd-pve-[0-9]+ --from=cronjob/etcd-backup' "${MOCK_LOG}"
+	assert_success
+}
+
+@test "the etcd backup hook refuses a bad ETCD_BACKUP_KEEP" {
+	export ETCD_BACKUP_KEEP=0
+	run "${OKD_PVE_ROOT}/hooks/56-etcd-backup.sh"
+	assert_failure 1
+	assert_output --partial "ETCD_BACKUP_KEEP must be a positive number"
+}

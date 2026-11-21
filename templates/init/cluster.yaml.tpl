@@ -146,7 +146,9 @@ hooks:
     - 10-infra-nodes
     - 30-ingress-controller
     - 40-monitoring
+    # - 56-etcd-backup                # daily etcd backup on a PVC (needs storage.backend)
   skip: []
   env:
     OKD_PVE_CATALOG_PROFILE: okderators   # or: redhat (needs a Red Hat pull secret)
     INGRESS_REPLICAS: "2"
+    # ETCD_BACKUP_TIMEZONE: Europe/Berlin # schedule "15 2 * * *" in this time zone

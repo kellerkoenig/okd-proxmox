@@ -148,6 +148,9 @@ tui_main() {
 			storage "Install the storage backend" \
 			hooks "List Post-Install hooks" \
 			hooks-run "Run Post-Install hooks" \
+			etcd-list "List etcd backups" \
+			etcd-backup "Take an etcd backup now" \
+			etcd-fetch "Copy the newest etcd backup to the cluster directory" \
 			kubeconfig "Show the kubeconfig path" \
 			logs "Show the latest log" \
 			logs-follow "Follow the log, also of later runs (Ctrl-C: back)" \
@@ -167,6 +170,9 @@ tui_main() {
 		storage) tui_run storage install ;;
 		hooks) tui_run hooks list ;;
 		hooks-run) tui_hooks_run ;;
+		etcd-list) tui_run etcd list ;;
+		etcd-backup) tui_run etcd backup ;;
+		etcd-fetch) tui_run etcd fetch --latest ;;
 		kubeconfig) tui_run kubeconfig --export ;;
 		logs) tui_run logs ;;
 		logs-follow) tui_run logs -f ;;

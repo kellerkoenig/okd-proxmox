@@ -130,6 +130,7 @@ versions; `@default` follows the catalog.
 | `53-operator-cert-manager` | cert-manager operator + `CertManager` |
 | `54-operator-web-terminal` | Web Terminal + idle timeout |
 | `55-eventrouter` | event router (plain manifests, no operator exists) |
+| `56-etcd-backup` | daily etcd backup (CronJob on a control plane node, `cluster-backup.sh`) on a PVC, alerts for failed or missing backups; see [etcd-backup.md](etcd-backup.md) |
 | `80-oauth-oidc.sh.example` | pattern: OIDC identity provider |
 | `81-inventory-serviceaccount.sh.example` | pattern: read-only service account + token for an inventory |
 | `82-gitops-bootstrap.sh.example` | pattern: GitOps operator + bootstrap Application |
