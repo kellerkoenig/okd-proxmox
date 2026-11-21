@@ -80,7 +80,7 @@ Commands:
   preflight                           Run all checks without changing anything
   create [--skip-preflight]           Build the cluster (resumes where it stopped)
   verify [--wait] [--timeout S]       Check cluster health
-  destroy                             Delete VMs, disks, ISOs and state
+  destroy [--delete-retained-volumes] Delete VMs, disks, ISOs, Proxmox CSI volumes and state
   node add --role worker|infra --count N [--group G]
   node add --resume                   Finish an interrupted node add
   node remove <node> [--drain-timeout 10m] [--force-control-plane]
@@ -437,6 +437,13 @@ cmd_create() {
 # ---------------------------------------------------------------------------
 
 cmd_destroy() {
+	local retained=''
+	while (($#)); do
+		case $1 in
+		--delete-retained-volumes) retained=--delete-retained && shift ;;
+		*) die "${EXIT_CONFIG}" "destroy: unknown argument $1" "okd-pve destroy [--delete-retained-volumes]" ;;
+		esac
+	done
 	proxmox_require
 	tools_ensure tofu
 	log_step "Destroying cluster ${CLUSTER_NAME}.${BASE_DOMAIN}"
@@ -451,7 +458,10 @@ cmd_destroy() {
 	else
 		log_info "No OpenTofu state; nothing to delete on Proxmox from state"
 	fi
+	storage_csi_volumes_before_destroy
 	if ((DRY_RUN)); then
+		[[ -z ${STORAGE_CSI_VOLUMES} ]] || dry_run_note "would delete the Proxmox CSI volumes: $(jq -r --arg all "${retained}" \
+			'[.[] | select(.policy == "Delete" or $all != "") | "\(.storage):\(.disk)"] | join(" ")' <<<"${STORAGE_CSI_VOLUMES}")"
 		if tf_has_state; then
 			tf_isos_json() { echo '{}'; }
 			tf_node_isos() { echo '{}'; }
@@ -462,7 +472,7 @@ cmd_destroy() {
 	fi
 	if ! ((ASSUME_YES)); then
 		is_interactive || die "${EXIT_ERROR}" "destroy needs confirmation." "Run interactively or pass --yes."
-		log_warn "This deletes all VMs, disks and ISOs of ${CLUSTER_NAME} and its local state."
+		log_warn "This deletes all VMs, disks, ISOs and Proxmox CSI volumes (except reclaimPolicy Retain) of ${CLUSTER_NAME} and its local state."
 		confirm_typed "${CLUSTER_NAME}" "Type the cluster name (${CLUSTER_NAME}) to confirm" ||
 			die "${EXIT_ERROR}" "Aborted; nothing was deleted."
 	fi
@@ -474,6 +484,7 @@ cmd_destroy() {
 		tf_destroy
 	fi
 	tf_isos_cleanup --all
+	storage_csi_volumes_after_destroy ${retained:+"${retained}"}
 	destroy_report_leftovers "${state_names}"
 	rm -rf "${GENERATED_DIR}" "${AUTH_DIR}" "${TOFU_DIR}/terraform.tfstate" "${TOFU_DIR}/terraform.tfstate.backup" \
 		"${TOFU_DIR}/cluster.auto.json"

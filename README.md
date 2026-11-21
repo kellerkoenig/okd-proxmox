@@ -233,7 +233,7 @@ deployment automation.
 | `preflight` | All checks, `PASS`/`WARN`/`FAIL` with a hint each, capacity table. Changes nothing. |
 | `create [--skip-preflight]` | Full cluster creation, resumable |
 | `verify [--wait] [--timeout S]` | Nodes, MachineConfigPools, ClusterOperators, CSRs, VIPs, console, etcd, time sync, infra placement, registry mirrors, storage |
-| `destroy` | VMs, disks, ISOs, state. Asks for the cluster name unless `--yes`. Keeps the configuration and logs. |
+| `destroy [--delete-retained-volumes]` | VMs, disks, ISOs, Proxmox CSI volumes (except `reclaimPolicy: Retain`, unless the flag), state. Asks for the cluster name unless `--yes`. Keeps the configuration and logs. |
 | `node add --role worker\|infra --count N [--group G]` | Node ISO via `oc adm node-image create`, new VMs (existing ones untouched), CSR approval, labels/taints |
 | `node add --resume` | Finishes a `node add` that was interrupted (Ctrl+C, timeout): CSR approval, labels/taints, `count`, ISO cleanup |
 | `node remove <name> [--drain-timeout 10m]` | cordon → drain → delete node → destroy only this VM. Refuses control-plane nodes without `--force-control-plane`. |
