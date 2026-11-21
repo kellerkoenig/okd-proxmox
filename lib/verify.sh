@@ -26,10 +26,17 @@ vf() {
 	return 0
 }
 
-# verify_once [--no-storage]: one pass over all checks.
+# verify_once [--no-storage] [--before-hooks]: one pass over all checks.
+# --before-hooks (create): the Post-Install hooks have not run yet, so the
+# router placement of hook 30-ingress-controller is not checked.
 verify_once() {
-	local no_storage=0
-	[[ ${1:-} == --no-storage ]] && no_storage=1
+	local no_storage=0 before_hooks=0 a
+	for a in "$@"; do
+		case ${a} in
+		--no-storage) no_storage=1 ;;
+		--before-hooks) before_hooks=1 ;;
+		esac
+	done
 	VF_FAIL=0 VF_WARN=0
 	local nodes_json_k8s
 	if ! nodes_json_k8s=$(oc get nodes -o json --request-timeout=20s 2>/dev/null); then
@@ -45,7 +52,7 @@ verify_once() {
 	if [[ $(jq -r '.verify.time_sync' "${CONFIG_JSON}") == true ]]; then
 		vf_time_sync "${nodes_json_k8s}"
 	fi
-	vf_infra "${nodes_json_k8s}"
+	vf_infra "${nodes_json_k8s}" "${before_hooks}"
 	vf_mirrors
 	vf_debug_shell
 	if ((no_storage)) && [[ $(cfg '.storage.backend') != none ]]; then
@@ -156,7 +163,7 @@ vf_time_sync() {
 }
 
 vf_infra() {
-	local k8s=$1 key value effects expected wrong=()
+	local k8s=$1 before_hooks=${2:-0} key value effects expected wrong=()
 	expected=$(nodes_query '[.[] | select(.infra) | {name, taint: .taint_infra}]')
 	if [[ ${expected} == '[]' ]]; then
 		vf SKIP "No infra nodes configured"
@@ -184,7 +191,9 @@ vf_infra() {
 	off=$(oc -n openshift-ingress get pods -l ingresscontroller.operator.openshift.io/deployment-ingresscontroller=default -o json 2>/dev/null |
 		jq -r --argjson infra "$(nodes_query '[.[] | select(.infra) | .name]')" \
 			'[.items[] | select(.spec.nodeName as $n | $infra | index($n) | not) | "\(.metadata.name)@\(.spec.nodeName // "pending")"] | join(" ")')
-	if [[ -n ${off} ]]; then
+	if [[ -n ${off} ]] && ((before_hooks)) && hook_selected 30-ingress-controller; then
+		vf SKIP "Ingress router placement (hook 30-ingress-controller moves the routers to the infra nodes)"
+	elif [[ -n ${off} ]]; then
 		vf WARN "Ingress router pods not on infra nodes: ${off}" "Enable and run hook 30-ingress-controller (okd-pve hooks run 30-ingress-controller)."
 	else
 		vf PASS "Ingress router pods run on infra nodes"

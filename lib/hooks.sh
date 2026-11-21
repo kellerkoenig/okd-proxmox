@@ -59,7 +59,9 @@ hooks_collect() {
 	builtin_sel=$(cfg_json '.hooks.builtin')
 	{
 		_hook_entries "$(builtin_hooks_dir)" builtin
-		[[ -n ${ext} ]] && _hook_entries "${ext}" external
+		# not "[[ ]] && ...": without an external directory the group would
+		# fail, and with pipefail the whole pipeline
+		if [[ -n ${ext} ]]; then _hook_entries "${ext}" external; fi
 	} | jq -R -s -r --argjson sel "${builtin_sel}" --argjson skip "$(cfg_json '.hooks.skip')" '
 		def short: sub("\\.(sh|bash|py|yaml|yml)$"; "");
 		[split("\n")[] | select(. != "") | split("\t") | {name: .[0], kind: .[1], path: .[2], source: .[3]}]
@@ -68,6 +70,13 @@ hooks_collect() {
 			(.source == "external" or $sel == "all" or (($sel | type) == "array" and ($sel | index($n) or index($s))))
 			and ($skip | index($n) or index($s) | not)))
 		| sort_by(.name)[] | [.name, .kind, .path, .source] | @tsv'
+}
+
+# hook_selected NAME: true when hooks_collect runs the hook NAME (with or
+# without extension), built-in or external.
+hook_selected() {
+	hooks_collect | cut -f1 | sed -E 's/\.(sh|bash|py|yaml|yml)$//' |
+		awk -v n="${1%.*}" '$0 == n { f = 1 } END { exit !f }'
 }
 
 # hook_env: environment exported to every hook.

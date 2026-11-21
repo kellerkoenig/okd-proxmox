@@ -26,5 +26,6 @@ spec:
   logLevel: ${CERT_MANAGER_LOG_LEVEL:-Normal}
   operatorLogLevel: Normal
 YAML
-oc_wait 600 "cert-manager deployments in namespace cert-manager" \
-	oc -n cert-manager rollout status deployment/cert-manager --timeout=10s
+# quiet check: oc_wait reports the progress itself
+rolled_out() { oc -n cert-manager rollout status deployment/cert-manager --timeout=10s >/dev/null 2>&1; }
+oc_wait 600 "cert-manager deployments in namespace cert-manager" rolled_out

@@ -387,8 +387,9 @@ cmd_create() {
 
 	create_step 12 "Verifying the cluster"
 	if ! dry_run_note "would run verify --wait"; then
-		local vstart=${SECONDS}
-		until verify_once --no-storage; do
+		local vstart=${SECONDS} vargs=(--no-storage)
+		state_step_done hooks || vargs+=(--before-hooks)
+		until verify_once "${vargs[@]}"; do
 			((SECONDS - vstart < 3600)) || die "${EXIT_ERROR}" "The cluster did not become healthy within 60 minutes." \
 				"Run 'okd-pve verify' for details; re-run create to continue with storage and hooks."
 			log_info "Not healthy yet (${VF_FAIL} failure(s)), checking again in 60s"
