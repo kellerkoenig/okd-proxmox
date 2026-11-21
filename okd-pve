@@ -64,6 +64,8 @@ source "${OKD_PVE_ROOT}/lib/verify.sh"
 source "${OKD_PVE_ROOT}/lib/storage.sh"
 # shellcheck source=lib/etcd.sh
 source "${OKD_PVE_ROOT}/lib/etcd.sh"
+# shellcheck source=lib/status.sh
+source "${OKD_PVE_ROOT}/lib/status.sh"
 # shellcheck source=lib/tui.sh
 source "${OKD_PVE_ROOT}/lib/tui.sh"
 
@@ -82,6 +84,7 @@ Commands:
   preflight                           Run all checks without changing anything
   create [--skip-preflight]           Build the cluster (resumes where it stopped)
   verify [--wait] [--timeout S]       Check cluster health
+  status                              Cluster, nodes, alerts, etcd backup and VMs on Proxmox at a glance
   destroy [--delete-retained-volumes] Delete VMs, disks, ISOs, Proxmox CSI volumes and state
   node add --role worker|infra --count N [--group G]
   node add --resume                   Finish an interrupted node add
@@ -628,7 +631,7 @@ main() {
 
 	local sub=${1:-}
 	case ${cmd} in
-	preflight | create | verify | destroy | kubeconfig | logs) ;;
+	preflight | create | verify | status | destroy | kubeconfig | logs) ;;
 	node | storage | hooks | mirrors | etcd) [[ -n ${sub} ]] || die "${EXIT_CONFIG}" "${cmd} needs a subcommand." "okd-pve help" ;;
 	*) usage >&2 && die "${EXIT_CONFIG}" "Unknown command: ${cmd}" ;;
 	esac
@@ -638,6 +641,7 @@ main() {
 	preflight) cmd_preflight "$@" ;;
 	create) cmd_create "$@" ;;
 	verify) cmd_verify "$@" ;;
+	status) cmd_status "$@" ;;
 	destroy) cmd_destroy "$@" ;;
 	kubeconfig) cmd_kubeconfig "$@" ;;
 	logs) cmd_logs "$@" ;;

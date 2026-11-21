@@ -141,6 +141,7 @@ tui_main() {
 			dry-run "Show what create would do" \
 			create "Create / continue creating the cluster" \
 			verify "Check cluster health" \
+			status "Cluster and Proxmox at a glance" \
 			nodes "List nodes" \
 			node-add "Add worker or infra nodes" \
 			node-remove "Remove a node" \
@@ -163,6 +164,7 @@ tui_main() {
 		dry-run) tui_run --dry-run create ;;
 		create) tui_yesno "Create (or continue creating) the cluster now?" && tui_run create ;;
 		verify) tui_run verify ;;
+		status) tui_run status ;;
 		nodes) tui_run node list ;;
 		node-add) tui_node_add ;;
 		node-remove) tui_node_remove ;;
