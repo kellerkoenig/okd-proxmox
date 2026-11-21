@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+# Only what the Containerfile copies; never cluster directories or secrets.
+*
+!LICENSE
+!LICENSES
+!README.md
+!okd-pve
+!docs
+!examples
+!hooks
+!lib
+!templates
+!terraform
+!scripts/container-entrypoint.sh

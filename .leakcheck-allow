@@ -26,6 +26,8 @@ registry\.redhat\.io
 registry\.access\.redhat\.com
 registry\.connect\.redhat\.com
 ghcr\.io
+# Docker Hub (container image)
+(index\.)?docker\.io
 console\.redhat\.com
 ([a-z0-9-]+\.)*opentofu\.org
 okd\.io

@@ -2,8 +2,9 @@
 // Copyright (C) 2026 The okd-proxmox Authors
 //
 // Renovate (https://docs.renovatebot.com) proposes version updates as pull
-// requests: GitHub Actions (pinned by digest) and every version marked with a
-// "# renovate:" comment in the Makefile and lib/versions.sh.
+// requests: GitHub Actions (pinned by digest), the base image of the
+// Containerfile (pinned by digest) and every version marked with a
+// "# renovate:" comment in the Makefile, lib/versions.sh and the Containerfile.
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
@@ -18,14 +19,14 @@
   // Only what the annotations and workflows declare. The provider range in
   // terraform/versions.tf is a lower bound; the pinned provider version is
   // PROXMOX_PROVIDER_VERSION in lib/versions.sh.
-  enabledManagers: ['github-actions', 'custom.regex'],
+  enabledManagers: ['github-actions', 'dockerfile', 'custom.regex'],
   customManagers: [
     {
       customType: 'regex',
-      description: 'Versions annotated with "# renovate:" in the Makefile and lib/versions.sh',
-      managerFilePatterns: ['/^Makefile$/', '/^lib/versions\\.sh$/'],
+      description: 'Versions annotated with "# renovate:" in the Makefile, lib/versions.sh and the Containerfile',
+      managerFilePatterns: ['/^Makefile$/', '/^lib/versions\\.sh$/', '/^Containerfile$/'],
       matchStrings: [
-        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+[A-Z_]+\\s*:?=\\s*(?:\\$\\{[A-Z_]+:-)?(?<currentValue>[0-9][0-9.]*)',
+        '# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+(?:ARG\\s+)?[A-Z_]+\\s*:?=\\s*(?:\\$\\{[A-Z_]+:-)?(?<currentValue>[0-9][0-9.]*)',
       ],
       extractVersionTemplate: '^v?(?<version>.*)$',
     },
@@ -35,6 +36,14 @@
       description: 'Keep OpenTofu in the Makefile and lib/versions.sh in step',
       matchDepNames: ['opentofu/opentofu'],
       groupName: 'OpenTofu',
+    },
+    {
+      description: 'yq in the Makefile and the Containerfile together; the Containerfile pins its checksum',
+      matchDepNames: ['mikefarah/yq'],
+      groupName: 'yq',
+      prBodyNotes: [
+        '⚠️ Before merging: set `YQ_SHA256` in the Containerfile to the `yq_linux_amd64` SHA256 from the release\'s `checksums-bsd`. The CI job "container image" fails until then.',
+      ],
     },
     {
       description: 'bats and its helper libraries together',

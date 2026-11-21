@@ -67,6 +67,24 @@ jobs:
       - name: tofu fmt / validate / tflint
         run: make terraform
 
+  image:
+    name: container image
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build
+        run: docker build -f Containerfile --build-arg OKD_PVE_VERSION=ci -t okd-pve:ci .
+      - name: Smoke test
+        run: |
+          docker run --rm okd-pve:ci version
+          docker run --rm --entrypoint bash okd-pve:ci -c 'for c in yq jq nmstatectl ssh whiptail column dig setpriv useradd; do command -v "$c" >/dev/null || { echo "missing: $c"; exit 1; }; done'
+          # files written to /work belong to the owner of the mounted directory
+          mkdir -p work
+          docker run --rm -v "$PWD/work:/work" okd-pve:ci init demo
+          test "$(stat -c %u work/clusters/demo/cluster.yaml)" = "$(id -u)"
+
   leakcheck:
     name: no environment-specific data
     runs-on: ubuntu-24.04

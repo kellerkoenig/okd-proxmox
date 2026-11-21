@@ -93,7 +93,9 @@ Please read this before you plan with it.
 
 ## Requirements
 
-Workstation (Linux; macOS works for most commands but is not tested):
+Workstation (Linux; macOS works for most commands but is not tested), or
+the container image `ghcr.io/kellerkoenig/okd-proxmox` for docker or podman,
+which brings every tool below ([docs/container.md](docs/container.md)):
 
 | Tool | Notes |
 |---|---|
@@ -129,6 +131,14 @@ export KUBECONFIG=$(./okd-pve kubeconfig)
 
 When `./clusters/` contains exactly one cluster, commands find it on their
 own; otherwise pass `--dir clusters/<name>`.
+
+The same with the container image instead of a local checkout and tools,
+with docker or podman ([docs/container.md](docs/container.md)):
+
+```bash
+alias okd-pve='docker run --rm -it -v "$PWD:/work:Z" -v "$HOME/.ssh:/home/okd-pve/.ssh:ro,Z" -e HTTP_PROXY -e HTTPS_PROXY -e NO_PROXY ghcr.io/kellerkoenig/okd-proxmox:latest'
+okd-pve init lab && okd-pve preflight && okd-pve create
+```
 
 Two complete example configurations are in [examples/](examples/): a small
 cluster with combined worker/infra nodes and a larger one with dedicated
@@ -327,7 +337,9 @@ license information ([REUSE](https://reuse.software)); Renovate proposes
 updates for the pinned tool versions and GitHub Actions. Pushing a tag
 `vX.Y.Z` (matching `OKD_PVE_VERSION`) runs all checks and attaches a source
 tarball, `SHA256SUMS` and the signed build provenance (`*.intoto.jsonl`) to
-the release. To verify a tarball:
+the release, and pushes the container image with its provenance to
+`ghcr.io/kellerkoenig/okd-proxmox` (`gh attestation verify
+oci://ghcr.io/kellerkoenig/okd-proxmox:X.Y.Z --repo kellerkoenig/okd-proxmox`). To verify a tarball:
 `gh attestation verify okd-proxmox-X.Y.Z.tar.gz --repo kellerkoenig/okd-proxmox`
 (add `--bundle okd-proxmox-X.Y.Z.tar.gz.intoto.jsonl` to use the attached
 provenance instead of the GitHub attestation API).
