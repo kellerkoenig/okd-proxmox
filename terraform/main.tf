@@ -13,6 +13,9 @@
 # without deleting the files, okd-pve deletes them once they are detached.
 removed {
   from = proxmox_virtual_environment_file.iso
+  lifecycle {
+    destroy = false
+  }
 }
 
 resource "proxmox_virtual_environment_vm" "node" {
@@ -134,8 +137,14 @@ resource "proxmox_virtual_environment_vm" "node" {
 
 # The HA manager restarts a VM on another node when its node fails. It is
 # destroyed before its VM (dependency), so destroy and node remove keep
-# working unchanged.
-resource "proxmox_virtual_environment_haresource" "node" {
+# working unchanged. The provider renamed the resource type (the long name goes
+# away in provider 1.0); states of okd-pve <= 0.1.7 are moved, not recreated.
+moved {
+  from = proxmox_virtual_environment_haresource.node
+  to   = proxmox_haresource.node
+}
+
+resource "proxmox_haresource" "node" {
   for_each = var.ha.enabled ? var.nodes : {}
 
   resource_id  = "vm:${proxmox_virtual_environment_vm.node[each.key].vm_id}"

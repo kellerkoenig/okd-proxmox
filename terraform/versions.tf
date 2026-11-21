@@ -2,7 +2,7 @@
 # Copyright (C) 2026 The okd-proxmox Authors
 
 terraform {
-  required_version = ">= 1.8.0"
+  required_version = ">= 1.10.0"
 
   required_providers {
     proxmox = {

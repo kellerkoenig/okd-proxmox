@@ -17,7 +17,7 @@ OKD_MIN_VERSION=4.17
 # "# renovate:" comments let Renovate propose updates (.github/renovate.json5).
 # renovate: datasource=github-releases depName=opentofu/opentofu
 TOFU_VERSION=${OKD_PVE_TOFU_VERSION:-1.13.2}
-TOFU_MIN_VERSION=1.8.0
+TOFU_MIN_VERSION=1.10.0
 # Oldest yq the tests run with (CI job "bats (oldest supported yq)"); yq
 # changes expression semantics between releases.
 YQ_MIN_VERSION=4.45.0
