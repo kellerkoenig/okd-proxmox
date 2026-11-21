@@ -13,10 +13,13 @@
 [![Proxmox VE 8 | 9](https://img.shields.io/badge/Proxmox%20VE-8%20%7C%209-E57000?logo=proxmox&logoColor=white)](https://www.proxmox.com/en/products/proxmox-virtual-environment/overview)
 [![OpenTofu](https://img.shields.io/badge/OpenTofu-bpg%2Fproxmox-FFDA18?logo=opentofu&logoColor=black)](https://opentofu.org)
 [![Bash ≥ 4.4](https://img.shields.io/badge/Bash-%E2%89%A5%204.4-4EAA25?logo=gnubash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![Container image](https://img.shields.io/badge/container%20image-GHCR%20%7C%20Docker%20Hub-2496ED?logo=docker&logoColor=white)](docs/container.md)
 
 `okd-pve` builds [OKD](https://okd.io) clusters on Proxmox VE: reproducibly,
 without clicking, and already configured for operation when the run ends.
-You can throw a cluster away and rebuild it identically within a few hours.
+You can throw a cluster away and rebuild it identically in about an hour
+(3 masters, 3 infra and 3 worker nodes: 1h06m to 1h14m in our runs, with
+storage and all hooks).
 
 There is no installer-provisioned infrastructure (IPI) for Proxmox. `okd-pve`
 closes that gap by combining the **OKD agent-based installer** with
@@ -27,17 +30,21 @@ okd-pve init mycluster        # commented configuration skeleton
 okd-pve preflight             # checks everything, changes nothing
 okd-pve create                # ISO, VMs, installation, labels, storage, hooks
 okd-pve verify                # cluster health
+okd-pve status                # cluster, alerts and VMs on Proxmox at a glance
 okd-pve node add --role worker --count 2
+okd-pve etcd backup           # and etcd restore, when it has to be
 okd-pve destroy
 ```
 
 - [What it does](#what-it-does)
+- [After the installation](#after-the-installation)
 - [Limits](#limits)
 - [Requirements](#requirements)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
 - [Commands](#commands)
 - [Troubleshooting](#troubleshooting)
+- [Documentation](#documentation)
 - [Development](#development)
 - [License](#license)
 
@@ -65,7 +72,7 @@ okd-pve destroy
 10. Installs the storage backend (Proxmox CSI, Ceph CSI, LSO/ODF or NFS) and
     proves it with a test PVC.
 11. Runs the **Post-Install** hooks (ingress placement, monitoring,
-    operators, ...) and prints a hook report.
+    operators, etcd backup, GitOps, ...) and prints a hook report.
 
 `create` is idempotent. When it is interrupted, by Ctrl-C, a timeout or a
 failed hook, the next run continues where it stopped.
@@ -74,6 +81,24 @@ A complete run (example values, shortened):
 
 ![okd-pve create: preflight, ISO, VMs, installation progress, hook report](docs/images/okd-pve-create.svg)
 
+## After the installation
+
+- **Look at it:** `okd-pve status` shows version, nodes, operators, firing
+  alerts, storage, the last etcd backup and where each VM runs on Proxmox;
+  `okd-pve verify` checks the health in depth.
+- **Scale:** `okd-pve node add --role worker|infra --count N` and
+  `okd-pve node remove <node>` ([docs/nodes.md](docs/nodes.md)).
+- **Back up etcd:** hook `56-etcd-backup` takes a daily backup on a
+  `Retain` volume; `okd-pve etcd fetch` copies backups out of the cluster
+  and `okd-pve etcd restore` restores one over SSH
+  ([docs/etcd-backup.md](docs/etcd-backup.md)). Restores are tested on a
+  real cluster; practise one before you need it.
+- **Deploy applications from Git:** hook `60-gitops` installs Argo CD and
+  points one bootstrap Application at your repository
+  ([docs/hooks.md](docs/hooks.md#gitops-bootstrap-60-gitops)).
+- **Rebuild:** `okd-pve destroy` removes the VMs and the cluster's CSI
+  volumes, `okd-pve create` builds it again from the same files.
+
 ## Limits
 
 Please read this before you plan with it.
@@ -81,8 +106,11 @@ Please read this before you plan with it.
 - **No Machine API, no MachineSets, no autoscaling.** Proxmox has no
   installer platform in OKD. Nodes are plain VMs; scale with
   `okd-pve node add` / `node remove`.
-- **No disconnected installation.** The cluster needs access to the image
-  registries (quay.io, and registry.redhat.io when you use Red Hat catalogs).
+- **No disconnected installation.** The cluster needs the image registries
+  (quay.io, and registry.redhat.io for Red Hat catalogs), directly or
+  through registry mirrors / pull-through caches such as Artifactory or
+  Nexus ([docs/registry-mirrors.md](docs/registry-mirrors.md)). A fully
+  air-gapped setup with `oc-mirror` is not supported.
 - **No cluster upgrades.** Use the regular OKD mechanisms for that. etcd
   backups and the restore are covered: hook `56-etcd-backup` and
   `okd-pve etcd` ([docs/etcd-backup.md](docs/etcd-backup.md)).
@@ -101,7 +129,8 @@ which brings every tool below ([docs/container.md](docs/container.md)):
 |---|---|
 | bash ≥ 4.4, curl, awk, sed, tar | |
 | `jq`, `yq` (mikefarah v4, >= 4.45) | required to read the configuration; CI tests the oldest supported yq too |
-| `nmstatectl` | `openshift-install` validates static network configuration with it. `dnf install nmstate`; where no package exists (e.g. Ubuntu), `create` extracts it from the CentOS Stream 9 package with podman or docker |
+| `nmstatectl` | `openshift-install` validates static network configuration with it. `dnf install nmstate`; where no package exists (e.g. Ubuntu), `create` extracts it from the CentOS Stream 9 package with podman or docker, or use the container image |
+| `ssh` | only for `okd-pve etcd restore` (as `core` on the control plane nodes) |
 | `unzip` | only to download OpenTofu |
 | `whiptail` or `dialog` | only for `okd-pve tui` |
 | `openshift-install`, `oc`, `tofu`, `butane` | downloaded into `<cluster>/bin` if missing |
@@ -117,7 +146,7 @@ nodes, and at least three NTP servers reachable from the nodes.
 ## Quick start
 
 ```bash
-git clone <this repository> okd-proxmox && cd okd-proxmox
+git clone https://github.com/kellerkoenig/okd-proxmox.git && cd okd-proxmox
 ./okd-pve init lab                     # creates clusters/lab/
 $EDITOR clusters/lab/install-config.yaml   # baseDomain, VIPs, machineNetwork
 $EDITOR clusters/lab/cluster.yaml          # Proxmox nodes, storage, node groups, IPs
@@ -252,7 +281,7 @@ deployment automation.
 | `node add --resume` | Finishes a `node add` that was interrupted (Ctrl+C, timeout): CSR approval, labels/taints, `count`, ISO cleanup |
 | `node remove <name> [--drain-timeout 10m]` | cordon → drain → delete node → destroy only this VM. Refuses control-plane nodes without `--force-control-plane`. |
 | `node list` / `node reconcile` | Inventory with VMID/host/IP/MAC/status / re-apply infra labels and taints |
-| `storage install` | Deploy the configured storage backend |
+| `storage install` | Deploy the configured storage backend; run it again after migrating VMs to other Proxmox hosts (topology labels) |
 | `mirrors apply` | Apply `registry_mirrors` (pull-through cache) to a running cluster: mirror sets, pull secret ([docs/registry-mirrors.md](docs/registry-mirrors.md)) |
 | `hooks list` / `hooks run [name \| --from name]` | Show hooks with last result / run all, one, or from one on |
 | `etcd list` / `etcd backup` / `etcd fetch [name \| --latest]` | etcd backups of hook `56-etcd-backup`: list them, take one now, copy one to `<cluster>/backups/etcd` |
@@ -309,8 +338,26 @@ instead of failing.
 | Hook failed | Fix it, then `okd-pve hooks run --from <hook>`. The hook report lists every hook with its result. |
 | PVC binds a dynamic volume instead of your NFS PV | A default StorageClass is set; use `storageClassName: ""` in such PVCs (docs/storage.md). |
 | VMs left over after a failure | All VMs are in the resource pool; `destroy` lists VMs of the cluster that are in the pool but not in the state. |
+| `vm-9999-pvc-*` disks on the CSI storage that no cluster uses | Proxmox CSI volumes of clusters destroyed with okd-pve before 0.2.0 (it did not delete them), or volumes with `reclaimPolicy: Retain`. Check the PVC names in `okd-pve status`/`oc get pv` of your clusters and delete the rest in the Proxmox UI. |
+| `etcd restore`: "No SSH to the recovery host ... Host key verification failed" | The cluster was rebuilt and the nodes have new host keys: `ssh-keygen -R <ip> -f <cluster>/.state/known_hosts`. Without any SSH: set `OKD_PVE_SSH_PRIVATE_KEY_FILE` to the key of `sshKey`. |
+| `etcd restore` stopped after `cluster-restore.sh` | etcd runs on no control plane node and the API is down. Fix the cause from the output, run the script again on the recovery host, then `okd-pve etcd restore --continue` ([docs/etcd-backup.md](docs/etcd-backup.md)). |
 
 `--debug` adds a shell trace to the log file (secrets masked).
+
+## Documentation
+
+| Document | Covers |
+|---|---|
+| [configuration.md](docs/configuration.md) | every key of `cluster.yaml` with its default |
+| [proxmox-permissions.md](docs/proxmox-permissions.md) | API tokens and roles for the installer and the CSI driver |
+| [sizing.md](docs/sizing.md) | CPU, memory and disk per role, Proxmox capacity |
+| [nodes.md](docs/nodes.md) | roles, infra nodes and taints, adding and removing nodes |
+| [storage.md](docs/storage.md) | Proxmox CSI, Ceph CSI, LSO/ODF, NFS, filesystem, volumes on destroy |
+| [registry-mirrors.md](docs/registry-mirrors.md) | pull-through caches, mirror sets, credentials |
+| [preboot-vs-post-install.md](docs/preboot-vs-post-install.md) | what goes into the ISO and what into hooks |
+| [hooks.md](docs/hooks.md) | hook mechanics, built-in hooks, GitOps bootstrap, private hooks |
+| [etcd-backup.md](docs/etcd-backup.md) | etcd backup, copies outside the cluster, restore |
+| [container.md](docs/container.md) | the container image with docker or podman |
 
 ## Development
 
@@ -329,20 +376,30 @@ RFC 5737 addresses in examples.
 
 Layout: `okd-pve` (entry point), `lib/` (all logic), `terraform/` (OpenTofu
 module), `templates/` (init, Pre-Boot and storage templates, defaults),
-`hooks/` (generic example hooks), `examples/`, `test/`, `docs/`.
+`hooks/` (built-in hooks), `examples/`, `test/`, `docs/`, `scripts/` (leak
+check, container entrypoint), `Containerfile`.
 
 How to contribute: [CONTRIBUTING.md](CONTRIBUTING.md). Security problems:
 [SECURITY.md](SECURITY.md), never as a public issue. Every file carries
 license information ([REUSE](https://reuse.software)); Renovate proposes
-updates for the pinned tool versions and GitHub Actions. Pushing a tag
-`vX.Y.Z` (matching `OKD_PVE_VERSION`) runs all checks and attaches a source
-tarball, `SHA256SUMS` and the signed build provenance (`*.intoto.jsonl`) to
-the release, and pushes the container image with its provenance to
-`ghcr.io/kellerkoenig/okd-proxmox` (`gh attestation verify
-oci://ghcr.io/kellerkoenig/okd-proxmox:X.Y.Z --repo kellerkoenig/okd-proxmox`). To verify a tarball:
-`gh attestation verify okd-proxmox-X.Y.Z.tar.gz --repo kellerkoenig/okd-proxmox`
-(add `--bundle okd-proxmox-X.Y.Z.tar.gz.intoto.jsonl` to use the attached
-provenance instead of the GitHub attestation API).
+updates for the pinned tool versions, the container base image and GitHub
+Actions.
+
+Releases: pushing a tag `vX.Y.Z` (matching `OKD_PVE_VERSION`) runs all
+checks and publishes
+
+- a source tarball, `SHA256SUMS` and the signed build provenance
+  (`*.intoto.jsonl`) on the GitHub release,
+- the container image on `ghcr.io/kellerkoenig/okd-proxmox` and Docker Hub
+  (`kellerkoenig/okd-proxmox`), with its provenance.
+
+```bash
+gh attestation verify okd-proxmox-X.Y.Z.tar.gz --repo kellerkoenig/okd-proxmox
+gh attestation verify oci://ghcr.io/kellerkoenig/okd-proxmox:X.Y.Z --repo kellerkoenig/okd-proxmox
+```
+
+Add `--bundle okd-proxmox-X.Y.Z.tar.gz.intoto.jsonl` to verify the tarball
+against the attached provenance instead of the GitHub attestation API.
 
 ## License
 
