@@ -116,6 +116,8 @@ Please read this before you plan with it.
   `okd-pve etcd` ([docs/etcd-backup.md](docs/etcd-backup.md)).
 - One cluster per cluster directory. IPv4 only, one NIC per node.
 - OKD 4.17 or newer (scaling uses `oc adm node-image`, available from 4.17).
+  Tested end to end (create, hooks, scaling, etcd restore, destroy) with
+  4.22.0-okd-scos.10 and 5.0.0-okd-scos.8 on Proxmox VE 9.2.
 - Single-node clusters use `platform: none` (the agent installer does not
   support baremetal VIPs with one node).
 
