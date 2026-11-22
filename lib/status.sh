@@ -106,7 +106,7 @@ status_proxmox() {
 	fi
 	local hosts vms
 	if ! hosts=$(pve_nodes) || ! vms=$(pve_cluster_vms); then
-		_status_row "Proxmox" "${C_RED}not reachable${C_RESET}: ${PVE_API_ERROR:-}"
+		_status_row "Proxmox" "${C_RED}not reachable${C_RESET}: $(pve_last_error)"
 		return 0
 	fi
 	local planned

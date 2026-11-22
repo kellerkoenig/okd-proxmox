@@ -398,8 +398,8 @@ installer_recover_hosts() {
 			continue
 		fi
 		if ! pve_vm_reset "${vm%%$'\t'*}" "${vmid}" >/dev/null; then
-			_log_to_file RECOVER "reset of VM ${vmid} failed: ${PVE_API_ERROR}"
-			printf 'recovery: could not reset VM %s (%s); reset it in Proxmox, then approve its CSRs\n' "${vmid}" "${PVE_API_ERROR}"
+			_log_to_file RECOVER "reset of VM ${vmid} failed: $(pve_last_error)"
+			printf 'recovery: could not reset VM %s (%s); reset it in Proxmox, then approve its CSRs\n' "${vmid}" "$(pve_last_error)"
 			continue
 		fi
 		printf '%(%Y-%m-%dT%H:%M:%S%z)T\n' -1 >"${STATE_DIR}/recovered-${name}"

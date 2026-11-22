@@ -154,7 +154,7 @@ tf_isos_upload() {
 			log_info "Uploading ${name} ($(human_gib "${want}")) to ${storage} on ${host}"
 			start=${SECONDS}
 			pve_iso_upload "${host}" "${storage}" "${path}" "${name}" "${timeout}" ||
-				die "${EXIT_ERROR}" "Upload of ${name} to ${storage} on ${host} failed: ${PVE_API_ERROR}" \
+				die "${EXIT_ERROR}" "Upload of ${name} to ${storage} on ${host} failed: $(pve_last_error)" \
 					"Check the connection to Proxmox and Datastore.AllocateTemplate on ${storage}; re-run the same command to upload again. proxmox.upload_timeout is ${timeout}s."
 			log_ok "${name} uploaded in $(elapsed "${start}") ($((want / 1048576 / (SECONDS - start > 0 ? SECONDS - start : 1))) MiB/s)"
 		done < <(_tf_iso_hosts "$(jq -c --arg k "${key}" '.[$k]' <<<"${isos}")" "${shared}")
@@ -185,7 +185,7 @@ tf_isos_cleanup() {
 			if pve_iso_delete "${host}" "${storage}" "${name}"; then
 				log_info "Deleted ${name} from ${storage} (${host})"
 			else
-				log_warn "Could not delete ${name} from ${storage} (${host}): ${PVE_API_ERROR}; trying again on the next run"
+				log_warn "Could not delete ${name} from ${storage} (${host}): $(pve_last_error); trying again on the next run"
 				failed=1
 			fi
 		done < <(_tf_iso_hosts "${entry}" "${shared}")
