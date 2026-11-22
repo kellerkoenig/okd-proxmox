@@ -83,14 +83,16 @@ rolled_out() { oc -n "${ns}" rollout status "$1" --timeout=10s >/dev/null 2>&1; 
 oc_wait 900 "Argo CD instance ${ns}/openshift-gitops" argocd_exists
 
 # Default instance on the infra nodes. The operator's GitopsService owns the
-# placement; patching the Argo CD instance directly would be undone.
+# placement; patching the Argo CD instance directly would be undone. The
+# nodeSelector is set explicitly: with tolerations set, GitOps 1.22 dropped
+# the infra nodeSelector that runOnInfra alone adds.
 if ((${OKD_PVE_INFRA_NODE_COUNT:-0} > 0)); then
 	gitopsservice() { [[ -n $(oc get gitopsservices.pipelines.openshift.io -A -o name 2>/dev/null) ]]; }
 	oc_wait 300 "GitopsService cluster" gitopsservice
 	gs_ns=$(oc get gitopsservices.pipelines.openshift.io -A -o jsonpath='{.items[0].metadata.namespace}')
 	tol='[]'
 	[[ ${OKD_PVE_INFRA_TAINTED:-false} == true ]] && tol=$(infra_tolerations_json)
-	patch_merge gitopsservice/cluster "$(jq -cn --argjson tol "${tol}" '{spec: {runOnInfra: true, tolerations: $tol}}')" \
+	patch_merge gitopsservice/cluster "$(jq -cn --argjson tol "${tol}" '{spec: {runOnInfra: true, nodeSelector: {"node-role.kubernetes.io/infra": ""}, tolerations: $tol}}')" \
 		${gs_ns:+-n "${gs_ns}"}
 fi
 
@@ -108,7 +110,23 @@ if [[ -n ${repo} && -n ${ca:-} ]]; then
 fi
 
 oc_wait 900 "Argo CD server in ${ns}" rolled_out deployment/openshift-gitops-server
-oc_wait 900 "Argo CD application controller in ${ns}" rolled_out statefulset/openshift-gitops-application-controller
+# A StatefulSet does not replace a pod that never became ready: the
+# application controller created before the placement patch stays Pending
+# with the old spec (no toleration for the infra taint). Delete such a pod
+# so that it is recreated from the current revision.
+controller_rolled_out() {
+	local sts=openshift-gitops-application-controller rev pod
+	rolled_out "statefulset/${sts}" && return 0
+	rev=$(oc -n "${ns}" get statefulset "${sts}" -o jsonpath='{.status.updateRevision}' 2>/dev/null) || return 1
+	pod=$(oc -n "${ns}" get pod "${sts}-0" -o json 2>/dev/null) || return 1
+	if [[ -n ${rev} ]] && jq -e --arg rev "${rev}" '.status.phase == "Pending"
+		and .metadata.labels["controller-revision-hash"] != $rev' <<<"${pod}" >/dev/null; then
+		echo "Recreating ${sts}-0: Pending with an outdated revision"
+		oc -n "${ns}" delete pod "${sts}-0" --wait=false >/dev/null || true
+	fi
+	return 1
+}
+oc_wait 900 "Argo CD application controller in ${ns}" controller_rolled_out
 
 if [[ ${GITOPS_CLUSTER_ADMIN:-false} == true ]]; then
 	apply_idempotent - <<YAML

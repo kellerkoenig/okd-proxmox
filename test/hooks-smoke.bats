@@ -155,6 +155,32 @@ SH
 	assert_output 0
 	run grep -o 'patch gitopsservice/cluster --type merge -p .*' "${MOCK_LOG}"
 	assert_output --partial '"runOnInfra":true'
+	assert_output --partial '"nodeSelector":{"node-role.kubernetes.io/infra":""}'
+}
+
+@test "the GitOps hook recreates an application controller pod stuck with an outdated revision" {
+	export OKD_PVE_CATALOG_PROFILE=redhat HOOK_OC=${OKD_PVE_ROOT}/test/mocks/hook-oc/oc
+	mkdir -p "${BATS_TEST_TMPDIR}/bin"
+	cat >"${BATS_TEST_TMPDIR}/bin/oc" <<'SH'
+#!/usr/bin/env bash
+case " $* " in
+*" rollout status statefulset/openshift-gitops-application-controller "*)
+	echo "oc $*" >>"${MOCK_LOG}"
+	grep -q 'delete pod openshift-gitops-application-controller-0' "${MOCK_LOG}"
+	;;
+*" get statefulset openshift-gitops-application-controller "*) echo rev-new ;;
+*" get pod openshift-gitops-application-controller-0 "*)
+	echo '{"status":{"phase":"Pending"},"metadata":{"labels":{"controller-revision-hash":"rev-old"}}}'
+	;;
+*) exec "${HOOK_OC}" "$@" ;;
+esac
+SH
+	chmod +x "${BATS_TEST_TMPDIR}/bin/oc"
+	PATH=${BATS_TEST_TMPDIR}/bin:${PATH} run_hook 60-gitops.sh
+	assert_success
+	assert_output --partial "Recreating openshift-gitops-application-controller-0: Pending with an outdated revision"
+	run grep -c 'delete pod openshift-gitops-application-controller-0' "${MOCK_LOG}"
+	assert_output 1
 }
 
 @test "the GitOps hook bootstraps an Application and keeps the credentials out of the output" {
