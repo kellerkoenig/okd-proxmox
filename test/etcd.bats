@@ -231,3 +231,30 @@ fake_cluster() {
 	assert_output --partial "No SSH to the recovery host small-master-0 (core@192.0.2.11): Host key verification failed."
 	assert_output --partial "ssh-keygen -R 192.0.2.11 -f"
 }
+
+@test "fetch retries a copy that breaks off" {
+	_etcd_require_cronjob() { :; }
+	_etcd_browser_start() { :; }
+	_etcd_browser_stop() { :; }
+	_etcd_remote_list() { printf '2026-11-21_213817_5.0.0-okd-scos.8\t5.0.0-okd-scos.8\t76M\n'; }
+	TRIES=${BATS_TEST_TMPDIR}/tries
+	: >"${TRIES}"
+	# the first stream breaks off, the second one is complete
+	oc() {
+		local src=${BATS_TEST_TMPDIR}/src
+		echo x >>"${TRIES}"
+		mkdir -p "${src}" && touch "${src}/snapshot_x.db" "${src}/static_kuberesources_x.tar.gz"
+		if (($(wc -l <"${TRIES}") == 1)); then
+			tar -C "${src}" -cf - . | head -c 100
+			return 1
+		fi
+		tar -C "${src}" -cf - .
+	}
+	ETCD_FETCH_RETRY_DELAY=0
+	run cmd_etcd_fetch --latest
+	assert_success
+	assert_output --partial "was interrupted; trying again (1/3)"
+	assert_output --partial "Fetched 2026-11-21_213817_5.0.0-okd-scos.8"
+	assert_equal "$(wc -l <"${TRIES}")" 2
+	assert [ ! -e "$(etcd_local_dir)/2026-11-21_213817_5.0.0-okd-scos.8.incomplete" ]
+}
