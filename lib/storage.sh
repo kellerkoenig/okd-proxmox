@@ -594,11 +594,35 @@ storage_csi_volumes_before_destroy() {
 
 # _storage_csi_volume_delete <node> <storage> <disk>: delete and wait for
 # the task (LVM deletes run as a task).
+# Returns 3 when the volume does not exist (any more), e.g. the PV of a
+# volume deleted after the etcd backup that a restore brought back.
 _storage_csi_volume_delete() {
-	local upid
-	upid=$(pve_api "/nodes/$1/storage/$2/content/$(pve_urlencode "$2:$3")" -X DELETE) || return 1
-	upid=$(jq -r 'if type == "string" then . else empty end' <<<"${upid}")
-	[[ -z ${upid} ]] || pve_task_wait "$1" "${upid}" 300
+	local upid out
+	# not in $(...): pve_api reports the error in PVE_API_ERROR
+	out=$(mktemp "${OKD_PVE_TMP:-${TMPDIR:-/tmp}}/csi-delete.XXXXXX")
+	if ! pve_api "/nodes/$1/storage/$2/content/$(pve_urlencode "$2:$3")" -X DELETE >"${out}"; then
+		rm -f "${out}"
+		_storage_csi_volume_missing "$@" && return 3
+		return 1
+	fi
+	upid=$(jq -r 'if type == "string" then . else empty end' <"${out}")
+	rm -f "${out}"
+	[[ -z ${upid} ]] && return 0
+	pve_task_wait "$1" "${upid}" 300 && return 0
+	_storage_csi_volume_missing "$@" && return 3
+	return 1
+}
+
+# _storage_csi_volume_missing <node> <storage> <disk>: the content listing
+# of the storage answers and does not contain the volume.
+_storage_csi_volume_missing() {
+	local list err
+	err=$(pve_last_error)
+	if ! list=$(pve_api "/nodes/$1/storage/$2/content?vmid=9999"); then
+		_pve_error "${err}" # keep the message of the delete
+		return 1
+	fi
+	! jq -e --arg v "$2:$3" 'any(.[]?; .volid == $v)' <<<"${list}" >/dev/null
 }
 
 # storage_csi_volumes_after_destroy [--delete-retained]: delete the volumes
@@ -614,7 +638,7 @@ storage_csi_volumes_after_destroy() {
 	local insecure=${PROXMOX_CSI_INSECURE:-${PROXMOX_VE_INSECURE:-false}} node0
 	[[ -n ${token} ]] && redact_register "${token}"
 	node0=$(cfg '.proxmox.nodes[0]')
-	local pv claim policy zone storage disk node failed=0 deleted=0 kept=()
+	local pv claim policy zone storage disk node rc failed=0 deleted=0 gone=0 kept=()
 	# empty fields would collapse with a tab as IFS: the zone is "-" when empty
 	while IFS=$'\t' read -r pv claim policy zone storage disk; do
 		if [[ ${policy} != Delete ]] && ! ((all)); then
@@ -629,16 +653,21 @@ storage_csi_volumes_after_destroy() {
 		# shared storage: the volume handle has no zone, any node will do
 		node=${zone}
 		[[ ${zone} != - ]] || node=${node0}
-		if PROXMOX_VE_API_TOKEN=${token} PROXMOX_VE_ENDPOINT=${endpoint} PROXMOX_VE_INSECURE=${insecure} \
-			_storage_csi_volume_delete "${node}" "${storage}" "${disk}"; then
-			deleted=$((deleted + 1))
-		else
-			log_warn "Could not delete ${storage}:${disk} (${claim}): ${PVE_API_ERROR:-}"
+		rc=0
+		PROXMOX_VE_API_TOKEN=${token} PROXMOX_VE_ENDPOINT=${endpoint} PROXMOX_VE_INSECURE=${insecure} \
+			_storage_csi_volume_delete "${node}" "${storage}" "${disk}" || rc=$?
+		case ${rc} in
+		0) deleted=$((deleted + 1)) ;;
+		3) gone=$((gone + 1)) ;;
+		*)
+			log_warn "Could not delete ${storage}:${disk} (${claim}): $(pve_last_error)"
 			kept+=("${storage}:${disk} (${claim})")
 			failed=1
-		fi
+			;;
+		esac
 	done < <(jq -r '.[] | [.pv, .claim, .policy, (if .zone == "" then "-" else .zone end), .storage, .disk] | @tsv' <<<"${STORAGE_CSI_VOLUMES}")
 	((deleted == 0)) || log_ok "Deleted ${deleted} Proxmox CSI volume(s)"
+	((gone == 0)) || log_info "${gone} Proxmox CSI volume(s) of the cluster no longer existed on the storage"
 	if ((${#kept[@]})); then
 		log_warn "Proxmox CSI volumes kept: $(join_by ', ' "${kept[@]}")"
 		if [[ -z ${token} ]]; then
