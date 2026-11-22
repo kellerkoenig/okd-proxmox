@@ -164,6 +164,46 @@ pvc-3 Retain  vm-nfs vm-9999-pvc-3.raw openshift-etcd-backup/etcd-backup"
 	assert_equal "${#lines[@]}" 2
 }
 
+@test "destroy counts a volume that no longer exists as gone, not as a failure" {
+	_csi_destroy_setup
+	STORAGE_CSI_VOLUMES=$(storage_csi_volumes_json)
+	# pvc-2 was deleted after the backup a restore came from: its task fails
+	pve_api() {
+		echo "${PROXMOX_VE_API_TOKEN%%=*} $1 $2 $3" >>"${DELETES}"
+		case $1 in
+		*content\?vmid=9999) echo '[{"volid": "vm-nfs:vm-9999-pvc-1.raw"}]' ;;
+		*) echo '"UPID:pve1:1"' ;;
+		esac
+	}
+	pve_task_wait() {
+		[[ $(tail -n 1 "${DELETES}") == *pvc-2* ]] || return 0
+		_pve_error "task failed: lvremove error: Failed to find logical volume"
+		return 1
+	}
+	run storage_csi_volumes_after_destroy
+	assert_success
+	assert_output --partial "Deleted 1 Proxmox CSI volume(s)"
+	assert_output --partial "1 Proxmox CSI volume(s) of the cluster no longer existed on the storage"
+	refute_output --partial "Could not delete"
+	refute_output --partial "after checking"
+}
+
+@test "destroy keeps a volume whose delete fails while it still exists" {
+	_csi_destroy_setup
+	STORAGE_CSI_VOLUMES=$(storage_csi_volumes_json)
+	pve_api() {
+		echo "${PROXMOX_VE_API_TOKEN%%=*} $1 $2 $3" >>"${DELETES}"
+		case $1 in
+		*content\?vmid=9999) echo '[{"volid": "local-lvm:vm-9999-pvc-2"}]' ;;
+		*pvc-2*) _pve_error "HTTP 500: volume is busy"; return 1 ;;
+		*) echo '"UPID:pve1:1"' ;;
+		esac
+	}
+	run storage_csi_volumes_after_destroy
+	assert_output --partial "Could not delete local-lvm:vm-9999-pvc-2 (app/data): HTTP 500: volume is busy"
+	assert_output --partial "Delete them in the Proxmox UI after checking."
+}
+
 @test "destroy --delete-retained-volumes deletes the retained volumes too" {
 	_csi_destroy_setup
 	STORAGE_CSI_VOLUMES=$(storage_csi_volumes_json)
