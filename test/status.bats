@@ -82,3 +82,13 @@ setup() {
 	run _status_age "$(date -u -d '-3 days' +%Y-%m-%dT%H:%M:%SZ)"
 	assert_output "3d ago"
 }
+
+@test "status names the Proxmox error although the API was called in a command substitution" {
+	OKD_PVE_TMP=${BATS_TEST_TMPDIR}/run
+	mkdir -p "${OKD_PVE_TMP}"
+	pve_nodes() { pve_api /nodes; }
+	pve_api() { _pve_error "HTTP 401: authentication failure"; return 1; }
+	run status_proxmox
+	assert_output --partial "not reachable"
+	assert_output --partial "HTTP 401: authentication failure"
+}

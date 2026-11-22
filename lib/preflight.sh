@@ -409,7 +409,7 @@ pf_privileges() {
 	for entry in $(printf '%s\n' "${checks[@]}" | sort -u | tr ' ' ','); do
 		path=${entry%%:*}
 		if ! have=$(pve_permissions "${path}"); then
-			pf WARN "Cannot read permissions for ${path}: ${PVE_API_ERROR}"
+			pf WARN "Cannot read permissions for ${path}: $(pve_last_error)"
 			continue
 		fi
 		missing=()
@@ -446,7 +446,7 @@ pf_storage() {
 	iso_storage=$(cfg '.proxmox.iso_storage')
 	for h in "$@"; do
 		if ! info=$(pve_node_storage "${h}"); then
-			pf FAIL "Cannot list storage on ${h}: ${PVE_API_ERROR}" "Grant Datastore.Audit / Sys.Audit."
+			pf FAIL "Cannot list storage on ${h}: $(pve_last_error)" "Grant Datastore.Audit / Sys.Audit."
 			continue
 		fi
 		for s in $(storages_vm) $(cfg '.proxmox.efi_storage'); do
@@ -523,7 +523,7 @@ pf_bridge() {
 	vnets=$(pve_sdn_vnets 2>/dev/null || echo '[]')
 	for h in "$@"; do
 		if ! nets=$(pve_node_networks "${h}"); then
-			pf WARN "Cannot list networks on ${h}: ${PVE_API_ERROR}" "Grant Sys.Audit on /nodes/${h}."
+			pf WARN "Cannot list networks on ${h}: $(pve_last_error)" "Grant Sys.Audit on /nodes/${h}."
 			continue
 		fi
 		if jq -e --arg b "${bridge}" '.[] | select(.iface == $b and (.type == "bridge" or .type == "OVSBridge"))' <<<"${nets}" >/dev/null; then
@@ -654,7 +654,7 @@ pf_capacity() {
 	local t_threads=0 t_ex_cpu=0 t_pl_cpu=0 t_mem=0 t_ex_mem=0 t_pl_mem=0 fail=0 warn_ratio=''
 	while IFS= read -r h; do
 		status=$(pve_node_status "${h}") || {
-			pf WARN "Cannot read status of ${h}: ${PVE_API_ERROR}"
+			pf WARN "Cannot read status of ${h}: $(pve_last_error)"
 			continue
 		}
 		threads=$(jq -r '.cpuinfo.cpus // 0' <<<"${status}")

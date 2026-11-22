@@ -173,3 +173,16 @@ _iso_stubs() {
 	run tf_write_vars
 	assert_success
 }
+
+@test "a Proxmox task is polled on the node named in its UPID" {
+	POLLS=${BATS_TEST_TMPDIR}/polls
+	pve_api() {
+		echo "$1" >>"${POLLS}"
+		echo '{"status": "stopped", "exitstatus": "OK"}'
+	}
+	# upload to shared storage via pve2: the task ran on the API endpoint pve1
+	run pve_task_wait pve2 'UPID:pve1:002287DE:05004775:6B022558:imgcopy::okd@pve!tok:'
+	assert_success
+	run cat "${POLLS}"
+	assert_output "/nodes/pve1/tasks/UPID%3Apve1%3A002287DE%3A05004775%3A6B022558%3Aimgcopy%3A%3Aokd%40pve%21tok%3A/status"
+}

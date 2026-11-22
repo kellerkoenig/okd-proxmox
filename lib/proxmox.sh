@@ -14,6 +14,26 @@ _OKD_PVE_PROXMOX_LOADED=1
 
 PVE_API_ERROR=''
 
+# _pve_error <message>: set PVE_API_ERROR (redacted). A call in $(...) loses
+# the variable, so the message also goes to a file in the run's temporary
+# directory, where pve_last_error finds it.
+_pve_error() {
+	PVE_API_ERROR=$(redact_string "$1")
+	if [[ -n ${OKD_PVE_TMP:-} && -d ${OKD_PVE_TMP} ]]; then
+		printf '%s\n' "${PVE_API_ERROR}" >"${OKD_PVE_TMP}/pve-api-error" 2>/dev/null || true
+	fi
+}
+
+# pve_last_error: the message of the last failed Proxmox API call, also
+# after a call in $(...).
+pve_last_error() {
+	if [[ -n ${OKD_PVE_TMP:-} && -s ${OKD_PVE_TMP}/pve-api-error ]]; then
+		cat "${OKD_PVE_TMP}/pve-api-error"
+	else
+		printf '%s\n' "${PVE_API_ERROR:-}"
+	fi
+}
+
 pve_api_url() {
 	local base=${PROXMOX_VE_ENDPOINT%/}
 	base=${base%/api2/json}
@@ -33,15 +53,14 @@ pve_api() {
 			curl -sS --connect-timeout 10 --max-time 60 -K - "${tls[@]+"${tls[@]}"}" \
 				-w '\n%{http_code}' "$@" "$(pve_api_url "${path}")" 2>&1
 	) || {
-		PVE_API_ERROR=$(redact_string "${out}")
+		_pve_error "${out}"
 		log_debug "GET ${path}: ${PVE_API_ERROR}"
 		return 1
 	}
 	code=${out##*$'\n'}
 	body=${out%$'\n'*}
 	if [[ ${code} != 2* ]]; then
-		PVE_API_ERROR="HTTP ${code}: $(jq -r '.message // .errors // empty' <<<"${body}" 2>/dev/null || true)"
-		PVE_API_ERROR=$(redact_string "${PVE_API_ERROR}")
+		_pve_error "HTTP ${code}: $(jq -r '.message // .errors // empty' <<<"${body}" 2>/dev/null || true)"
 		log_debug "GET ${path}: ${PVE_API_ERROR}"
 		return 1
 	fi
@@ -103,15 +122,19 @@ pve_pool() {
 # with PVE_API_ERROR unless it ends with "OK".
 pve_task_wait() {
 	local node=$1 upid=$2 timeout=${3:-600} start=${SECONDS} st
+	# The task runs on the node named in the UPID, which is not always the
+	# node of the request: an upload to shared storage runs on the node that
+	# received it (the API endpoint).
+	[[ ${upid} =~ ^UPID:([^:]+): ]] && node=${BASH_REMATCH[1]}
 	while :; do
 		st=$(pve_api "/nodes/${node}/tasks/$(pve_urlencode "${upid}")/status") || return 1
 		if [[ $(jq -r '.status' <<<"${st}") == stopped ]]; then
 			[[ $(jq -r '.exitstatus // ""' <<<"${st}") == OK ]] && return 0
-			PVE_API_ERROR="task failed: $(jq -r '.exitstatus // "unknown"' <<<"${st}")"
+			_pve_error "task failed: $(jq -r '.exitstatus // "unknown"' <<<"${st}")"
 			return 1
 		fi
 		if ((SECONDS - start >= timeout)); then
-			PVE_API_ERROR="task still running after ${timeout}s: ${upid}"
+			_pve_error "task still running after ${timeout}s: ${upid}"
 			return 1
 		fi
 		sleep "${OKD_PVE_TASK_POLL:-2}"
@@ -144,14 +167,13 @@ pve_iso_upload() {
 				-F "filename=@${path};filename=${name}" \
 				"$(pve_api_url "/nodes/${node}/storage/${storage}/upload")" 2>&1
 	) || {
-		PVE_API_ERROR=$(redact_string "${out}")
+		_pve_error "${out}"
 		return 1
 	}
 	code=${out##*$'\n'}
 	body=${out%$'\n'*}
 	if [[ ${code} != 2* ]]; then
-		PVE_API_ERROR="HTTP ${code}: $(jq -r '.message // .errors // empty' <<<"${body}" 2>/dev/null || true)"
-		PVE_API_ERROR=$(redact_string "${PVE_API_ERROR}")
+		_pve_error "HTTP ${code}: $(jq -r '.message // .errors // empty' <<<"${body}" 2>/dev/null || true)"
 		return 1
 	fi
 	upid=$(jq -r '.data // empty' <<<"${body}" 2>/dev/null)
