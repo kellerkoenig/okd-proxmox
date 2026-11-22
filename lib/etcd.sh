@@ -181,7 +181,7 @@ cmd_etcd_backup() {
 # <cluster>/backups/etcd/<name> (mode 700; it contains every secret of the
 # cluster).
 cmd_etcd_fetch() {
-	local name=${1:---latest} dir target
+	local name=${1:---latest} dir target try
 	_etcd_require_cronjob
 	dir=$(etcd_local_dir)
 	_etcd_browser_start
@@ -207,14 +207,22 @@ cmd_etcd_fetch() {
 	fi
 	(umask 077 && mkdir -p "${dir}")
 	chmod 700 "${CLUSTER_DIR}/backups" "${dir}"
-	rm -rf "${target}.incomplete"
-	(umask 077 && mkdir "${target}.incomplete")
-	if ! oc -n "${ETCD_BACKUP_NS}" exec "${ETCD_BROWSER_POD}" -- tar -C "/backup/${name}" -cf - . |
-		tar -C "${target}.incomplete" --no-same-owner -xf -; then
-		_etcd_browser_stop
+	# oc exec streams can break on a flaky connection (VPN): retry the copy
+	for try in 1 2 3; do
 		rm -rf "${target}.incomplete"
-		die "${EXIT_ERROR}" "Copying ${name} failed."
-	fi
+		(umask 077 && mkdir "${target}.incomplete")
+		if oc -n "${ETCD_BACKUP_NS}" exec "${ETCD_BROWSER_POD}" -- tar -C "/backup/${name}" -cf - . |
+			tar -C "${target}.incomplete" --no-same-owner -xf -; then
+			break
+		fi
+		if ((try == 3)); then
+			_etcd_browser_stop
+			rm -rf "${target}.incomplete"
+			die "${EXIT_ERROR}" "Copying ${name} failed."
+		fi
+		log_warn "Copying ${name} was interrupted; trying again (${try}/3)"
+		sleep "${ETCD_FETCH_RETRY_DELAY:-5}"
+	done
 	_etcd_browser_stop
 	chmod 600 "${target}.incomplete"/*
 	etcd_backup_valid "${target}.incomplete" || die "${EXIT_ERROR}" "${name} is incomplete (snapshot or static pod resources missing)."
