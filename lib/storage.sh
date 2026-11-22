@@ -581,8 +581,7 @@ STORAGE_CSI_VOLUMES=''
 storage_csi_volumes_before_destroy() {
 	STORAGE_CSI_VOLUMES=''
 	[[ $(cfg '.storage.backend') == proxmox-csi ]] || return 0
-	if [[ -f ${KUBECONFIG_FILE} ]] && tool_check oc >/dev/null 2>&1; then
-		cluster_api_init
+	if cluster_api_init_any; then
 		STORAGE_CSI_VOLUMES=$(storage_csi_volumes_json) || STORAGE_CSI_VOLUMES=''
 	fi
 	if [[ -z ${STORAGE_CSI_VOLUMES} ]]; then

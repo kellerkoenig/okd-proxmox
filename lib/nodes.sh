@@ -27,6 +27,30 @@ cluster_api_init() {
 	return 0
 }
 
+# cluster_api_init_any: like cluster_api_init for read-only queries, but
+# takes any oc it finds, without the version check and without a download.
+# destroy needs the API of the running cluster even when okd.version already
+# names the next version (e.g. 4.22 -> 5.0 before a rebuild). Returns 1
+# without kubeconfig or oc.
+cluster_api_init_any() {
+	local c
+	[[ -f ${KUBECONFIG_FILE} ]] || return 1
+	if c=$(tool_check oc 2>/dev/null); then
+		c=${c%%$'\t'*}
+	else
+		c=$(_candidates oc | head -n 1)
+	fi
+	[[ -n ${c} ]] || return 1
+	OC=${c}
+	export KUBECONFIG=${KUBECONFIG_FILE}
+	PATH=$(dirname "${OC}"):${PATH}
+	export PATH
+	if [[ -f ${AUTH_DIR}/kubeadmin-password ]]; then
+		redact_register "$(cat "${AUTH_DIR}/kubeadmin-password")"
+	fi
+	return 0
+}
+
 infra_taint_effects() {
 	cfg '.infra.taint_effects'
 }
@@ -235,8 +259,7 @@ nodes_join_wait() {
 
 cmd_node_list() {
 	local k8s='{}'
-	if [[ -f ${KUBECONFIG_FILE} ]] && tool_check oc >/dev/null 2>&1; then
-		cluster_api_init
+	if cluster_api_init_any; then
 		k8s=$(oc get nodes -o json --request-timeout=10s 2>/dev/null | jq -c '[.items[] | {key: .metadata.name, value: {
 			ready: ([.status.conditions[]? | select(.type == "Ready") | .status][0] // "Unknown"),
 			roles: ([.metadata.labels | keys[] | select(startswith("node-role.kubernetes.io/")) | sub("node-role.kubernetes.io/"; "")] | join(",")),
