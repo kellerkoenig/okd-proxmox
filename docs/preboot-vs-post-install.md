@@ -31,6 +31,7 @@ time a node starts:
 | KubeletConfig | master **and** worker | image GC thresholds, eviction, `autoSizingReserved` |
 | kernel arguments | master, worker, infra (additive) | e.g. serial console |
 | CA trust | master, worker | extra CA for CRI-O/chrony, see `preboot.ca_bundle_file` |
+| rendezvous network | master | static network of the rendezvous host on first boot if the installer did not copy it (`preboot.rendezvous_network`) |
 | infra MachineConfigPool | – | only for dedicated infra groups |
 
 Add your own manifests to `<cluster>/preboot/`: Butane (`.bu`, rendered

@@ -10,6 +10,7 @@ setup() {
 	make_cluster small
 	LOG_FILE=${BATS_TEST_TMPDIR}/test.log
 	load_cluster
+	stub_nmstatectl
 }
 
 @test "install-config: replicas, pull secret and SSH key filled in, source untouched" {

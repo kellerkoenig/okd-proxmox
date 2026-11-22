@@ -62,6 +62,12 @@ CONF
 	chmod "${1:-600}" "${CLUSTER}/proxmox.conf"
 }
 
+# stub_nmstatectl: nmstatectl as the fake from test/mocks (gc of the single
+# static interface okd-pve renders).
+stub_nmstatectl() {
+	nmstatectl() { "${OKD_PVE_ROOT}/test/mocks/nmstatectl.fake" "$@"; }
+}
+
 use_mocks() {
 	export PATH="${OKD_PVE_ROOT}/test/mocks:${PATH}"
 	export MOCK_PVE_FIXTURES=${OKD_PVE_ROOT}/test/fixtures/pve

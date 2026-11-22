@@ -9,6 +9,7 @@ setup() {
 	load_libs
 	command -v butane >/dev/null || skip "butane not installed"
 	BUTANE=$(command -v butane)
+	stub_nmstatectl
 	make_cluster small
 	LOG_FILE=${BATS_TEST_TMPDIR}/test.log
 	load_cluster
@@ -46,7 +47,86 @@ mc_file() {
 @test "combined cluster: chrony, kubelet and kernel args for master and worker, no infra pool" {
 	manifests_render "${OUT}"
 	run ls "${OUT}"
-	assert_output $'99-master-okd-pve-chrony.yaml\n99-master-okd-pve-kargs.yaml\n99-okd-pve-kubelet-master.yaml\n99-okd-pve-kubelet-worker.yaml\n99-worker-okd-pve-chrony.yaml\n99-worker-okd-pve-kargs.yaml'
+	assert_output $'99-master-okd-pve-chrony.yaml\n99-master-okd-pve-kargs.yaml\n99-master-okd-pve-rendezvous-network.yaml\n99-okd-pve-kubelet-master.yaml\n99-okd-pve-kubelet-worker.yaml\n99-worker-okd-pve-chrony.yaml\n99-worker-okd-pve-kargs.yaml'
+}
+
+# mc_file_at <manifest> <path>: decoded content of a MachineConfig file.
+mc_file_at() {
+	local src gz
+	src=$(P=$2 yq -r '.spec.config.storage.files[] | select(.path == strenv(P)) | .contents.source' "${OUT}/$1")
+	gz=$(P=$2 yq -r '.spec.config.storage.files[] | select(.path == strenv(P)) | .contents.compression // ""' "${OUT}/$1")
+	if [[ ${src} == data:\;base64,* ]]; then
+		if [[ ${gz} == gzip ]]; then
+			base64 -d <<<"${src#data:;base64,}" | gunzip
+		else
+			base64 -d <<<"${src#data:;base64,}"
+		fi
+	else
+		python3 -c 'import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1]), end="")' "${src#data:,}"
+	fi
+}
+
+@test "rendezvous network: keyfiles of the rendezvous host and a first-boot unit for the master pool" {
+	manifests_render "${OUT}"
+	local f=99-master-okd-pve-rendezvous-network.yaml rv mac
+	rv=$(cfg '.network.rendezvous_ip')
+	mac=$(nodes_query --arg ip "${rv}" '.[] | select(.ip == $ip) | .mac')
+	assert_equal "$(yq -r '.metadata.labels."machineconfiguration.openshift.io/role"' "${OUT}/${f}")" master
+	run mc_file_at "${f}" /etc/okd-pve/rendezvous-network/ens18.nmconnection
+	assert_output --partial "address0=${rv}/"
+	assert_output --partial "cloned-mac-address=${mac}"
+	assert_equal "$(yq -r '.spec.config.storage.files[] | select(.path == "/etc/okd-pve/rendezvous-network/ens18.nmconnection") | .mode' "${OUT}/${f}")" 384
+	run mc_file_at "${f}" /etc/okd-pve/rendezvous-network/macs
+	assert_output "${mac,,}"
+	run mc_file_at "${f}" /usr/local/bin/okd-pve-rendezvous-network.sh
+	assert_output --partial 'if ((match)) && ((${#existing[@]} == 0)); then'
+	run yq -r '.spec.config.systemd.units[0] | .name + " " + (.enabled | tostring)' "${OUT}/${f}"
+	assert_output "okd-pve-rendezvous-network.service true"
+	run yq -r '.spec.config.systemd.units[0].contents' "${OUT}/${f}"
+	assert_output --partial "Before=network-pre.target NetworkManager.service"
+}
+
+@test "rendezvous network: the first-boot script installs keyfiles only where they are missing on the rendezvous host" {
+	manifests_render "${OUT}"
+	local f=99-master-okd-pve-rendezvous-network.yaml root=${BATS_TEST_TMPDIR}/root mac script
+	mac=$(mc_file_at "${f}" /etc/okd-pve/rendezvous-network/macs)
+	script=$(mc_file_at "${f}" /usr/local/bin/okd-pve-rendezvous-network.sh | sed -e "s|/etc/|${root}/etc/|g" -e "s|/run/|${root}/run/|g" -e "s|/var/lib/|${root}/var/lib/|g" -e "s|/sys/class/net/|${root}/sys/class/net/|g")
+	_fs() {
+		rm -rf "${root}" && mkdir -p "${root}/etc/okd-pve/rendezvous-network" "${root}/etc/NetworkManager/system-connections" \
+			"${root}/run/NetworkManager/system-connections" "${root}/sys/class/net/ens18"
+		mc_file_at "${f}" /etc/okd-pve/rendezvous-network/macs >"${root}/etc/okd-pve/rendezvous-network/macs"
+		mc_file_at "${f}" /etc/okd-pve/rendezvous-network/ens18.nmconnection >"${root}/etc/okd-pve/rendezvous-network/ens18.nmconnection"
+		echo "$1" >"${root}/sys/class/net/ens18/address"
+		touch "${root}/run/NetworkManager/system-connections/Wired connection 1.nmconnection"
+	}
+	# rendezvous host without keyfiles: installed, initramfs DHCP profile removed
+	_fs "${mac}"
+	run bash -c "${script}"
+	assert_success
+	assert_output --partial "installed the static network configuration"
+	assert [ -f "${root}/etc/NetworkManager/system-connections/ens18.nmconnection" ]
+	assert [ ! -e "${root}/run/NetworkManager/system-connections/Wired connection 1.nmconnection" ]
+	assert [ -f "${root}/var/lib/okd-pve/rendezvous-network.checked" ]
+	# rendezvous host where the installer copied them: untouched
+	_fs "${mac}"
+	echo copied >"${root}/etc/NetworkManager/system-connections/ens18.nmconnection"
+	run bash -c "${script}"
+	assert_output ""
+	assert_equal "$(cat "${root}/etc/NetworkManager/system-connections/ens18.nmconnection")" copied
+	assert [ -e "${root}/run/NetworkManager/system-connections/Wired connection 1.nmconnection" ]
+	# another master: untouched
+	_fs 02:00:00:00:00:99
+	run bash -c "${script}"
+	assert_output ""
+	run ls "${root}/etc/NetworkManager/system-connections"
+	assert_output ""
+}
+
+@test "rendezvous network: preboot.rendezvous_network false renders nothing" {
+	yq_set '.preboot.rendezvous_network = false'
+	load_cluster
+	manifests_render "${OUT}"
+	assert [ ! -e "${OUT}/99-master-okd-pve-rendezvous-network.yaml" ]
 }
 
 @test "chrony config contains the NTP servers, makestep, rtcsync and driftfile" {

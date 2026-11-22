@@ -27,6 +27,7 @@ setup() {
 	cmd_storage_install() { echo "storage stub"; }
 	hooks_run() { echo "hooks stub"; }
 	tool_check() { printf '%s\t%s\n' "$(command -v "$1")" mock; }
+	stub_nmstatectl
 	ORIG_IC=$(sha256sum "${CLUSTER}/install-config.yaml")
 }
 
