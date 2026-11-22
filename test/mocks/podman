@@ -6,8 +6,7 @@ echo "podman $*" >>"${MOCK_LOG:-/dev/null}"
 for a in "$@"; do
 	if [[ ${a} == *:/out:Z ]]; then
 		out=${a%:/out:Z}
-		printf '#!/bin/sh\necho "nmstatectl 2.2.62"\n' >"${out}/nmstatectl"
-		chmod +x "${out}/nmstatectl"
+		cp "$(dirname "${BASH_SOURCE[0]}")/nmstatectl.fake" "${out}/nmstatectl"
 	fi
 done
 echo "nmstate-2.2.62-3.el9.x86_64"

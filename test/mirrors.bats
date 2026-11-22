@@ -12,6 +12,7 @@ setup() {
 	LOG_FILE=${BATS_TEST_TMPDIR}/test.log
 	: >"${LOG_FILE}"
 	IC=${BATS_TEST_TMPDIR}/ic.yaml
+	stub_nmstatectl
 }
 
 # _mirrors [fallback]: two mirrors, quay.io with its own fallback setting.

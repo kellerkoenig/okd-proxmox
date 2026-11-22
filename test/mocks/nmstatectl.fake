@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2026 The okd-proxmox Authors
+# Fake nmstatectl, dropped into <cluster>/bin by the podman mock:
+# --version, and "gc <file>" for the single static interface okd-pve renders.
+case $1 in
+--version) echo "nmstatectl 2.2.62" ;;
+gc)
+	jq -r '.interfaces[0] as $i | "NetworkManager:\n- - \($i.name).nmconnection\n  - |\n    [connection]\n    id=\($i.name)\n    interface-name=\($i.name)\n    [ipv4]\n    address0=\($i.ipv4.address[0].ip)/\($i.ipv4.address[0]."prefix-length")\n    method=manual\n    [ethernet]\n    cloned-mac-address=\($i."mac-address")"' "$2"
+	;;
+*) exit 1 ;;
+esac

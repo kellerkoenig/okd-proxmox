@@ -129,6 +129,37 @@ _render_ca() {
 	_butane "${work}/${name}.bu" "${out}/${name}.yaml" "${work}"
 }
 
+# _render_rendezvous_network <name> <out> <work>: the rendezvous host's
+# NetworkManager keyfiles (nmstatectl gc of its agent-config networkConfig)
+# and a first-boot unit that installs them when the installer did not copy
+# them (templates/preboot/rendezvous-network.bu.tpl).
+_render_rendezvous_network() {
+	local name=$1 out=$2 work=$3 host gc files='' macs f
+	host=$(nodes_json | jq_lib -c --slurpfile c "${CONFIG_JSON}" '
+		include "nodes";
+		$c[0] as $c | [.[] | select(.ip == $c.network.rendezvous_ip) | agent_host($c)][0] // empty')
+	[[ -n ${host} ]] || { echo "rendezvous IP $(cfg '.network.rendezvous_ip') matches no node" >&2 && return 1; }
+	jq '.networkConfig' <<<"${host}" >"${work}/${name}.nmstate.json"
+	if ! gc=$(nmstatectl gc "${work}/${name}.nmstate.json" 2>/dev/null | yq -o json '.NetworkManager // []'); then
+		echo "nmstatectl gc failed for the rendezvous host's networkConfig" >&2
+		return 1
+	fi
+	mkdir -p "${work}/${name}"
+	while IFS=$'\t' read -r f; do
+		[[ ${f} =~ ^[A-Za-z0-9._-]+\.nmconnection$ ]] || { echo "unexpected keyfile name from nmstatectl: ${f}" >&2 && return 1; }
+		jq -j --arg f "${f}" '.[] | select(.[0] == $f) | .[1]' <<<"${gc}" >"${work}/${name}/${f}"
+		files+="- path: /etc/okd-pve/rendezvous-network/${f}"$'\n'
+		files+="  mode: 0600"$'\n'
+		files+="  contents:"$'\n'
+		files+="    local: ${name}/${f}"$'\n'
+	done < <(jq -r '.[][0]' <<<"${gc}")
+	[[ -n ${files} ]] || { echo "nmstatectl gc produced no keyfiles for the rendezvous host" >&2 && return 1; }
+	macs=$(jq -r '[.interfaces[].macAddress | ascii_downcase] | join("\n")' <<<"${host}")
+	TPL=([NAME]=${name} [BUTANE_SPEC]=${BUTANE_OPENSHIFT_SPEC} [MACS]=${macs} [KEYFILES]=${files%$'\n'})
+	render_template "$(_preboot_tpl rendezvous-network.bu.tpl)" >"${work}/${name}.bu" || return 1
+	_butane "${work}/${name}.bu" "${out}/${name}.yaml" "${work}"
+}
+
 # manifests_render <out-dir>: render all Pre-Boot manifests into out-dir.
 manifests_render() {
 	local out=$1 work role pool
@@ -176,6 +207,10 @@ manifests_render() {
 		for role in master worker; do
 			_render_ca "${role}" "99-${role}-okd-pve-ca" "${out}" "${work}" || return 1
 		done
+	fi
+
+	if [[ $(jq -r '.preboot.rendezvous_network' "${CONFIG_JSON}") != false ]]; then
+		_render_rendezvous_network 99-master-okd-pve-rendezvous-network "${out}" "${work}" || return 1
 	fi
 
 	if mirrors_enabled; then

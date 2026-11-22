@@ -117,6 +117,7 @@ kubelet:
 preboot:
   chrony: true
   kubelet: true
+  rendezvous_network: true
   chrony_overrides:
     master: []
     worker: []

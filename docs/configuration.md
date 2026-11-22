@@ -159,6 +159,7 @@ MAC or host of an existing VM are refused.
 | `chrony_overrides.{master,worker,infra}` | `[]` | other NTP servers per pool (infra only with a dedicated infra pool) |
 | `kernel_args.{master,worker,infra}` | serial console for master/worker | infra args are added to the inherited worker args |
 | `ca_bundle_file` | `""` | PEM file added to the host trust store |
+| `rendezvous_network` | `true` | the rendezvous host gets its static network on first boot even if the installer did not copy it (seen with OKD 5.0, see [Troubleshooting](../README.md#troubleshooting)) |
 
 ### kubelet
 
