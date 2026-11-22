@@ -186,8 +186,27 @@ pvc-3 Retain  vm-nfs vm-9999-pvc-3.raw openshift-etcd-backup/etcd-backup"
 	_csi_destroy_setup
 	oc() { return 1; }
 	touch "${KUBECONFIG_FILE}" 2>/dev/null || { mkdir -p "$(dirname "${KUBECONFIG_FILE}")" && touch "${KUBECONFIG_FILE}"; }
-	tool_check() { :; }
-	cluster_api_init() { :; }
+	cluster_api_init_any() { :; }
 	run storage_csi_volumes_before_destroy
 	assert_output --partial "cannot be determined and stay on the storage"
+}
+
+@test "destroy finds the CSI volumes with an oc of the old version after okd.version changed" {
+	_csi_destroy_setup
+	mkdir -p "$(dirname "${KUBECONFIG_FILE}")" "${BIN_DIR}"
+	touch "${KUBECONFIG_FILE}"
+	cat >"${BIN_DIR}/oc" <<'SH'
+#!/bin/sh
+echo '{"releaseClientVersion": "4.22.0-okd-scos.10"}'
+SH
+	chmod +x "${BIN_DIR}/oc"
+	_candidates() { echo "${BIN_DIR}/oc"; }
+	yq_set '.okd.version = "5.0.0-okd-scos.8"'
+	load_cluster
+	oc() { [[ "$*" == "get pv -o json --request-timeout=20s" ]] && _pvs; }
+	run tool_check oc
+	assert_failure
+	storage_csi_volumes_before_destroy
+	assert_equal "$(jq -r 'map(.pv) | join(" ")' <<<"${STORAGE_CSI_VOLUMES}")" "pvc-1 pvc-2 pvc-3"
+	assert_equal "${OC}" "${BIN_DIR}/oc"
 }
